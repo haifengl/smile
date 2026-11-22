@@ -85,7 +85,8 @@ function schemaKeys(model, onlineMode = false) {
   return keys;
 }
 
-function SmileForm({ modelId }) {
+function SmileForm({ modelId, versions = [], defaultVersion = null }) {
+  const [selectedVersion, setSelectedVersion] = useState("");
   const [modelMeta, setModelMeta] = useState(null);
   const [schema, setSchema] = useState(null);
   const [rows, setRows] = useState([]);
@@ -108,6 +109,14 @@ function SmileForm({ modelId }) {
   const pendingRef = useRef([]);
   const flushRafRef = useRef(0);
 
+  const modelBasePath = selectedVersion
+    ? `/v1/smile/${modelId}/versions/${encodeURIComponent(selectedVersion)}`
+    : `/v1/smile/${modelId}`;
+
+  useEffect(() => {
+    setSelectedVersion("");
+  }, [modelId]);
+
   useEffect(() => {
     if (!modelId) {
       return;
@@ -125,7 +134,7 @@ function SmileForm({ modelId }) {
     setStartedAt(null);
     setFinishedAt(null);
 
-    fetch(`/v1/smile/${modelId}`)
+    fetch(modelBasePath)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch model schema");
@@ -148,7 +157,7 @@ function SmileForm({ modelId }) {
         cancelAnimationFrame(flushRafRef.current);
       }
     };
-  }, [modelId]);
+  }, [modelId, modelBasePath]);
 
   const flushPending = () => {
     flushRafRef.current = 0;
@@ -215,8 +224,8 @@ function SmileForm({ modelId }) {
 
     if (onlineMode) {
       const updateUrl = persistUpdate
-        ? `/v1/smile/${modelId}/update?persist=true`
-        : `/v1/smile/${modelId}/update`;
+        ? `${modelBasePath}/update?persist=true`
+        : `${modelBasePath}/update`;
       fetch(updateUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -245,7 +254,7 @@ function SmileForm({ modelId }) {
       ? { samples: shapSamples, ridge: shapRidge }
       : null;
     const url = buildExplainUrl(
-      `/v1/smile/${modelId}`,
+      modelBasePath,
       Boolean(shapMethod) && explain,
       shapOptions
     );
@@ -309,8 +318,8 @@ function SmileForm({ modelId }) {
 
       if (onlineMode) {
         const updateStreamUrl = persistUpdate
-          ? `/v1/smile/${modelId}/update/stream?persist=true`
-          : `/v1/smile/${modelId}/update/stream`;
+          ? `${modelBasePath}/update/stream?persist=true`
+          : `${modelBasePath}/update/stream`;
         const res = await fetch(updateStreamUrl, {
           method: "POST",
           headers: { "Content-Type": contentType },
@@ -331,7 +340,7 @@ function SmileForm({ modelId }) {
         ? { samples: shapSamples, ridge: shapRidge }
         : null;
       const streamUrl = buildExplainUrl(
-        `/v1/smile/${modelId}/stream`,
+        `${modelBasePath}/stream`,
         Boolean(shapMethod) && explain,
         shapOptions
       );
@@ -380,11 +389,36 @@ function SmileForm({ modelId }) {
 
   const keys = schemaKeys(modelMeta, onlineMode);
   const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
+  const availableVersions =
+    Array.isArray(modelMeta?.versions) && modelMeta.versions.length > 0
+      ? modelMeta.versions
+      : versions;
 
   return (
     <div className="infer-form">
       <div className="infer-layout">
         <section className="infer-inputs">
+          {availableVersions.length > 1 && (
+            <div className="mode-toggle">
+              <label>
+                Version{" "}
+                <select
+                  value={selectedVersion}
+                  onChange={(e) => setSelectedVersion(e.target.value)}
+                  disabled={streaming}
+                >
+                  <option value="">
+                    Default{defaultVersion ? ` (v${defaultVersion})` : ""}
+                  </option>
+                  {availableVersions.map((v) => (
+                    <option key={v} value={v}>
+                      v{v}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <Form
             schema={schema}
             validator={validator}

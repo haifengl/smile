@@ -66,9 +66,10 @@ public class ServeSupportTest {
     }
 
     @Test
-    public void testDriftWarningAcceptsVersionedId() {
-        // Given / When / Then: the engine reports <name>-<version>.
-        assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini-1"), "phi-4-mini").isEmpty());
+    public void testDriftWarningMatchesExactSlug() {
+        // Given / When / Then: the engine reports exact slugs without synthetic suffixes.
+        assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini"), "phi-4-mini").isEmpty());
+        assertEquals(Optional.of("phi-4-mini"), ServeSupport.driftWarning(List.of("phi-4-mini-extra"), "phi-4-mini"));
     }
 
     @Test

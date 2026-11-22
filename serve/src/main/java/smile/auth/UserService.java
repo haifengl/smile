@@ -14,6 +14,7 @@ import java.util.List;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 import jakarta.transaction.Transactional;
 import smile.chat.Conversation;
 import smile.chat.ConversationContent;
@@ -33,6 +34,7 @@ public class UserService {
 
     /**
      * Returns the bootstrap local {@code me} account, creating it when missing.
+     * Race-safe across concurrent multi-replica boots.
      *
      * @return persisted local user.
      */
@@ -40,16 +42,38 @@ public class UserService {
     public User findOrCreateMe() {
         User existing = User.findByExternalId(LOCAL_ME_EXTERNAL_ID);
         if (existing != null) {
-            userCache.register(existing);
+            if (userCache != null) {
+                userCache.register(existing);
+            }
             return existing;
         }
-        User user = new User();
-        user.externalId = LOCAL_ME_EXTERNAL_ID;
-        user.displayName = "Me";
-        user.authProvider = AuthProviderKind.LOCAL;
-        user.persist();
-        userCache.register(user);
-        return user;
+        try {
+            User created = QuarkusTransaction.requiringNew().call(() -> {
+                User again = User.findByExternalId(LOCAL_ME_EXTERNAL_ID);
+                if (again != null) {
+                    return again;
+                }
+                User user = new User();
+                user.externalId = LOCAL_ME_EXTERNAL_ID;
+                user.displayName = "Me";
+                user.authProvider = AuthProviderKind.LOCAL;
+                user.persistAndFlush();
+                return user;
+            });
+            if (userCache != null) {
+                userCache.register(created);
+            }
+            return created;
+        } catch (PersistenceException ex) {
+            User winner = QuarkusTransaction.requiringNew().call(() -> User.findByExternalId(LOCAL_ME_EXTERNAL_ID));
+            if (winner != null) {
+                if (userCache != null) {
+                    userCache.register(winner);
+                }
+                return winner;
+            }
+            throw ex;
+        }
     }
 
     /**
@@ -127,11 +151,29 @@ public class UserService {
         if (ctx.user() != null) {
             return ctx.user();
         }
-        OidcPrincipal principal = ctx.oidcPrincipal();
+        User resolved = ensureOidcUser(ctx.oidcPrincipal());
+        if (resolved != null) {
+            ctx.setOidcPrincipal(ctx.oidcPrincipal(), resolved);
+        }
+        return resolved;
+    }
+
+    /**
+     * Lazily resolves or upserts an {@link OidcPrincipal} into a persisted {@link User}
+     * without requiring an active request-scoped {@link AuthContext}. Safe to invoke
+     * from async worker threads (such as streaming SSE workers).
+     *
+     * @param principal verified OIDC / trusted-proxy principal.
+     * @return resolved or newly persisted user, or {@code null} when principal is null
+     *         or references a deleted session user id.
+     */
+    public User ensureOidcUser(OidcPrincipal principal) {
+        if (principal == null) {
+            return null;
+        }
         if (principal.sessionUserId() != null) {
             User cachedById = userCache != null ? userCache.getById(principal.sessionUserId()) : null;
             if (cachedById != null && cachedById.authProvider == AuthProviderKind.OIDC) {
-                ctx.setOidcPrincipal(principal, cachedById);
                 return cachedById;
             }
             User found = QuarkusTransaction.joiningExisting().call(() -> findById(principal.sessionUserId()));
@@ -139,14 +181,12 @@ public class UserService {
                 if (userCache != null) {
                     userCache.register(found);
                 }
-                ctx.setOidcPrincipal(principal, found);
                 return found;
             }
             return null;
         }
         User cached = userCache != null ? userCache.getByExternalId(principal.externalId()) : null;
         if (cached != null) {
-            ctx.setOidcPrincipal(principal, cached);
             return cached;
         }
         String fallbackName = principal.displayName() != null && !principal.displayName().isBlank()
@@ -154,14 +194,14 @@ public class UserService {
                 : (principal.email() != null && !principal.email().isBlank()
                         ? principal.email()
                         : principal.subject());
-        User user = QuarkusTransaction.joiningExisting().call(() ->
+        return QuarkusTransaction.joiningExisting().call(() ->
                 upsertOidcUser(principal.externalId(), principal.email(), fallbackName, principal.avatarUrl()));
-        ctx.setOidcPrincipal(principal, user);
-        return user;
     }
 
     /**
-     * Upserts an OAuth / OIDC user account.
+     * Upserts an OAuth / OIDC user account. Race-safe under concurrent first-request
+     * upserts for the same {@code external_id}: isolates insert in a new transaction and
+     * re-fetches on unique-constraint collision.
      *
      * @param provider {@link AuthProviderKind#GOOGLE}, {@link AuthProviderKind#MICROSOFT}, or {@link AuthProviderKind#OIDC}.
      * @param sub      provider subject / external identifier.
@@ -184,18 +224,57 @@ public class UserService {
         String safePicture = truncate(picture, 1024);
         User user = User.findByExternalId(safeSub);
         if (user == null) {
-            user = new User();
-            user.externalId = safeSub;
-            user.authProvider = provider;
-            user.displayName = safeName != null && !safeName.isBlank() ? safeName : "User";
-            user.email = safeEmail;
-            user.avatarUrl = safePicture;
-            user.persist();
-            if (userCache != null) {
-                userCache.register(user);
+            try {
+                User inserted = QuarkusTransaction.requiringNew().call(() -> {
+                    User again = User.findByExternalId(safeSub);
+                    if (again != null) {
+                        applyProfileUpdates(again, provider, safeEmail, safeName, safePicture);
+                        return again;
+                    }
+                    User fresh = new User();
+                    fresh.externalId = safeSub;
+                    fresh.authProvider = provider;
+                    fresh.displayName = safeName != null && !safeName.isBlank() ? safeName : "User";
+                    fresh.email = safeEmail;
+                    fresh.avatarUrl = safePicture;
+                    fresh.persistAndFlush();
+                    return fresh;
+                });
+                if (userCache != null) {
+                    userCache.register(inserted);
+                }
+                return inserted;
+            } catch (PersistenceException ex) {
+                User winner = QuarkusTransaction.requiringNew().call(() -> {
+                    User existing = User.findByExternalId(safeSub);
+                    if (existing != null) {
+                        applyProfileUpdates(existing, provider, safeEmail, safeName, safePicture);
+                    }
+                    return existing;
+                });
+                if (winner != null) {
+                    if (userCache != null) {
+                        userCache.register(winner);
+                    }
+                    return winner;
+                }
+                throw ex;
             }
-            return user;
         }
+        applyProfileUpdates(user, provider, safeEmail, safeName, safePicture);
+        if (userCache != null) {
+            userCache.register(user);
+        }
+        return user;
+    }
+
+    private static void applyProfileUpdates(
+            User user,
+            AuthProviderKind provider,
+            String safeEmail,
+            String safeName,
+            String safePicture
+    ) {
         user.authProvider = provider;
         if (safeEmail != null && !safeEmail.isBlank()) {
             user.email = safeEmail;
@@ -206,10 +285,6 @@ public class UserService {
         if (safePicture != null && !safePicture.isBlank()) {
             user.avatarUrl = safePicture;
         }
-        if (userCache != null) {
-            userCache.register(user);
-        }
-        return user;
     }
 
     private static String truncate(String value, int maxLength) {

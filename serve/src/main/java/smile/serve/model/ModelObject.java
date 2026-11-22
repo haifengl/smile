@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -20,17 +21,19 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 /**
- * OpenAI-compatible model object returned by {@code GET /models} and
- * {@code GET /models/{id}}, extended with a SMILE {@code kind} discriminator
- * and optional type-specific detail blocks on retrieve.
+ * OpenAI-compatible model object returned by {@code GET /v1/models} and
+ * {@code GET /v1/models/{id}}, extended with a SMILE {@code kind} discriminator,
+ * optional version summary fields, and optional type-specific detail blocks on retrieve.
  *
- * @param id           model identifier referenced by API endpoints.
+ * @param id           model identifier (slug for SMILE/ONNX, served name for LLM).
  * @param created      Unix epoch seconds when the model became available.
  * @param object       always {@code "model"}.
  * @param ownedBy      organization / hub owner.
  * @param shutdownDate optional retirement date; always {@code null} for smile-serve.
  * @param kind         model category: {@link #KIND_LLM}, {@link #KIND_ONNX}, or a
  *                     SMILE algorithm name (e.g. {@code "random-forest"}).
+ * @param version      active/resolved model version string (omitted for LLMs without versions).
+ * @param versions     all loaded versions for this slug in ascending version order (omitted when null).
  * @param smile        SMILE {@code .sml} details (retrieve only).
  * @param onnx         ONNX graph details (retrieve only).
  * @param llm          chat LLM architecture details (retrieve only).
@@ -48,6 +51,8 @@ public record ModelObject(
         String ownedBy,
         String shutdownDate,
         String kind,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String version,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<String> versions,
         @JsonInclude(JsonInclude.Include.NON_NULL) SmileModelDetails smile,
         @JsonInclude(JsonInclude.Include.NON_NULL) OnnxModelDetails onnx,
         @JsonInclude(JsonInclude.Include.NON_NULL) LlmModelDetails llm) {
@@ -62,35 +67,37 @@ public record ModelObject(
     public static final String KIND_ONNX = "ONNX";
 
     /**
-     * Builds a lean list/catalog model object (no type-specific details).
-     *
-     * @param id      public model id.
-     * @param created load / availability timestamp (Unix seconds).
-     * @param ownedBy owner string.
-     * @param kind    {@link #KIND_LLM}, {@link #KIND_ONNX}, or a SMILE algorithm name.
-     * @return the model object.
+     * Builds a lean list/catalog model object (no version metadata or detail blocks).
      */
     public static ModelObject of(String id, long created, String ownedBy, String kind) {
-        return of(id, created, ownedBy, kind, null, null, null);
+        return of(id, created, ownedBy, kind, null, null, null, null, null);
     }
 
     /**
-     * Builds a model object, optionally with retrieve-only detail blocks.
-     *
-     * @param id      public model id.
-     * @param created load / availability timestamp (Unix seconds).
-     * @param ownedBy owner string.
-     * @param kind    {@link #KIND_LLM}, {@link #KIND_ONNX}, or a SMILE algorithm name.
-     * @param smile   SMILE details, or {@code null}.
-     * @param onnx    ONNX details, or {@code null}.
-     * @param llm     LLM details, or {@code null}.
-     * @return the model object.
+     * Builds a lean versioned list/catalog model object (no retrieve-only detail blocks).
+     */
+    public static ModelObject of(String id, long created, String ownedBy, String kind,
+                                 String version, List<String> versions) {
+        return of(id, created, ownedBy, kind, version, versions, null, null, null);
+    }
+
+    /**
+     * Builds a model object without version fields, optionally with retrieve-only detail blocks.
      */
     public static ModelObject of(String id, long created, String ownedBy, String kind,
                                  SmileModelDetails smile, OnnxModelDetails onnx, LlmModelDetails llm) {
+        return of(id, created, ownedBy, kind, null, null, smile, onnx, llm);
+    }
+
+    /**
+     * Builds a model object with optional version metadata and retrieve-only detail blocks.
+     */
+    public static ModelObject of(String id, long created, String ownedBy, String kind,
+                                 String version, List<String> versions,
+                                 SmileModelDetails smile, OnnxModelDetails onnx, LlmModelDetails llm) {
         String owner = (ownedBy == null || ownedBy.isBlank()) ? UNKNOWN_OWNER : ownedBy;
         String k = (kind == null || kind.isBlank()) ? UNKNOWN_OWNER : kind.trim();
-        return new ModelObject(id, created, "model", owner, null, k, smile, onnx, llm);
+        return new ModelObject(id, created, "model", owner, null, k, version, versions, smile, onnx, llm);
     }
 
     /**

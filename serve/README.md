@@ -9,13 +9,18 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering, vector quantization, and anomaly detection |
-| **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions |
-| **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
+| **Classic ML** | `/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering, vector quantization, and anomaly detection |
+| **ONNX Runtime** | `/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
+| **LLM Chat** | `/v1/chat` | OpenAI-compatible chat completions |
+| **Models** | `/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
+| **Web UI / Auth / History** | `/api/v1/*` | Authentication (`/api/v1/auth`), user profiles (`/api/v1/users/me`), conversation history (`/api/v1/conversations`), and media blobs (`/api/v1/media`) |
 | **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models (when built with the optional `metrics-prometheus` plugin in `serve/plugins/`) |
 
 A React-based web UI is bundled and served from the same process.
+
+> **Breaking API Changes**
+> - **Inference & OpenAI-compatible endpoints moved to `/v1/*`:** `/v1/smile/*`, `/v1/onnx/*`, `/v1/models/*`, and `/v1/chat/completions` are no longer served under `/api/v1/*` (no compatibility redirect). Application/UI endpoints (`/api/v1/auth/*`, `/api/v1/users/*`, `/api/v1/conversations/*`, `/api/v1/media/*`) remain under `/api/v1/*`.
+> - **Clean model slugs & explicit versioning:** `.sml` model IDs no longer append `-<version>` (for example `iris_random_forest` instead of `iris_random_forest-1`), matching ONNX model IDs. Multiple versions of the same slug can be co-served via `/v1/{smile,onnx}/{slug}/versions/{version}` and `/v1/{smile,onnx}/{slug}/aliases/{alias}` (see [§5.6](#56-model-ids-versions-aliases-and-modelsjson)).
 
 ---
 
@@ -44,7 +49,7 @@ A React-based web UI is bundled and served from the same process.
    - [Single Inference (JSON)](#53-single-inference-json)
    - [Streaming Inference (CSV / JSON-lines)](#54-streaming-inference-csv--json-lines)
    - [Online Learning Updates](#55-online-learning-updates)
-   - [Model IDs](#56-model-ids)
+   - [Model IDs, Versions, Aliases, and `models.json`](#56-model-ids-versions-aliases-and-modelsjson)
    - [Model Health and Metrics](#57-model-health-and-metrics)
    - [Model Lifecycle Control (Reload & Unload)](#58-model-lifecycle-control-reload--unload)
 6. [ONNX Inference API](#6-onnx-inference-api)
@@ -295,7 +300,7 @@ Runtime and ONNX-GENAI native libraries installed and configured; see
 ### 1.4 Health and Metrics Endpoints
 
 Operational endpoints follow the Quarkus `/q/` convention, separate from the
-business API under `/api/v1`. Health probes are provided by SmallRye Health;
+inference API under `/v1` and the application/UI API under `/api/v1`. Health probes are provided by SmallRye Health;
 Prometheus metrics (`/q/metrics`) are exposed when a metrics plugin (such as
 `metrics-prometheus`) is included in `serve/plugins/`.
 
@@ -678,7 +683,7 @@ Quarkus app inside Docker and takes the same `QUARKUS_PROFILE` build argument. T
 | `dev` / `test` | `quarkusDev` / unit tests | H2 (file / in-memory) |
 
 `native-micro` builds with `-Dquarkus.profile=micro` (see the `%micro.*` block in `application.properties`).
-Chat and auth endpoints return 404, and `POST /api/v1/models/load` with a chat model returns 503. The chat
+Chat and auth endpoints return 404, and `POST /v1/models/load` with a chat model returns 503. The chat
 page of the web UI therefore shows errors; the SMILE and ONNX inference pages work.
 
 `native-micro` can be built smaller still with `--build-arg GRADLE_ARGS="-Dquarkus.native.additional-build-args-append=-Os"`
@@ -714,9 +719,12 @@ the corresponding profiles.
 | `quarkus.http.host` | `0.0.0.0` | HTTP bind address (use `127.0.0.1` for loopback-only) |
 | `quarkus.http.domain-socket-enabled` | `false` | Enable Unix domain socket listener on Linux (`quarkus.vertx.prefer-native-transport=true` is enabled by default) |
 | `quarkus.http.domain-socket` | `/var/run/smile-serve.sock` | Unix domain socket path when `quarkus.http.domain-socket-enabled=true` |
-| `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
-| `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
-| `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
+| `smile.serve.model` | `/model` | Path to a `.sml` file or directory of `.sml` models (flat, versioned `<slug>/<version>/`, or with `models.json`) |
+| `smile.serve.served-model-id` | _(unset)_ | Optional explicit slug override when serving a single `.sml` model without `models.json` |
+| `smile.serve.manifest` | _(unset)_ | Optional explicit path to a `models.json` manifest (auto-detected at `<model>/models.json` when unset) |
+| `smile.onnx.model` | `/model` | Path to a `.onnx` file or directory of `.onnx` models (flat, versioned `<slug>/<version>/`, or with `models.json`) |
+| `smile.onnx.served-model-id` | _(unset)_ | Optional explicit slug override when serving a single `.onnx` model without `models.json` |
+| `smile.onnx.manifest` | _(unset)_ | Optional explicit path to a `models.json` manifest (auto-detected at `<model>/models.json` when unset) |
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model`, `tokenizer.model`, or HF `tokenizer.json` for AWQ/GPTQ cards) |
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
 | `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. A waiting request is admitted only when free KV can reserve its full `prompt + max_tokens` window (capped by `max-seq-len`); otherwise it stays queued. |
@@ -779,21 +787,21 @@ is loaded; if it is a directory every `.sml` file in the directory is loaded.
 ### 5.2 Get Model Metadata
 
 Returns the algorithm name, input schema, online-learning capability, response variable metadata (for supervised models), and tags for a model.
-Use `GET /api/v1/models` to discover loaded model IDs.
+Use `GET /v1/models` to discover loaded model IDs.
 
 ```
-GET /api/v1/smile/{id}
+GET /v1/smile/{id}
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/smile/iris_random_forest-1
+curl http://localhost:8080/v1/smile/iris_random_forest
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "algorithm": "random-forest",
   "schema": {
     "petallength": { "type": "float", "nullable": false },
@@ -811,7 +819,7 @@ curl http://localhost:8080/api/v1/smile/iris_random_forest-1
 ```
 
 - `schema` — lists every input feature in alphabetical order (the **column order** used by the CSV streaming endpoints).
-- `online` — `true` if the model supports online learning updates via `POST /api/v1/smile/{id}/update` (e.g. `VectorQuantizerModel` or online supervised models such as `logistic`, `mlp`, `ols --recursive`).
+- `online` — `true` if the model supports online learning updates via `POST /v1/smile/{id}/update` (e.g. `VectorQuantizerModel` or online supervised models such as `logistic`, `mlp`, `ols --recursive`).
 - `response` / `responseType` — response variable name and type (`"integer"` for classification, `"double"` for regression); omitted (`null`) for unsupervised models (`ClusteringModel`, `VectorQuantizerModel`, `AnomalyModel`).
 
 ### 5.3 Single Inference (JSON)
@@ -819,7 +827,7 @@ curl http://localhost:8080/api/v1/smile/iris_random_forest-1
 Send one sample as a JSON object and receive the prediction synchronously.
 
 ```
-POST /api/v1/smile/{id}
+POST /v1/smile/{id}
 Content-Type: application/json
 ```
 
@@ -829,7 +837,7 @@ defined in the model schema. **All non-nullable fields are required.**
 **Classification example (`ClassificationModel`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
+curl -X POST http://localhost:8080/v1/smile/iris_random_forest \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -850,7 +858,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
 
 ```shell
 curl --unix-socket /var/run/smile-serve.sock \
-  -X POST http://localhost/api/v1/smile/iris_random_forest-1 \
+  -X POST http://localhost/v1/smile/iris_random_forest \
   -H "Content-Type: application/json" \
   -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 ```
@@ -858,7 +866,7 @@ curl --unix-socket /var/run/smile-serve.sock \
 **Clustering example (`ClusteringModel`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_kmeans-1 \
+curl -X POST http://localhost:8080/v1/smile/iris_kmeans \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -878,7 +886,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_kmeans-1 \
 **Vector quantization example (`VectorQuantizerModel`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_som-1 \
+curl -X POST http://localhost:8080/v1/smile/iris_som \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -899,7 +907,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_som-1 \
 **Anomaly detection example (`AnomalyModel`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_iforest-1 \
+curl -X POST http://localhost:8080/v1/smile/iris_iforest \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -930,7 +938,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_iforest-1 \
 Explanations can be requested by passing `"enableExplanations": true` in the JSON body, or appending `?explain=true` to the URL.
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=true" \
+curl -X POST "http://localhost:8080/v1/smile/iris_random_forest?explain=true" \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -966,7 +974,7 @@ For models using **KernelSHAP**, optional per-request parameters can be passed a
 | `ridge` | `shapRidge` / `shap.ridge` | `double` | `1e-8` | L2 regularization penalty for weighted least squares (`>= 0`, finite). |
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/smile/iris_lda-1?explain=true&samples=256&ridge=1e-6" \
+curl -X POST "http://localhost:8080/v1/smile/iris_lda?explain=true&samples=256&ridge=1e-6" \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -991,7 +999,7 @@ stream emitting structured JSON objects — one `data:` line per input sample.
 Append `?explain=true` to include explanations in each streaming event.
 
 ```
-POST /api/v1/smile/{id}/stream
+POST /v1/smile/{id}/stream
 Content-Type: text/plain          ← CSV mode
 Content-Type: application/json   ← JSON-lines mode
 ```
@@ -1000,13 +1008,13 @@ Content-Type: application/json   ← JSON-lines mode
 
 Each non-blank line is a comma-separated row of feature values in the **same
 column order as the model schema** (alphabetical by field name, as shown by
-`GET /api/v1/smile/{id}`).
+`GET /v1/smile/{id}`).
 
 ```shell
 cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
+  http://localhost:8080/v1/smile/iris_random_forest/stream
 ```
 
 Where `iris.csv` might contain:
@@ -1036,7 +1044,7 @@ This is more verbose but supports named fields in any order. Each sample can als
 cat iris.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
+  http://localhost:8080/v1/smile/iris_random_forest/stream
 ```
 
 Where `iris.jsonl` contains:
@@ -1048,14 +1056,14 @@ Where `iris.jsonl` contains:
 
 ### 5.5 Online Learning Updates
 
-Models that support online learning (`model.isOnline() == true`, reported as `"online": true` by `GET /api/v1/smile/{id}`) can be updated incrementally at runtime without full retraining. This includes all `VectorQuantizerModel` algorithms (`som`, `neural-gas`, `growing-neural-gas`, `neural-map`, `birch`) as well as online supervised models (such as `logistic`, `mlp`, and `ols --recursive`).
+Models that support online learning (`model.isOnline() == true`, reported as `"online": true` by `GET /v1/smile/{id}`) can be updated incrementally at runtime without full retraining. This includes all `VectorQuantizerModel` algorithms (`som`, `neural-gas`, `growing-neural-gas`, `neural-map`, `birch`) as well as online supervised models (such as `logistic`, `mlp`, and `ols --recursive`).
 
 Online update endpoints are restricted to `localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly`. Non-localhost requests are rejected with **HTTP 403 Forbidden**. Calling `/update` on a model that does not support online learning returns **HTTP 400 Bad Request**.
 
 #### Single observation update (JSON)
 
 ```
-POST /api/v1/smile/{id}/update?persist=false
+POST /v1/smile/{id}/update?persist=false
 Content-Type: application/json
 ```
 
@@ -1065,7 +1073,7 @@ Content-Type: application/json
 
 ```shell
 # Unsupervised online update (SOM vector quantizer) and persist to disk
-curl -X POST "http://localhost:8080/api/v1/smile/iris_som-1/update?persist=true" \
+curl -X POST "http://localhost:8080/v1/smile/iris_som/update?persist=true" \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -1078,7 +1086,7 @@ curl -X POST "http://localhost:8080/api/v1/smile/iris_som-1/update?persist=true"
 ```json
 {
   "status": "updated",
-  "id": "iris_som-1",
+  "id": "iris_som",
   "updated": 1,
   "persisted": true,
   "timestamp": 1728087390
@@ -1087,7 +1095,7 @@ curl -X POST "http://localhost:8080/api/v1/smile/iris_som-1/update?persist=true"
 
 ```shell
 # Supervised online update (Logistic Regression with response column "class")
-curl -X POST http://localhost:8080/api/v1/smile/iris_logit-1/update \
+curl -X POST http://localhost:8080/v1/smile/iris_logit/update \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -1101,7 +1109,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_logit-1/update \
 #### Batch / streaming online update (CSV / JSON-lines)
 
 ```
-POST /api/v1/smile/{id}/update/stream?persist=false
+POST /v1/smile/{id}/update/stream?persist=false
 Content-Type: text/plain          ← CSV mode
 Content-Type: application/json   ← JSON-lines mode
 ```
@@ -1112,26 +1120,77 @@ Processes multiple observations sequentially and optionally persists the model o
 cat new_samples.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  "http://localhost:8080/api/v1/smile/iris_som-1/update/stream?persist=true"
+  "http://localhost:8080/v1/smile/iris_som/update/stream?persist=true"
 ```
 
 ```json
 {
   "status": "updated",
-  "id": "iris_som-1",
+  "id": "iris_som",
   "updated": 2,
   "persisted": true,
   "timestamp": 1728087395
 }
 ```
 
-### 5.6 Model IDs
+### 5.6 Model IDs, Versions, Aliases, and `models.json`
 
-A model's ID is constructed as `<name>-<version>` from the model's embedded
-metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
-If those tags are absent, the file name stem is used as the name and `"1"` as
-the version. For example, a file named `iris_random_forest.sml` with no ID
-tag gets the ID `iris_random_forest-1`.
+Every `.sml` and `.onnx` model is identified by a structured `(slug, version)` pair:
+
+- **Slug** (`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$`): the public model identifier used in `/v1/models`, `/v1/smile/{slug}`, and `/v1/onnx/{slug}`.
+- **Version** (`^[a-zA-Z0-9][a-zA-Z0-9._+-]{0,63}$`): numeric or SemVer version string (default `"1"`), ordered with numeric/SemVer precedence (`2 < 10`, `1.2.0-rc1 < 1.2.0 < 1.10.0`).
+- **Resolution precedence**:
+  1. Explicit override via `POST /v1/models/load` (`slug`, `version`) or single-model `served-model-id`
+  2. Declarative `models.json` manifest
+  3. Versioned directory structure (`<dir>/<slug>/<version>/<file>.(sml|onnx)`)
+  4. Embedded metadata (`Model.ID` / `Model.VERSION` for `.sml`; custom metadata `id`/`name` & `version` or protobuf `model_version > 0` for `.onnx`)
+  5. File name stem and version `"1"` (e.g. `iris_random_forest.sml` → slug `iris_random_forest`, version `"1"`)
+
+#### Versioned directory layout & `models.json`
+
+A model directory may mix flat files, versioned subdirectories (`<slug>/<version>/<artifact>`), and an optional `models.json` manifest:
+
+```json
+{
+  "auto_discover": true,
+  "models": [
+    {
+      "slug": "fraud",
+      "kind": "sml",
+      "versions": {
+        "1": "fraud_rf.sml",
+        "2": "fraud_gb.sml"
+      },
+      "default": "1",
+      "aliases": {
+        "stable": "1",
+        "canary": "2"
+      }
+    },
+    {
+      "slug": "vision-cls",
+      "kind": "onnx",
+      "path": "squeezenet.onnx",
+      "version": "1.0"
+    }
+  ]
+}
+```
+
+Set `"auto_discover": false` to restrict loading strictly to models declared in `models.json`.
+
+#### Addressing versions and mutable aliases
+
+| Route | Behavior |
+|---|---|
+| `/v1/{smile,onnx}/{slug}` | Routes to the slug's `default` alias (pinned version, or highest loaded version `latest` when unpinned) |
+| `/v1/{smile,onnx}/{slug}/versions` | Lists loaded `versions`, `default`, `latest`, and `aliases` |
+| `/v1/{smile,onnx}/{slug}/versions/{version}` | Pins a specific version (also supports `/health`, `/stream`, `/reload`, `/unload`, and `/update`) |
+| `/v1/{smile,onnx}/{slug}/aliases/{alias}` | Routes via `default`, reserved `latest`, or a custom alias (`canary`, `stable`, …) |
+| `PUT /v1/{smile,onnx}/{slug}/aliases/{alias}` | Assigns or promotes an alias (`{"version": "2"}`), including `default` (`@LocalhostOnly`) |
+| `DELETE /v1/{smile,onnx}/{slug}/aliases/{alias}` | Removes a custom alias, or unpins `default` back to tracking `latest` (`@LocalhostOnly`) |
+
+Every inference and metadata response includes `X-Model-Id` and `X-Model-Version` headers identifying the concrete artifact served.
 
 ### 5.7 Model Health and Metrics
 
@@ -1141,16 +1200,16 @@ inference latency of a loaded SMILE model.
 #### Health status
 
 ```
-GET /api/v1/smile/{id}/health
+GET /v1/smile/{id}/health
 ```
 
 ```shell
-curl http://localhost:8080/api/v1/smile/iris_random_forest-1/health
+curl http://localhost:8080/v1/smile/iris_random_forest/health
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "status": "ACTIVE",
   "in_flight_requests": 0,
   "uptime_seconds": 182
@@ -1168,7 +1227,7 @@ Per-model metrics are exposed through the unified Prometheus endpoint
 per-model JSON endpoint. Every series carries a `model_id` label.
 
 ```shell
-curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest-1'
+curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest'
 ```
 
 | Metric | Type | Description |
@@ -1198,17 +1257,17 @@ the new model atomically replaces the active instance. If the model was previous
 unloaded, it is restored into active memory:
 
 ```
-POST /api/v1/smile/{id}/reload
+POST /v1/smile/{id}/reload
 ```
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1/reload
+curl -X POST http://localhost:8080/v1/smile/iris_random_forest/reload
 ```
 
 ```json
 {
   "status": "reloaded",
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "path": "/model/iris_random_forest.sml",
   "algorithm": "random-forest",
   "timestamp": 1728087382
@@ -1222,19 +1281,19 @@ model state to `UNLOADING`, stops accepting new requests (returning `503`), and
 gracefully waits for in-flight requests to finish:
 
 ```
-POST /api/v1/smile/{id}/unload?timeout=10
+POST /v1/smile/{id}/unload?timeout=10
 ```
 
 - `timeout` *(optional, default `10`)*: Maximum seconds to wait for active in-flight requests to complete.
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1/unload?timeout=5"
+curl -X POST "http://localhost:8080/v1/smile/iris_random_forest/unload?timeout=5"
 ```
 
 ```json
 {
   "status": "unloaded",
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "drained": true,
   "timestamp": 1728087400
 }
@@ -1270,14 +1329,14 @@ aborting the whole serve process. Download pre-built binaries from the
 ### 6.2 Get ONNX Model Info
 
 Returns graph metadata and the typed, shaped input/output node descriptors.
-Use `GET /api/v1/models` to discover loaded model IDs.
+Use `GET /v1/models` to discover loaded model IDs.
 
 ```
-GET /api/v1/onnx/{id}
+GET /v1/onnx/{id}
 ```
 
 ```shell
-curl http://localhost:8080/api/v1/onnx/resnet50
+curl http://localhost:8080/v1/onnx/resnet50
 ```
 
 ```json
@@ -1312,7 +1371,7 @@ inference time from the input data).
 ### 6.3 Single Inference (JSON)
 
 ```
-POST /api/v1/onnx/{id}
+POST /v1/onnx/{id}
 Content-Type: application/json
 ```
 
@@ -1323,7 +1382,7 @@ declared element type and shape.
 **Example — image classification (resnet50, 1×3×224×224 = 150528 floats):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/onnx/resnet50 \
+curl -X POST http://localhost:8080/v1/onnx/resnet50 \
   -H "Content-Type: application/json" \
   -d '{"input": [0.485, 0.456, 0.406, ...]}'
 ```
@@ -1348,7 +1407,7 @@ scores as class probabilities (same as `InferenceSessionTest` in `core`).
 **Multi-input model example:**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
+curl -X POST http://localhost:8080/v1/onnx/bert_classifier \
   -H "Content-Type: application/json" \
   -d '{
     "input_ids":      [101, 2054, 2003, 1996, 3007, 1997, 2605, 1029, 102],
@@ -1360,7 +1419,7 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
 **String input model example (e.g. scikit-learn pipeline with categorical string features or text inputs):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/onnx/pipeline_classifier \
+curl -X POST http://localhost:8080/v1/onnx/pipeline_classifier \
   -H "Content-Type: application/json" \
   -d '{
     "category": ["electronics", "apparel"],
@@ -1392,7 +1451,7 @@ Identical in structure to the classic ML streaming endpoint but returns
 JSON objects:
 
 ```
-POST /api/v1/onnx/{id}/stream
+POST /v1/onnx/{id}/stream
 Content-Type: text/plain          ← CSV floats for single-input models
 Content-Type: application/json   ← JSON-lines for multi-input models
 ```
@@ -1403,7 +1462,7 @@ Content-Type: application/json   ← JSON-lines for multi-input models
 cat features.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/onnx/my_classifier/stream
+  http://localhost:8080/v1/onnx/my_classifier/stream
 ```
 
 Each response line is a compact JSON object:
@@ -1420,7 +1479,7 @@ data: {"output":[0.88,0.07,0.05]}
 cat samples.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/onnx/bert_classifier/stream
+  http://localhost:8080/v1/onnx/bert_classifier/stream
 ```
 
 ### 6.5 Tensor Types and Shape Resolution
@@ -1444,11 +1503,11 @@ of an ONNX model.
 #### Health status
 
 ```
-GET /api/v1/onnx/{id}/health
+GET /v1/onnx/{id}/health
 ```
 
 ```shell
-curl http://localhost:8080/api/v1/onnx/resnet50/health
+curl http://localhost:8080/v1/onnx/resnet50/health
 ```
 
 ```json
@@ -1495,11 +1554,11 @@ backing `.onnx` file on disk, atomically updating the model and closing the old
 session:
 
 ```
-POST /api/v1/onnx/{id}/reload
+POST /v1/onnx/{id}/reload
 ```
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/onnx/resnet50/reload
+curl -X POST http://localhost:8080/v1/onnx/resnet50/reload
 ```
 
 ```json
@@ -1518,11 +1577,11 @@ drain, closes the native session to free native memory/GPU resources, and remove
 it from active memory:
 
 ```
-POST /api/v1/onnx/{id}/unload?timeout=10
+POST /v1/onnx/{id}/unload?timeout=10
 ```
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/onnx/resnet50/unload?timeout=5"
+curl -X POST "http://localhost:8080/v1/onnx/resnet50/unload?timeout=5"
 ```
 
 ```json
@@ -1638,7 +1697,7 @@ select it outside the chat API (the chat endpoint is text-only).
 ### 7.2 List models
 
 ```
-GET /api/v1/models
+GET /v1/models
 ```
 
 OpenAI-compatible catalog of **all** loaded models — chat LLMs, ONNX graphs,
@@ -1646,10 +1705,10 @@ and SMILE {@code .sml} models
 ([List models](https://developers.openai.com/api/reference/resources/models/methods/list)).
 
 Inference still uses type-specific paths:
-`/api/v1/chat/completions`, `/api/v1/onnx/{id}`, `/api/v1/smile/{id}`.
+`/v1/chat/completions`, `/v1/onnx/{id}`, `/v1/smile/{id}`.
 
 ```shell
-curl http://localhost:8080/api/v1/models
+curl http://localhost:8080/v1/models
 ```
 
 ```json
@@ -1665,7 +1724,7 @@ curl http://localhost:8080/api/v1/models
       "kind": "LLM"
     },
     {
-      "id": "iris_random_forest-1",
+      "id": "iris_random_forest",
       "object": "model",
       "created": 1710000000,
       "owned_by": "Unknown",
@@ -1700,7 +1759,7 @@ curl http://localhost:8080/api/v1/models
 ### 7.3 Retrieve model
 
 ```
-GET /api/v1/models/{id}
+GET /v1/models/{id}
 ```
 
 OpenAI-compatible
@@ -1727,12 +1786,12 @@ For SMILE `.sml` models, `smile.train` reports summary metrics specific to the m
 List responses omit `smile` / `onnx` / `llm` so the catalog stays lean.
 
 ```shell
-curl http://localhost:8080/api/v1/models/iris_random_forest-1
+curl http://localhost:8080/v1/models/iris_random_forest
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "object": "model",
   "created": 1710000000,
   "owned_by": "Unknown",
@@ -1760,7 +1819,7 @@ Load a new model from disk or Hugging Face Hub dynamically into active memory
 without restarting the server process:
 
 ```
-POST /api/v1/models/load
+POST /v1/models/load
 Content-Type: application/json
 ```
 
@@ -1773,16 +1832,20 @@ Remote requests return **HTTP 403 Forbidden**.
 |---|---|---|---|
 | `model` | `string` | **Yes** | Local file or directory path, or Hugging Face repo ID (`owner/name`) |
 | `kind` | `string` | No (default `auto`) | Model kind: `sml` / `smile`, `onnx`, `llm` / `chat`, or `auto` |
+| `slug` (or `id`) | `string` | No | Explicit model slug override (single-artifact `.sml`/`.onnx` loads) |
+| `version` | `string` | No | Explicit model version string (single-artifact `.sml`/`.onnx` loads) |
+| `alias` / `aliases` | `string` / `string[]` | No | Optional alias(es) to bind to the loaded version |
+| `set_default` | `boolean` | No | `true` pins `default` to this version; `false` pins the existing default so this version does not hijack default traffic |
 | `config` | `object` | No | Serving configuration overrides (chat and ONNX GenAI models only) |
 
 #### Conflict handling (409 Conflict)
 
-To maintain a clean API contract without overlapping responsibilities, `POST /api/v1/models/load`
+To maintain a clean API contract without overlapping responsibilities, `POST /v1/models/load`
 strictly rejects any model whose ID is already loaded in active memory with **HTTP 409 Conflict**:
 
 ```json
 {
-  "error": "Model 'iris_random_forest-1' is already loaded. Use POST /api/v1/smile/iris_random_forest-1/reload to refresh it, or unload it first."
+  "error": "Model 'iris_random_forest' is already loaded. Use POST /v1/smile/iris_random_forest/reload to refresh it, or unload it first."
 }
 ```
 
@@ -1791,7 +1854,7 @@ strictly rejects any model whose ID is already loaded in active memory with **HT
 **1. Load a SMILE `.sml` model:**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/models/load \
+curl -X POST http://localhost:8080/v1/models/load \
   -H "Content-Type: application/json" \
   -d '{"model": "/model/iris_random_forest.sml", "kind": "smile"}'
 ```
@@ -1801,8 +1864,8 @@ curl -X POST http://localhost:8080/api/v1/models/load \
   "status": "loaded",
   "kind": "sml",
   "model": "/model/iris_random_forest.sml",
-  "ids": ["iris_random_forest-1"],
-  "id": "iris_random_forest-1",
+  "ids": ["iris_random_forest"],
+  "id": "iris_random_forest",
   "algorithm": "random-forest"
 }
 ```
@@ -1810,7 +1873,7 @@ curl -X POST http://localhost:8080/api/v1/models/load \
 **2. Load an ONNX model:**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/models/load \
+curl -X POST http://localhost:8080/v1/models/load \
   -H "Content-Type: application/json" \
   -d '{"model": "/model/resnet50.onnx", "kind": "onnx"}'
 ```
@@ -1828,7 +1891,7 @@ curl -X POST http://localhost:8080/api/v1/models/load \
 **3. Load a Chat / LLM model with configuration overrides:**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/models/load \
+curl -X POST http://localhost:8080/v1/models/load \
   -H "Content-Type: application/json" \
   -d '{
     "model": "microsoft/Phi-4-mini-instruct-onnx",
@@ -1857,7 +1920,7 @@ curl -X POST http://localhost:8080/api/v1/models/load \
 ### 7.5 Chat Completions
 
 ```
-POST /api/v1/chat/completions
+POST /v1/chat/completions
 Content-Type: application/json
 ```
 
@@ -1902,7 +1965,7 @@ OpenAI-compatible tool calling is supported for latest Qwen checkpoints (XML
 `<tool_call>` format). Clients run tools locally and continue the dialog:
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role": "user", "content": "What is the weather in SF?"}],
@@ -1930,13 +1993,13 @@ replays `delta.tool_calls` at the end (not token-true XML streaming).
 Smoke test with the OpenAI Python SDK:
 
 ```shell
-python serve/scripts/test_tool_calling.py --base-url http://localhost:8888/api/v1
+python serve/scripts/test_tool_calling.py --base-url http://localhost:8888/v1
 ```
 
 **Streaming example (`stream: true`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -N \
   -d '{
@@ -1956,7 +2019,7 @@ events, terminated by `data: [DONE]`.
 **Non-streaming example (`stream` omitted or `false`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [
@@ -1991,7 +2054,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
 **Example — continue a previous conversation:**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -N \
   -d '{
@@ -2291,12 +2354,6 @@ The test class `InferenceResourceTest` covers:
 
 ## API Quick Reference
 
-### System & Health — `/api/v1`
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/models/load` | Dynamically load a model (.sml, .onnx, or LLM) into active memory (localhost only) |
-
 ### Operational — `/q`
 
 | Method | Path | Description |
@@ -2307,41 +2364,64 @@ The test class `InferenceResourceTest` covers:
 | `GET` | `/q/health/started` | Startup probe |
 | `GET` | `/q/metrics` | Prometheus scrape endpoint (all models) |
 
-### Classic ML — `/api/v1/smile`
+### Unified Model Catalog — `/v1/models`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/smile/{id}` | Get model metadata and schema |
-| `GET` | `/smile/{id}/health` | Model health status and active request count |
-| `POST` | `/smile/{id}` | Single JSON inference |
-| `POST` | `/smile/{id}/stream` | Streaming CSV or JSON-lines inference |
-| `POST` | `/smile/{id}/reload` | Reload model from disk (localhost only) |
-| `POST` | `/smile/{id}/unload` | Gracefully unload model from memory (localhost only) |
+| `GET` | `/v1/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible; one entry per slug with `version` and `versions`) |
+| `GET` | `/v1/models/{id}` | Retrieve a model by slug (or HF repo ID) |
+| `GET` | `/v1/models/{slug}/versions/{version}` | Retrieve a specific loaded version of a SMILE or ONNX model |
+| `GET` | `/v1/models/{slug}/aliases/{alias}` | Retrieve a SMILE or ONNX model version by alias (`default`, `latest`, or custom) |
+| `POST` | `/v1/models/load` | Dynamically load a model (`.sml`, `.onnx`, or LLM) into active memory (localhost only) |
 
-### ONNX — `/api/v1/onnx`
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/onnx/{id}` | Get graph info, input/output shapes |
-| `GET` | `/onnx/{id}/health` | ONNX model health status and active request count |
-| `POST` | `/onnx/{id}` | Single JSON inference |
-| `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
-| `POST` | `/onnx/{id}/reload` | Reload ONNX model from disk (localhost only) |
-| `POST` | `/onnx/{id}/unload` | Gracefully unload ONNX model from memory (localhost only) |
-
-### Chat — `/api/v1/models`, `/api/v1/chat`, `/api/v1/conversations`
+### Classic ML — `/v1/smile`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/models` | List all loaded models — chat, ONNX, SMILE (OpenAI-compatible) |
-| `GET` | `/models/{id}` | Retrieve a model by id (OpenAI-compatible) |
-| `POST` | `/chat/completions` | Chat completion — SSE when `stream: true`, JSON when `stream: false` |
-| `GET` | `/conversations` | List conversations (paginated; smile extension) |
-| `GET` | `/conversations/{conversation_id}` | Retrieve conversation (OpenAI-compatible) |
-| `POST` | `/conversations` | Create conversation (OpenAI-compatible) |
-| `POST` | `/conversations/{conversation_id}` | Update conversation metadata (OpenAI-compatible) |
-| `DELETE` | `/conversations/{conversation_id}` | Delete conversation (OpenAI-compatible) |
-| `GET` | `/conversations/{conversation_id}/items` | List message turns (paginated; smile extension) |
+| `GET` | `/v1/smile/{slug}` | Get default version metadata and schema (also `/versions/{version}`, `/aliases/{alias}`) |
+| `GET` | `/v1/smile/{slug}/versions` | List loaded versions, `default`, `latest`, and custom aliases |
+| `GET` | `/v1/smile/{slug}/health` | Model health status and active request count (also `/versions/{version}/health`, `/aliases/{alias}/health`) |
+| `POST` | `/v1/smile/{slug}` | Single JSON inference (also `/versions/{version}`, `/aliases/{alias}`) |
+| `POST` | `/v1/smile/{slug}/stream` | Streaming CSV or JSON-lines inference (also `/versions/{version}/stream`, `/aliases/{alias}/stream`) |
+| `POST` | `/v1/smile/{slug}/update` | Online learning single update (also `/versions/{version}/update`, `/aliases/{alias}/update`, plus `/update/stream`; localhost only) |
+| `POST` | `/v1/smile/{slug}/reload` | Reload default version from disk (or `/versions/{version}/reload`; localhost only) |
+| `POST` | `/v1/smile/{slug}/unload` | Gracefully unload all versions of slug (or `/versions/{version}/unload` for a single version; localhost only) |
+| `PUT` | `/v1/smile/{slug}/aliases/{alias}` | Assign or promote an alias (including `default`; localhost only) |
+| `DELETE` | `/v1/smile/{slug}/aliases/{alias}` | Remove an alias or unpin `default` back to `latest` (localhost only) |
+
+### ONNX — `/v1/onnx`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/v1/onnx/{slug}` | Get graph info, input/output shapes (also `/versions/{version}`, `/aliases/{alias}`) |
+| `GET` | `/v1/onnx/{slug}/versions` | List loaded versions, `default`, `latest`, and custom aliases |
+| `GET` | `/v1/onnx/{slug}/health` | ONNX model health status and active request count (also `/versions/{version}/health`, `/aliases/{alias}/health`) |
+| `POST` | `/v1/onnx/{slug}` | Single JSON inference (also `/versions/{version}`, `/aliases/{alias}`) |
+| `POST` | `/v1/onnx/{slug}/stream` | Streaming CSV or JSON-lines inference (also `/versions/{version}/stream`, `/aliases/{alias}/stream`) |
+| `POST` | `/v1/onnx/{slug}/reload` | Reload default version from disk (or `/versions/{version}/reload`; localhost only) |
+| `POST` | `/v1/onnx/{slug}/unload` | Gracefully unload all versions of slug (or `/versions/{version}/unload` for a single version; localhost only) |
+| `PUT` | `/v1/onnx/{slug}/aliases/{alias}` | Assign or promote an alias (including `default`; localhost only) |
+| `DELETE` | `/v1/onnx/{slug}/aliases/{alias}` | Remove an alias or unpin `default` back to `latest` (localhost only) |
+
+### LLM Chat — `/v1/chat`
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/v1/chat/completions` | Chat completion — SSE when `stream: true`, JSON when `stream: false` (OpenAI-compatible) |
+
+### Web UI, Auth & Conversation History — `/api/v1`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/v1/auth/me` | Current user (`logged_in`, `user` profile) or guest |
+| `GET` | `/api/v1/users/me` | Authenticated user profile (`PATCH` to update) |
+| `GET` | `/api/v1/conversations` | List conversations (paginated; smile extension) |
+| `GET` | `/api/v1/conversations/{conversation_id}` | Retrieve conversation |
+| `POST` | `/api/v1/conversations` | Create conversation |
+| `POST` | `/api/v1/conversations/{conversation_id}` | Update conversation metadata |
+| `DELETE` | `/api/v1/conversations/{conversation_id}` | Delete conversation |
+| `GET` | `/api/v1/conversations/{conversation_id}/items` | List message turns (paginated; smile extension) |
+| `GET` | `/api/v1/media/{content_id}` | Retrieve stored multimedia blob |
 
 
 ---

@@ -22,17 +22,21 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ServiceUnavailableException;
+import smile.serve.model.ModelRef;
+import smile.serve.model.ModelSource;
 import smile.serve.model.OnnxModelDetails;
 import smile.onnx.ElementType;
 import smile.onnx.InferenceSession;
 import smile.onnx.NodeInfo;
 import smile.onnx.OrtValue;
 import smile.onnx.TensorInfo;
+import smile.io.Paths;
 
 /**
  * Wraps a loaded ONNX {@link InferenceSession} and exposes a high-level
@@ -80,8 +84,8 @@ public class OnnxModel implements AutoCloseable {
         UNLOADED
     }
 
-    /** The model ID (file stem). */
-    private final String id;
+    /** The immutable {@code (slug, version)} model identity. */
+    private final ModelRef ref;
     /** The model file path. */
     private final Path path;
     /** The loaded ONNX inference session. */
@@ -89,17 +93,18 @@ public class OnnxModel implements AutoCloseable {
     /** Cached metadata DTO. */
     private final OnnxModelInfo info;
     private final AtomicReference<State> state = new AtomicReference<>(State.ACTIVE);
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     private final ModelMetrics metrics = new ModelMetrics();
 
     /**
-     * Constructs an {@code OnnxModel} from an open session.
+     * Constructs an {@code OnnxModel} from an open session and explicit {@link ModelRef}.
      *
-     * @param id      the model ID.
+     * @param ref     validated {@code (slug, version)} identity.
      * @param path    the source file path.
      * @param session the loaded ONNX inference session (this model takes ownership).
      */
-    public OnnxModel(String id, Path path, InferenceSession session) {
-        this.id = id;
+    public OnnxModel(ModelRef ref, Path path, InferenceSession session) {
+        this.ref = ref;
         this.path = path;
         this.session = session;
 
@@ -110,13 +115,63 @@ public class OnnxModel implements AutoCloseable {
         var outputs = session.outputInfos().stream()
                 .map(OnnxModelInfo.NodeDescriptor::of).toList();
         this.info = new OnnxModelInfo(
-                id,
+                ref.slug(),
+                ref.version(),
+                null,
+                null,
                 onnxMeta.graphName(),
                 onnxMeta.description(),
                 onnxMeta.version(),
                 inputs,
                 outputs,
                 onnxMeta.customMetadata());
+    }
+
+    /**
+     * Resolves an ONNX model's {@link ModelRef} using strict precedence:
+     * explicit source overrides &gt; ONNX custom metadata ({@code id}/{@code name}, {@code version})
+     * &gt; ONNX protobuf {@code model_version} (when &gt; 0) &gt; file stem and default version {@code "1"}.
+     *
+     * @param onnxMeta ONNX runtime model metadata.
+     * @param source   model source path and optional overrides.
+     * @return validated {@link ModelRef}.
+     */
+    public static ModelRef resolveRef(smile.onnx.ModelMetadata onnxMeta, ModelSource source) {
+        Map<String, String> custom = onnxMeta != null ? onnxMeta.customMetadata() : Map.of();
+        String slug = source.slugOverride();
+        if (slug == null) {
+            String metaId = findCustomMeta(custom, "id", "name");
+            slug = metaId != null ? metaId : Paths.getFileName(source.path());
+        }
+        String version = source.versionOverride();
+        if (version == null) {
+            String metaVer = findCustomMeta(custom, "version");
+            if (metaVer != null) {
+                version = metaVer;
+            } else if (onnxMeta != null && onnxMeta.version() > 0) {
+                version = Long.toString(onnxMeta.version());
+            } else {
+                version = ModelRef.DEFAULT_VERSION;
+            }
+        }
+        return new ModelRef(slug, version);
+    }
+
+    private static String findCustomMeta(Map<String, String> metadata, String... keys) {
+        if (metadata == null || metadata.isEmpty()) {
+            return null;
+        }
+        for (String key : keys) {
+            for (var entry : metadata.entrySet()) {
+                if (entry.getKey() != null
+                        && entry.getKey().equalsIgnoreCase(key)
+                        && entry.getValue() != null
+                        && !entry.getValue().isBlank()) {
+                    return entry.getValue().strip();
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -159,12 +214,39 @@ public class OnnxModel implements AutoCloseable {
     }
 
     /**
-     * Returns the model ID.
+     * Returns the model slug (public model id).
      *
-     * @return the model ID.
+     * @return the model slug.
      */
     public String id() {
-        return id;
+        return ref.slug();
+    }
+
+    /**
+     * Returns the model slug.
+     *
+     * @return the model slug.
+     */
+    public String slug() {
+        return ref.slug();
+    }
+
+    /**
+     * Returns the served model version string.
+     *
+     * @return the model version.
+     */
+    public String version() {
+        return ref.version();
+    }
+
+    /**
+     * Returns the immutable {@code (slug, version)} model identity.
+     *
+     * @return the model ref.
+     */
+    public ModelRef ref() {
+        return ref;
     }
 
     /**
@@ -177,7 +259,7 @@ public class OnnxModel implements AutoCloseable {
     }
 
     /**
-     * Returns the model metadata DTO.
+     * Returns the model metadata DTO without catalog-level sibling version lists.
      *
      * @return the model info.
      */
@@ -186,12 +268,22 @@ public class OnnxModel implements AutoCloseable {
     }
 
     /**
-     * Returns rich ONNX details for {@code GET /models/{id}}.
-     *
-     * @return onnx details including producer/domain and I/O shapes.
+     * Returns the model metadata DTO enriched with catalog-level version and alias lists.
      */
-    public OnnxModelDetails details() {
-        return OnnxModelDetails.of(session.metadata(), info);
+    public OnnxModelInfo info(List<String> versions, Map<String, String> aliases) {
+        return info.withCatalogVersions(versions, aliases);
+    }
+
+    /**
+     * Returns rich ONNX details for {@code GET /v1/models/{id}}.
+     *
+     * @param defaultVersion active default version for this slug.
+     * @param versions       all loaded versions for this slug.
+     * @param aliases        active aliases for this slug.
+     * @return onnx details including producer/domain, I/O shapes, and versions.
+     */
+    public OnnxModelDetails details(String defaultVersion, List<String> versions, Map<String, String> aliases) {
+        return OnnxModelDetails.of(session.metadata(), info, defaultVersion, versions, aliases);
     }
 
     // -----------------------------------------------------------------------
@@ -214,7 +306,7 @@ public class OnnxModel implements AutoCloseable {
     public JsonObject predict(JsonObject request) throws BadRequestException {
         if (request == null) throw new BadRequestException("Request body must not be null");
         if (state.get() != State.ACTIVE) {
-            throw new ServiceUnavailableException("ONNX model " + id + " is " + state.get().name().toLowerCase());
+            throw new ServiceUnavailableException("ONNX model " + ref + " is " + state.get().name().toLowerCase());
         }
 
         long start = metrics.startExecution();
@@ -271,7 +363,7 @@ public class OnnxModel implements AutoCloseable {
             throw new BadRequestException("CSV line must not be blank");
         }
         if (state.get() != State.ACTIVE) {
-            throw new ServiceUnavailableException("ONNX model " + id + " is " + state.get().name().toLowerCase());
+            throw new ServiceUnavailableException("ONNX model " + ref + " is " + state.get().name().toLowerCase());
         }
 
         long start = metrics.startExecution();
@@ -484,12 +576,14 @@ public class OnnxModel implements AutoCloseable {
 
     @Override
     public void close() {
-        session.close();
+        if (closed.compareAndSet(false, true)) {
+            session.close();
+        }
     }
 
     @Override
     public String toString() {
-        return "OnnxModel{id='" + id + "', path=" + path + "}";
+        return "OnnxModel{ref='" + ref + "', path=" + path + "}";
     }
 }
 

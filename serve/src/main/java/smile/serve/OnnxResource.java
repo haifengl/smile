@@ -22,65 +22,35 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.vertx.core.json.JsonObject;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import smile.serve.model.ModelRegistry;
 
 /**
- * REST resource exposing the ONNX model inference and control API at
- * {@code /v1/onnx}.
+ * REST resource exposing ONNX Runtime model inference, versioning, aliases,
+ * and lifecycle management under {@code /v1/onnx}.
  *
- * <ul>
- *   <li>{@code GET  /v1/onnx/{id}}          – retrieve ONNX model metadata.</li>
- *   <li>{@code GET  /v1/onnx/{id}/health}   – inspect model operational status.</li>
- *   <li>{@code POST /v1/onnx/{id}}          – single JSON inference request.</li>
- *   <li>{@code POST /v1/onnx/{id}/stream}   – streaming inference (JSON lines
- *       or CSV text for single-input models).</li>
- *   <li>{@code POST /v1/onnx/{id}/reload}   – reload ONNX model from disk (localhost only).</li>
- *   <li>{@code POST /v1/onnx/{id}/unload}   – unload ONNX model from memory (localhost only).</li>
- * </ul>
- *
- * <p>The unified model catalog is {@code GET /v1/models}.
- *
- * <h2>Request format</h2>
- * <p>For single-shot inference, the request body is a JSON object mapping
- * each input name to a flat array of numeric or string values:
- * <pre>{@code
- * POST /v1/onnx/resnet50
- * Content-Type: application/json
- *
- * { "input": [0.1, 0.2, ..., 0.3] }
- * }</pre>
- * or for models with string inputs:
- * <pre>{@code
- * POST /v1/onnx/text_classifier
- * Content-Type: application/json
- *
- * { "text": ["positive", "neutral"] }
- * }</pre>
- *
- * <p>For single-input models, CSV lines are also accepted via the
- * {@code /stream} endpoint with {@code Content-Type: text/plain}.
- *
- * <h2>Response format</h2>
- * <p>Responses are JSON objects mapping each output name to a flat array of
- * numbers or strings:
- * <pre>{@code
- * { "output": [0.02, 0.95, 0.03] }
- * }</pre>
+ * <p>Inference and metadata responses include {@code X-Model-Id} and
+ * {@code X-Model-Version} headers identifying the concrete artifact served.
  *
  * @author Haifeng Li
  */
@@ -90,68 +60,154 @@ public class OnnxResource {
     @Inject
     OnnxService service;
 
-    /**
-     * Returns the metadata of a single ONNX model, including its graph name,
-     * version, input/output node descriptors, and any custom metadata embedded
-     * in the model file.
-     *
-     * @param id the model ID (file stem without {@code .onnx}).
-     * @return the model info, or HTTP 404 if not found.
-     */
+    // --------------------------------------------------------------- info & versions
+
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public OnnxModelInfo info(@PathParam("id") String id) {
-        return service.getModel(id).info();
+    public RestResponse<OnnxModelInfo> info(@PathParam("id") String id) {
+        return infoResponse(service.getModel(id));
     }
 
-    /**
-     * Returns the health and readiness status of an ONNX model.
-     *
-     * @param id the model ID.
-     * @return health status JSON object.
-     */
+    @GET
+    @Path("/{id}/versions/{version}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<OnnxModelInfo> infoVersion(@PathParam("id") String id,
+                                                   @PathParam("version") String version) {
+        return infoResponse(service.getModelVersion(id, version));
+    }
+
+    @GET
+    @Path("/{id}/aliases/{alias}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<OnnxModelInfo> infoAlias(@PathParam("id") String id,
+                                                 @PathParam("alias") String alias) {
+        return infoResponse(service.getModelAlias(id, alias));
+    }
+
+    @GET
+    @Path("/{id}/versions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> versions(@PathParam("id") String id) {
+        return versionsPayload(service.getVersions(id));
+    }
+
+    private RestResponse<OnnxModelInfo> infoResponse(OnnxModel model) {
+        return RestResponse.ResponseBuilder.ok(service.infoFor(model))
+                .header(InferenceResource.HEADER_MODEL_ID, model.slug())
+                .header(InferenceResource.HEADER_MODEL_VERSION, model.version())
+                .build();
+    }
+
+    // --------------------------------------------------------------- health
+
     @GET
     @Path("/{id}/health")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> health(@PathParam("id") String id) {
-        var model = service.getModel(id);
-        return Map.of(
-                "id", model.id(),
-                "status", model.state().name(),
-                "in_flight_requests", model.metrics().inFlightRequests(),
-                "uptime_seconds", model.metrics().uptimeSeconds()
-        );
+        return healthPayload(service.getModel(id));
     }
 
-    /**
-     * Reloads an ONNX model from disk into active memory. Accessible only from localhost.
-     *
-     * @param id the model ID.
-     * @return reload confirmation.
-     */
+    @GET
+    @Path("/{id}/versions/{version}/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> healthVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version) {
+        return healthPayload(service.getModelVersion(id, version));
+    }
+
+    @GET
+    @Path("/{id}/aliases/{alias}/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> healthAlias(@PathParam("id") String id,
+                                           @PathParam("alias") String alias) {
+        return healthPayload(service.getModelAlias(id, alias));
+    }
+
+    private static Map<String, Object> healthPayload(OnnxModel model) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", model.slug());
+        map.put("version", model.version());
+        map.put("status", model.state().name());
+        map.put("in_flight_requests", model.metrics().inFlightRequests());
+        map.put("uptime_seconds", model.metrics().uptimeSeconds());
+        return map;
+    }
+
+    // --------------------------------------------------------------- alias management
+
+    @PUT
+    @Path("/{id}/aliases/{alias}")
+    @LocalhostOnly
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> setAlias(@PathParam("id") String id,
+                                        @PathParam("alias") String alias,
+                                        JsonObject request) {
+        if (request == null || request.getString("version") == null || request.getString("version").isBlank()) {
+            throw new BadRequestException("Request body must contain non-blank 'version'");
+        }
+        String version = request.getString("version").strip();
+        ModelRegistry.SlugVersions updated = service.setAlias(id, alias, version);
+        Map<String, Object> resp = new LinkedHashMap<>();
+        resp.put("status", "updated");
+        resp.put("slug", updated.slug());
+        resp.put("alias", alias);
+        resp.put("version", version);
+        resp.put("default", updated.defaultVersion());
+        resp.put("latest", updated.latestVersion());
+        resp.put("versions", updated.versions());
+        resp.put("aliases", updated.aliases());
+        return resp;
+    }
+
+    @DELETE
+    @Path("/{id}/aliases/{alias}")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> deleteAlias(@PathParam("id") String id,
+                                           @PathParam("alias") String alias) {
+        ModelRegistry.SlugVersions updated = service.deleteAlias(id, alias);
+        Map<String, Object> resp = new LinkedHashMap<>();
+        resp.put("status", "deleted");
+        resp.put("slug", updated.slug());
+        resp.put("alias", alias);
+        resp.put("default", updated.defaultVersion());
+        resp.put("latest", updated.latestVersion());
+        resp.put("versions", updated.versions());
+        resp.put("aliases", updated.aliases());
+        return resp;
+    }
+
+    // --------------------------------------------------------------- reload & unload
+
     @POST
     @Path("/{id}/reload")
     @LocalhostOnly
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> reload(@PathParam("id") String id) {
-        var reloaded = service.reloadModel(id);
-        return Map.of(
-                "status", "reloaded",
-                "id", reloaded.id(),
-                "path", reloaded.path().toString(),
-                "timestamp", Instant.now().getEpochSecond()
-        );
+        return reloadPayload(service.reloadModel(id));
     }
 
-    /**
-     * Unloads an ONNX model from active memory, gracefully waiting for in-flight requests.
-     * Accessible only from localhost.
-     *
-     * @param id          the model ID.
-     * @param timeoutSecs grace period in seconds to wait for in-flight requests (default: 10s).
-     * @return unload confirmation.
-     */
+    @POST
+    @Path("/{id}/versions/{version}/reload")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> reloadVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version) {
+        return reloadPayload(service.reloadModelVersion(id, version));
+    }
+
+    private static Map<String, Object> reloadPayload(OnnxModel reloaded) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "reloaded");
+        map.put("id", reloaded.slug());
+        map.put("version", reloaded.version());
+        map.put("path", reloaded.path().toString());
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
+    }
+
     @POST
     @Path("/{id}/unload")
     @LocalhostOnly
@@ -167,44 +223,61 @@ public class OnnxResource {
         );
     }
 
-    /**
-     * Runs a single inference with JSON-encoded inputs.
-     *
-     * <p>The request body must be a JSON object whose keys are the model's
-     * input names and whose values are flat JSON arrays of numbers or strings.
-     *
-     * @param id      the model ID.
-     * @param request JSON object mapping input names to flat arrays.
-     * @return JSON object mapping output names to flat arrays.
-     */
+    @POST
+    @Path("/{id}/versions/{version}/unload")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> unloadVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version,
+                                             @QueryParam("timeout") @DefaultValue("10") long timeoutSecs) {
+        boolean drained = service.unloadModelVersion(id, version, Duration.ofSeconds(Math.max(1, timeoutSecs)));
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "unloaded");
+        map.put("id", id);
+        map.put("version", version);
+        map.put("drained", drained);
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
+    }
+
+    // --------------------------------------------------------------- predict & stream
+
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JsonObject predict(@PathParam("id") String id, JsonObject request) {
-        return service.predict(id, request);
+    public RestResponse<JsonObject> predict(@PathParam("id") String id, JsonObject request) {
+        return doPredict(service.getModel(id), request);
     }
 
-    /**
-     * Streams inference results over a multi-line request body.
-     *
-     * <p>Each non-blank line in the body is treated as a separate inference
-     * request:
-     * <ul>
-     *   <li>If {@code Content-Type} starts with {@code application/json},
-     *       each line must be a complete JSON object (JSON-lines format).</li>
-     *   <li>If {@code Content-Type} starts with {@code text/plain},
-     *       each line must be a comma-separated list of floats for the model's
-     *       first (and only) input.</li>
-     * </ul>
-     * Each result is emitted as an SSE {@code data:} event containing a
-     * compact JSON object.
-     *
-     * @param contentType the MIME type of each input line.
-     * @param id          the model ID.
-     * @param input       the request body input stream.
-     * @return a reactive stream of JSON result strings, one per input line.
-     */
+    @POST
+    @Path("/{id}/versions/{version}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<JsonObject> predictVersion(@PathParam("id") String id,
+                                                   @PathParam("version") String version,
+                                                   JsonObject request) {
+        return doPredict(service.getModelVersion(id, version), request);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<JsonObject> predictAlias(@PathParam("id") String id,
+                                                 @PathParam("alias") String alias,
+                                                 JsonObject request) {
+        return doPredict(service.getModelAlias(id, alias), request);
+    }
+
+    private RestResponse<JsonObject> doPredict(OnnxModel model, JsonObject request) {
+        JsonObject result = service.predict(model, request);
+        return RestResponse.ResponseBuilder.ok(result)
+                .header(InferenceResource.HEADER_MODEL_ID, model.slug())
+                .header(InferenceResource.HEADER_MODEL_VERSION, model.version())
+                .build();
+    }
+
     @POST
     @Path("/{id}/stream")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -212,7 +285,32 @@ public class OnnxResource {
     public Multi<String> stream(@HeaderParam("Content-Type") String contentType,
                                 @PathParam("id") String id,
                                 InputStream input) {
-        var model = service.getModel(id);
+        return doStream(service.getModel(id), contentType, input);
+    }
+
+    @POST
+    @Path("/{id}/versions/{version}/stream")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> streamVersion(@HeaderParam("Content-Type") String contentType,
+                                       @PathParam("id") String id,
+                                       @PathParam("version") String version,
+                                       InputStream input) {
+        return doStream(service.getModelVersion(id, version), contentType, input);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}/stream")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> streamAlias(@HeaderParam("Content-Type") String contentType,
+                                     @PathParam("id") String id,
+                                     @PathParam("alias") String alias,
+                                     InputStream input) {
+        return doStream(service.getModelAlias(id, alias), contentType, input);
+    }
+
+    private Multi<String> doStream(OnnxModel model, String contentType, InputStream input) {
         boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
         return Multi.createFrom().emitter(emitter -> {
             Infrastructure.getDefaultWorkerPool().submit(() -> {
@@ -227,7 +325,8 @@ public class OnnxResource {
                             String encoded = response.encode();
                             if (service.hasListeners()) {
                                 service.notifyListeners(InferenceEvent.onnxPredict(
-                                        id,
+                                        model.slug(),
+                                        model.version(),
                                         InferenceEvent.Action.STREAM_PREDICT,
                                         line,
                                         encoded,
@@ -243,5 +342,14 @@ public class OnnxResource {
             });
         });
     }
-}
 
+    private static Map<String, Object> versionsPayload(ModelRegistry.SlugVersions info) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("slug", info.slug());
+        map.put("default", info.defaultVersion());
+        map.put("latest", info.latestVersion());
+        map.put("versions", info.versions());
+        map.put("aliases", info.aliases());
+        return map;
+    }
+}

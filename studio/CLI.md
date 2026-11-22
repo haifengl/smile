@@ -907,9 +907,9 @@ smile serve [model-options] [server-options] [llm-options]
 
 Launches the high-performance Quarkus-based SMILE Serve HTTP inference server.
 The server brings together three complementary inference capabilities in a single process:
-- **Classic ML** (`/api/v1/smile`, `/api/v1/ml/models`) — serialized SMILE models (`.sml`)
-- **ONNX Runtime** (`/api/v1/onnx`) — open neural network format (`.onnx`)
-- **LLM Chat** (`/api/v1/chat/completions`, `/api/v1/models`) — OpenAI-compatible chat completions and model catalog with continuous batching or ONNX Runtime GenAI
+- **Classic ML** (`/v1/smile`) — serialized SMILE models (`.sml`)
+- **ONNX Runtime** (`/v1/onnx`) — open neural network format (`.onnx`)
+- **LLM Chat** (`/v1/chat/completions`, `/v1/models`) — OpenAI-compatible chat completions and model catalog with continuous batching or ONNX Runtime GenAI
 
 A bundled React-based Web UI is served from `http://<host>:<port>/` (`/infer` and `/chat`).
 
@@ -1008,15 +1008,15 @@ smile serve --llm Qwen/Qwen3.8-27B --devices 0,1 --tp-size 2 --max-batch-size 32
 **5. Querying the endpoints:**
 ```bash
 # Model catalog (OpenAI-compatible)
-curl http://localhost:8888/api/v1/models
+curl http://localhost:8888/v1/models
 
 # Classic ML inference
-curl -X POST http://localhost:8888/api/v1/smile/iris_random_forest-1 \
+curl -X POST http://localhost:8888/v1/smile/iris_random_forest \
      -H "Content-Type: application/json" \
      -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 
 # Chat completion (OpenAI-compatible)
-curl -X POST http://localhost:8888/api/v1/chat/completions \
+curl -X POST http://localhost:8888/v1/chat/completions \
      -H "Content-Type: application/json" \
      -d '{"model":"microsoft/Phi-4-mini-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
@@ -1349,7 +1349,7 @@ smile serve --model iris.sml
 smile serve --model iris.sml --host 0.0.0.0 --port 9090
 
 # Query classic ML prediction (after server is up)
-curl -X POST http://localhost:9090/api/v1/smile/iris_random_forest-1 \
+curl -X POST http://localhost:9090/v1/smile/iris_random_forest \
   -H "Content-Type: application/json" \
   -d '{"sepallength":6.3,"sepalwidth":2.5,"petallength":5.0,"petalwidth":1.9}'
 # → {"prediction":2}
@@ -1358,7 +1358,7 @@ curl -X POST http://localhost:9090/api/v1/smile/iris_random_forest-1 \
 smile serve --llm microsoft/Phi-4-mini-instruct-onnx
 
 # Query chat completion (OpenAI compatible)
-curl -X POST http://localhost:8888/api/v1/chat/completions \
+curl -X POST http://localhost:8888/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"microsoft/Phi-4-mini-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```

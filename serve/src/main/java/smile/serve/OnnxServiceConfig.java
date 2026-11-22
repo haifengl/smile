@@ -17,8 +17,10 @@
  */
 package smile.serve;
 
+import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 
 /**
  * Configuration for the ONNX inference service.
@@ -35,5 +37,25 @@ public interface OnnxServiceConfig {
      */
     @WithDefault("../model")
     String model();
+
+    /**
+     * Optional public model slug override when serving a single {@code .onnx} model.
+     * When set and exactly one {@code .onnx} model is loaded without a {@code models.json}
+     * manifest, it is registered under this slug instead of the file stem.
+     */
+    @WithName("served-model-id")
+    default Optional<String> servedModelId() {
+        return Optional.empty();
+    }
+
+    /**
+     * Optional explicit path to a {@code models.json} manifest file.
+     * When unset and {@link #model()} is a directory, {@code <model>/models.json}
+     * is loaded automatically if present.
+     */
+    @WithName("manifest")
+    default Optional<String> manifest() {
+        return Optional.empty();
+    }
 }
 

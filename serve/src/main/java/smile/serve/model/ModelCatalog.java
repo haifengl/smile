@@ -9,8 +9,10 @@
 package smile.serve.model;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.annotation.Priority;
@@ -64,6 +66,20 @@ public class ModelCatalog {
         } else if (isEmpty()) {
             logger.info("No model loaded at startup; waiting for dynamic loads "
                     + "(smile.serve.allow-empty=true)");
+        } else {
+            warnOnCrossBackendCollisions();
+        }
+    }
+
+    private void warnOnCrossBackendCollisions() {
+        Set<String> seen = new HashSet<>();
+        for (ModelObject model : list()) {
+            if (!seen.add(model.id())) {
+                logger.warnf("Model id '%s' is registered by multiple backends; "
+                        + "GET /v1/models/%s will return the first contributor match. "
+                        + "Assign distinct slugs via models.json to avoid shadowing.",
+                        model.id(), model.id());
+            }
         }
     }
 

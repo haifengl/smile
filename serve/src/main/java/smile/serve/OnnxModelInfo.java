@@ -20,6 +20,7 @@ package smile.serve;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import smile.onnx.NodeInfo;
 import smile.onnx.TensorInfo;
@@ -28,10 +29,13 @@ import smile.onnx.TensorInfo;
  * Immutable metadata describing a loaded ONNX model exposed by
  * {@link OnnxResource}.
  *
- * @param id          the model identifier derived from the file name.
+ * @param id          the model slug.
+ * @param version     the served model version string.
+ * @param versions    all loaded versions for this slug in ascending version order (optional).
+ * @param aliases     active aliases mapped to versions for this slug (optional).
  * @param graphName   the ONNX graph name embedded in the model file.
  * @param description a human-readable description embedded in the model file.
- * @param version     the model version integer embedded in the model file.
+ * @param onnxVersion the raw model version integer embedded in the ONNX protobuf.
  * @param inputs      ordered list of input node descriptors.
  * @param outputs     ordered list of output node descriptors.
  * @param customMeta  user-defined key-value pairs embedded in the model file.
@@ -39,24 +43,45 @@ import smile.onnx.TensorInfo;
  * @author Haifeng Li
  */
 /* Jackson instantiates the array type while writing this record (not registered automatically in native mode). */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @RegisterForReflection(targets = OnnxModelInfo.NodeDescriptor[].class)
 public record OnnxModelInfo(String id,
+                             String version,
+                             List<String> versions,
+                             Map<String, String> aliases,
                              String graphName,
                              String description,
-                             long version,
+                             long onnxVersion,
                              List<NodeDescriptor> inputs,
                              List<NodeDescriptor> outputs,
                              Map<String, String> customMeta) {
 
     /**
+     * Returns a copy enriched with registry-level version and alias metadata.
+     */
+    public OnnxModelInfo withCatalogVersions(List<String> versions, Map<String, String> aliases) {
+        return new OnnxModelInfo(
+                id,
+                version,
+                versions,
+                (aliases == null || aliases.isEmpty()) ? null : aliases,
+                graphName,
+                description,
+                onnxVersion,
+                inputs,
+                outputs,
+                customMeta);
+    }
+
+    /**
      * Describes a single input or output node of the ONNX graph.
      *
-     * @param name       the node name used in run calls.
-     * @param onnxType   the ONNX value type (e.g. {@code "TENSOR"}).
+     * @param name        the node name used in run calls.
+     * @param onnxType    the ONNX value type (e.g. {@code "TENSOR"}).
      * @param elementType the tensor element type (e.g. {@code "FLOAT"}),
-     *                   or {@code null} for non-tensor nodes.
-     * @param shape      the tensor shape dimensions; {@code -1} means
-     *                   dynamic; {@code null} for non-tensor nodes.
+     *                    or {@code null} for non-tensor nodes.
+     * @param shape       the tensor shape dimensions; {@code -1} means
+     *                    dynamic; {@code null} for non-tensor nodes.
      */
     public record NodeDescriptor(String name,
                                   String onnxType,
@@ -81,4 +106,3 @@ public record OnnxModelInfo(String id,
         }
     }
 }
-

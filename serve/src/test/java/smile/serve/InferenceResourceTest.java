@@ -49,15 +49,15 @@ public class InferenceResourceTest {
      */
     @Test
     public void testGetModelMetadata() {
-        // Given the iris_random_forest-1 model is loaded
+        // Given the iris_random_forest model is loaded
         // When fetching its metadata
         // Then the response contains algorithm, schema and tags
         given()
-            .when().get("/v1/smile/iris_random_forest-1")
+            .when().get("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("id", is("iris_random_forest-1"))
+                .body("id", is("iris_random_forest"))
                 .body("algorithm", is("random-forest"))
                 .body("schema", notNullValue())
                 .body("schema.petallength.type", is("float"))
@@ -94,7 +94,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/v1/smile/iris_random_forest-1")
+            .when().post("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -113,7 +113,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/v1/smile/iris_random_forest-1")
+            .when().post("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -131,7 +131,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/v1/smile/iris_random_forest-1")
+            .when().post("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(400);
     }
@@ -169,7 +169,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/v1/smile/iris_random_forest-1/stream")
+            .when().post("/v1/smile/iris_random_forest/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -201,7 +201,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.JSON)
             .body(jsonLines)
-            .when().post("/v1/smile/iris_random_forest-1/stream")
+            .when().post("/v1/smile/iris_random_forest/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -232,7 +232,7 @@ public class InferenceResourceTest {
             String body = given()
                 .contentType(ContentType.TEXT)
                 .body(badCsv)
-                .when().post("/v1/smile/iris_random_forest-1/stream")
+                .when().post("/v1/smile/iris_random_forest/stream")
                 .then()
                 .extract().body().asString();
             // If we get a body at all, it must contain no valid data lines.
@@ -287,7 +287,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/v1/smile/iris_random_forest-1")
+            .when().post("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -309,7 +309,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/v1/smile/iris_random_forest-1?explain=true")
+            .when().post("/v1/smile/iris_random_forest?explain=true")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -327,7 +327,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/v1/smile/iris_random_forest-1/stream?explain=true")
+            .when().post("/v1/smile/iris_random_forest/stream?explain=true")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -353,7 +353,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.JSON)
             .body(jsonLines)
-            .when().post("/v1/smile/iris_random_forest-1/stream")
+            .when().post("/v1/smile/iris_random_forest/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -409,11 +409,11 @@ public class InferenceResourceTest {
     @Test
     public void testGetModelHealth() {
         given()
-            .when().get("/v1/smile/iris_random_forest-1/health")
+            .when().get("/v1/smile/iris_random_forest/health")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("id", is("iris_random_forest-1"))
+                .body("id", is("iris_random_forest"))
                 .body("status", is("ACTIVE"))
                 .body("in_flight_requests", is(0))
                 .body("uptime_seconds", notNullValue());
@@ -423,12 +423,12 @@ public class InferenceResourceTest {
     @Test
     public void testReloadModel() {
         given()
-            .when().post("/v1/smile/iris_random_forest-1/reload")
+            .when().post("/v1/smile/iris_random_forest/reload")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("status", is("reloaded"))
-                .body("id", is("iris_random_forest-1"))
+                .body("id", is("iris_random_forest"))
                 .body("algorithm", is("random-forest"));
     }
 
@@ -436,31 +436,31 @@ public class InferenceResourceTest {
     public void testUnloadAndReloadModel() {
         // Unload the model
         given()
-            .when().post("/v1/smile/iris_random_forest-1/unload?timeout=5")
+            .when().post("/v1/smile/iris_random_forest/unload?timeout=5")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("status", is("unloaded"))
-                .body("id", is("iris_random_forest-1"))
+                .body("id", is("iris_random_forest"))
                 .body("drained", is(true));
 
         // Subsequent requests should return 404
         given()
-            .when().get("/v1/smile/iris_random_forest-1")
+            .when().get("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(404);
 
         // Reload unloaded model from disk should restore it
         given()
-            .when().post("/v1/smile/iris_random_forest-1/reload")
+            .when().post("/v1/smile/iris_random_forest/reload")
             .then()
                 .statusCode(200)
                 .body("status", is("reloaded"))
-                .body("id", is("iris_random_forest-1"));
+                .body("id", is("iris_random_forest"));
 
         // Verify model is accessible again
         given()
-            .when().get("/v1/smile/iris_random_forest-1")
+            .when().get("/v1/smile/iris_random_forest")
             .then()
                 .statusCode(200);
     }
@@ -478,7 +478,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/v1/smile/iris_lda-1?explain=true")
+            .when().post("/v1/smile/iris_lda?explain=true")
             .then()
                 .statusCode(200)
                 .body("prediction", is(2))
@@ -489,7 +489,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/v1/smile/iris_lda-1?explain=true&samples=32&ridge=1e-4")
+            .when().post("/v1/smile/iris_lda?explain=true&samples=32&ridge=1e-4")
             .then()
                 .statusCode(200)
                 .body("prediction", is(2))
@@ -502,7 +502,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(jsonWithFlatOpts)
-            .when().post("/v1/smile/iris_lda-1")
+            .when().post("/v1/smile/iris_lda")
             .then()
                 .statusCode(200)
                 .body("prediction", is(2))
@@ -515,7 +515,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(jsonWithNestedShap)
-            .when().post("/v1/smile/iris_lda-1")
+            .when().post("/v1/smile/iris_lda")
             .then()
                 .statusCode(200)
                 .body("prediction", is(2))
@@ -527,7 +527,7 @@ public class InferenceResourceTest {
         String streamBody = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/v1/smile/iris_lda-1/stream?explain=true&samples=32&ridge=1e-5")
+            .when().post("/v1/smile/iris_lda/stream?explain=true&samples=32&ridge=1e-5")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -544,14 +544,14 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/v1/smile/iris_lda-1?explain=true&samples=-1")
+            .when().post("/v1/smile/iris_lda?explain=true&samples=-1")
             .then()
                 .statusCode(400);
 
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/v1/smile/iris_lda-1?explain=true&ridge=-0.1")
+            .when().post("/v1/smile/iris_lda?explain=true&ridge=-0.1")
             .then()
                 .statusCode(400);
     }
@@ -577,11 +577,11 @@ public class InferenceResourceTest {
                 .when().post("/v1/models/load")
                 .then()
                     .statusCode(200)
-                    .body("id", is("iris_kmeans-1"));
+                    .body("id", is("iris_kmeans"));
 
-            // Then GET /v1/models/iris_kmeans-1 includes clustering details in smile.train
+            // Then GET /v1/models/iris_kmeans includes clustering details in smile.train
             given()
-                .when().get("/v1/models/iris_kmeans-1")
+                .when().get("/v1/models/iris_kmeans")
                 .then()
                     .statusCode(200)
                     .body("kind", is("kmeans"))
@@ -591,18 +591,18 @@ public class InferenceResourceTest {
                     .body("smile.train.cluster_sizes", hasSize(3))
                     .body("smile.train.distortions", hasSize(3));
 
-            // And POST /v1/smile/iris_kmeans-1 returns cluster prediction and centroid
+            // And POST /v1/smile/iris_kmeans returns cluster prediction and centroid
             var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
                 .body(sample)
-                .when().post("/v1/smile/iris_kmeans-1")
+                .when().post("/v1/smile/iris_kmeans")
                 .then()
                     .statusCode(200)
                     .body("prediction", notNullValue())
                     .body("centroid", hasSize(4));
         } finally {
-            given().when().post("/v1/smile/iris_kmeans-1/unload?timeout=5");
+            given().when().post("/v1/smile/iris_kmeans/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempModel);
         }
 
@@ -620,10 +620,10 @@ public class InferenceResourceTest {
                 .when().post("/v1/models/load")
                 .then()
                     .statusCode(200)
-                    .body("id", is("iris_emeans-1"));
+                    .body("id", is("iris_emeans"));
 
             given()
-                .when().get("/v1/models/iris_emeans-1")
+                .when().get("/v1/models/iris_emeans")
                 .then()
                     .statusCode(200)
                     .body("kind", is("emeans"))
@@ -637,13 +637,13 @@ public class InferenceResourceTest {
             given()
                 .contentType(ContentType.JSON)
                 .body(sample)
-                .when().post("/v1/smile/iris_emeans-1")
+                .when().post("/v1/smile/iris_emeans")
                 .then()
                     .statusCode(200)
                     .body("prediction", notNullValue())
                     .body("centroid", hasSize(4));
         } finally {
-            given().when().post("/v1/smile/iris_emeans-1/unload?timeout=5");
+            given().when().post("/v1/smile/iris_emeans/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempEmeansModel);
         }
     }
@@ -670,19 +670,19 @@ public class InferenceResourceTest {
                 .when().post("/v1/models/load")
                 .then()
                     .statusCode(200)
-                    .body("id", is("iris_som-1"));
+                    .body("id", is("iris_som"));
 
             // Metadata indicates online = true
             given()
-                .when().get("/v1/smile/iris_som-1")
+                .when().get("/v1/smile/iris_som")
                 .then()
                     .statusCode(200)
                     .body("algorithm", is("som"))
                     .body("online", is(true));
 
-            // GET /v1/models/iris_som-1 includes SOM lattice details
+            // GET /v1/models/iris_som includes SOM lattice details
             given()
-                .when().get("/v1/models/iris_som-1")
+                .when().get("/v1/models/iris_som")
                 .then()
                     .statusCode(200)
                     .body("kind", is("som"))
@@ -691,12 +691,12 @@ public class InferenceResourceTest {
                     .body("smile.train.ncol", is(3))
                     .body("smile.train.neurons", is(9));
 
-            // POST /v1/smile/iris_som-1 returns 2D grid prediction [row, col], centroid, and error
+            // POST /v1/smile/iris_som returns 2D grid prediction [row, col], centroid, and error
             var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
                 .body(sample)
-                .when().post("/v1/smile/iris_som-1")
+                .when().post("/v1/smile/iris_som")
                 .then()
                     .statusCode(200)
                     .body("prediction", hasSize(2))
@@ -707,11 +707,11 @@ public class InferenceResourceTest {
             given()
                 .contentType(ContentType.JSON)
                 .body(sample)
-                .when().post("/v1/smile/iris_som-1/update?persist=true")
+                .when().post("/v1/smile/iris_som/update?persist=true")
                 .then()
                     .statusCode(200)
                     .body("status", is("updated"))
-                    .body("id", is("iris_som-1"))
+                    .body("id", is("iris_som"))
                     .body("updated", is(1))
                     .body("persisted", is(true));
 
@@ -720,22 +720,22 @@ public class InferenceResourceTest {
             given()
                 .contentType(ContentType.TEXT)
                 .body(csvBody)
-                .when().post("/v1/smile/iris_som-1/update/stream?persist=true")
+                .when().post("/v1/smile/iris_som/update/stream?persist=true")
                 .then()
                     .statusCode(200)
                     .body("status", is("updated"))
                     .body("updated", is(2))
                     .body("persisted", is(true));
 
-            // Updating a non-online model (iris_random_forest-1) returns 400 Bad Request
+            // Updating a non-online model (iris_random_forest) returns 400 Bad Request
             given()
                 .contentType(ContentType.JSON)
                 .body(sample)
-                .when().post("/v1/smile/iris_random_forest-1/update")
+                .when().post("/v1/smile/iris_random_forest/update")
                 .then()
                     .statusCode(400);
         } finally {
-            given().when().post("/v1/smile/iris_som-1/unload?timeout=5");
+            given().when().post("/v1/smile/iris_som/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempModel);
         }
     }
@@ -757,11 +757,11 @@ public class InferenceResourceTest {
                 .when().post("/v1/models/load")
                 .then()
                     .statusCode(200)
-                    .body("id", is("iris_logit-1"));
+                    .body("id", is("iris_logit"));
 
             // Metadata exposes online = true and response = "class"
             given()
-                .when().get("/v1/smile/iris_logit-1")
+                .when().get("/v1/smile/iris_logit")
                 .then()
                     .statusCode(200)
                     .body("online", is(true))
@@ -773,7 +773,7 @@ public class InferenceResourceTest {
             given()
                 .contentType(ContentType.JSON)
                 .body(sampleWithTarget)
-                .when().post("/v1/smile/iris_logit-1/update")
+                .when().post("/v1/smile/iris_logit/update")
                 .then()
                     .statusCode(200)
                     .body("status", is("updated"))
@@ -784,11 +784,11 @@ public class InferenceResourceTest {
             given()
                 .contentType(ContentType.JSON)
                 .body(sampleWithoutTarget)
-                .when().post("/v1/smile/iris_logit-1/update")
+                .when().post("/v1/smile/iris_logit/update")
                 .then()
                     .statusCode(400);
         } finally {
-            given().when().post("/v1/smile/iris_logit-1/unload?timeout=5");
+            given().when().post("/v1/smile/iris_logit/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempModel);
         }
     }
@@ -814,11 +814,11 @@ public class InferenceResourceTest {
                 .when().post("/v1/models/load")
                 .then()
                     .statusCode(200)
-                    .body("id", is("iris_iforest-1"));
+                    .body("id", is("iris_iforest"));
 
-            // GET /v1/models/iris_iforest-1 includes IsolationForest details in smile.train
+            // GET /v1/models/iris_iforest includes IsolationForest details in smile.train
             given()
-                .when().get("/v1/models/iris_iforest-1")
+                .when().get("/v1/models/iris_iforest")
                 .then()
                     .statusCode(200)
                     .body("kind", is("isolation-forest"))
@@ -826,29 +826,29 @@ public class InferenceResourceTest {
                     .body("smile.train.extension_level", is(0))
                     .body("smile.train.threshold", is(0.55f));
 
-            // POST /v1/smile/iris_iforest-1 on normal sample returns boolean prediction and score
+            // POST /v1/smile/iris_iforest on normal sample returns boolean prediction and score
             var inlier = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
                 .body(inlier)
-                .when().post("/v1/smile/iris_iforest-1")
+                .when().post("/v1/smile/iris_iforest")
                 .then()
                     .statusCode(200)
                     .body("prediction", is(false))
                     .body("score", notNullValue());
 
-            // POST /v1/smile/iris_iforest-1 on extreme outlier returns prediction = true
+            // POST /v1/smile/iris_iforest on extreme outlier returns prediction = true
             var outlier = "{\"sepallength\":100.0,\"sepalwidth\":100.0,\"petallength\":100.0,\"petalwidth\":100.0}";
             given()
                 .contentType(ContentType.JSON)
                 .body(outlier)
-                .when().post("/v1/smile/iris_iforest-1")
+                .when().post("/v1/smile/iris_iforest")
                 .then()
                     .statusCode(200)
                     .body("prediction", is(true))
                     .body("score", notNullValue());
         } finally {
-            given().when().post("/v1/smile/iris_iforest-1/unload?timeout=5");
+            given().when().post("/v1/smile/iris_iforest/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempModel);
         }
     }

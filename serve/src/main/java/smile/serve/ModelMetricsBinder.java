@@ -34,10 +34,37 @@ public interface ModelMetricsBinder {
     void register(String namespace, String modelId, ModelMetrics metrics);
 
     /**
+     * Registers telemetry meters for a versioned model.
+     *
+     * <p>The default implementation delegates to {@link #register(String, String, ModelMetrics)}
+     * with {@code slug + ":" + version} so multiple versions of the same slug do not collide
+     * in plugins that only implement the unversioned signature.
+     *
+     * @param namespace the metric namespace ({@link #SMILE_NAMESPACE} or {@link #ONNX_NAMESPACE}).
+     * @param slug      the model slug.
+     * @param version   the model version.
+     * @param metrics   the model's live metrics instance.
+     */
+    default void register(String namespace, String slug, String version, ModelMetrics metrics) {
+        register(namespace, slug + ":" + version, metrics);
+    }
+
+    /**
      * Removes telemetry meters for an unloaded model.
      *
-     * @param namespace the metric namespace.
+     * @param namespace the metric namespace ({@link #SMILE_NAMESPACE} or {@link #ONNX_NAMESPACE}).
      * @param modelId   the model id.
      */
     void unregister(String namespace, String modelId);
+
+    /**
+     * Removes telemetry meters for an unloaded model version.
+     *
+     * @param namespace the metric namespace ({@link #SMILE_NAMESPACE} or {@link #ONNX_NAMESPACE}).
+     * @param slug      the model slug.
+     * @param version   the model version.
+     */
+    default void unregister(String namespace, String slug, String version) {
+        unregister(namespace, slug + ":" + version);
+    }
 }

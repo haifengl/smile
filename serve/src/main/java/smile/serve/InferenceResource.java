@@ -22,110 +22,215 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.vertx.core.json.JsonObject;
+import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.feature.importance.KernelSHAP;
 import smile.model.Prediction;
+import smile.serve.model.ModelRegistry;
 
 /**
- * REST resource exposing the classic SMILE model inference and control API at
- * {@code /v1/smile}.
+ * REST resource exposing classic SMILE model inference, versioning, aliases,
+ * and lifecycle management under {@code /v1/smile}.
  *
+ * <p>Endpoints:
  * <ul>
- *   <li>{@code GET  /v1/smile/{id}}         – retrieve model metadata.</li>
- *   <li>{@code GET  /v1/smile/{id}/health}  – inspect model operational status.</li>
- *   <li>{@code POST /v1/smile/{id}}         – single JSON inference request.</li>
- *   <li>{@code POST /v1/smile/{id}/stream}  – streaming inference (JSON lines or CSV).</li>
- *   <li>{@code POST /v1/smile/{id}/reload}  – reload model from disk (localhost only).</li>
- *   <li>{@code POST /v1/smile/{id}/unload}  – unload model from memory (localhost only).</li>
+ *   <li>{@code GET    /v1/smile/{slug}[/versions/{ver}|/aliases/{alias}]} – model metadata.</li>
+ *   <li>{@code GET    /v1/smile/{slug}/versions} – list loaded versions and aliases.</li>
+ *   <li>{@code GET    /v1/smile/{slug}[/versions/{ver}|/aliases/{alias}]/health} – health status.</li>
+ *   <li>{@code POST   /v1/smile/{slug}[/versions/{ver}|/aliases/{alias}]} – single JSON inference.</li>
+ *   <li>{@code POST   /v1/smile/{slug}[/versions/{ver}|/aliases/{alias}]/stream} – streaming inference.</li>
+ *   <li>{@code POST   /v1/smile/{slug}[/versions/{ver}]/reload} – reload from disk (localhost only).</li>
+ *   <li>{@code POST   /v1/smile/{slug}[/versions/{ver}]/unload} – unload from memory (localhost only).</li>
+ *   <li>{@code POST   /v1/smile/{slug}[/versions/{ver}|/aliases/{alias}]/update[/stream]} – online update (localhost only).</li>
+ *   <li>{@code PUT    /v1/smile/{slug}/aliases/{alias}} – assign/promote alias (localhost only).</li>
+ *   <li>{@code DELETE /v1/smile/{slug}/aliases/{alias}} – remove alias (localhost only).</li>
  * </ul>
  *
- * <p>The unified model catalog is {@code GET /v1/models}.
+ * <p>Inference and metadata responses include {@code X-Model-Id} and
+ * {@code X-Model-Version} headers identifying the concrete artifact served.
  *
  * @author Haifeng Li
  */
 @Path("/v1/smile")
 public class InferenceResource {
 
+    /** Response header carrying the resolved model slug. */
+    public static final String HEADER_MODEL_ID = "X-Model-Id";
+
+    /** Response header carrying the concrete served model version. */
+    public static final String HEADER_MODEL_VERSION = "X-Model-Version";
+
     @Inject
     InferenceService service;
 
-    /**
-     * Returns the metadata of a single model.
-     *
-     * @param id the model ID.
-     * @return the model metadata (404 if not found).
-     */
+    // --------------------------------------------------------------- metadata & versions
+
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ModelMetadata get(@PathParam("id") String id) {
-        return service.getModel(id).metadata();
+    public RestResponse<ModelMetadata> get(@PathParam("id") String id) {
+        return metadataResponse(service.getModel(id));
     }
 
-    /**
-     * Returns the health and readiness status of a model.
-     *
-     * @param id the model ID.
-     * @return health status JSON object.
-     */
+    @GET
+    @Path("/{id}/versions/{version}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<ModelMetadata> getVersion(@PathParam("id") String id,
+                                                  @PathParam("version") String version) {
+        return metadataResponse(service.getModelVersion(id, version));
+    }
+
+    @GET
+    @Path("/{id}/aliases/{alias}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<ModelMetadata> getAlias(@PathParam("id") String id,
+                                                @PathParam("alias") String alias) {
+        return metadataResponse(service.getModelAlias(id, alias));
+    }
+
+    @GET
+    @Path("/{id}/versions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> versions(@PathParam("id") String id) {
+        return versionsPayload(service.getVersions(id));
+    }
+
+    private RestResponse<ModelMetadata> metadataResponse(InferenceModel model) {
+        return RestResponse.ResponseBuilder.ok(service.metadataFor(model))
+                .header(HEADER_MODEL_ID, model.slug())
+                .header(HEADER_MODEL_VERSION, model.version())
+                .build();
+    }
+
+    // --------------------------------------------------------------- health
+
     @GET
     @Path("/{id}/health")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> health(@PathParam("id") String id) {
-        var model = service.getModel(id);
-        return Map.of(
-                "id", model.id(),
-                "status", model.state().name(),
-                "in_flight_requests", model.metrics().inFlightRequests(),
-                "uptime_seconds", model.metrics().uptimeSeconds()
-        );
+        return healthPayload(service.getModel(id));
     }
 
-    /**
-     * Reloads a model from disk into active memory. Accessible only from localhost.
-     *
-     * @param id the model ID.
-     * @return reload confirmation.
-     */
+    @GET
+    @Path("/{id}/versions/{version}/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> healthVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version) {
+        return healthPayload(service.getModelVersion(id, version));
+    }
+
+    @GET
+    @Path("/{id}/aliases/{alias}/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> healthAlias(@PathParam("id") String id,
+                                           @PathParam("alias") String alias) {
+        return healthPayload(service.getModelAlias(id, alias));
+    }
+
+    private static Map<String, Object> healthPayload(InferenceModel model) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", model.slug());
+        map.put("version", model.version());
+        map.put("status", model.state().name());
+        map.put("in_flight_requests", model.metrics().inFlightRequests());
+        map.put("uptime_seconds", model.metrics().uptimeSeconds());
+        return map;
+    }
+
+    // --------------------------------------------------------------- alias management
+
+    @PUT
+    @Path("/{id}/aliases/{alias}")
+    @LocalhostOnly
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> setAlias(@PathParam("id") String id,
+                                        @PathParam("alias") String alias,
+                                        JsonObject request) {
+        if (request == null || request.getString("version") == null || request.getString("version").isBlank()) {
+            throw new BadRequestException("Request body must contain non-blank 'version'");
+        }
+        String version = request.getString("version").strip();
+        ModelRegistry.SlugVersions updated = service.setAlias(id, alias, version);
+        Map<String, Object> resp = new LinkedHashMap<>();
+        resp.put("status", "updated");
+        resp.put("slug", updated.slug());
+        resp.put("alias", alias);
+        resp.put("version", version);
+        resp.put("default", updated.defaultVersion());
+        resp.put("latest", updated.latestVersion());
+        resp.put("versions", updated.versions());
+        resp.put("aliases", updated.aliases());
+        return resp;
+    }
+
+    @DELETE
+    @Path("/{id}/aliases/{alias}")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> deleteAlias(@PathParam("id") String id,
+                                           @PathParam("alias") String alias) {
+        ModelRegistry.SlugVersions updated = service.deleteAlias(id, alias);
+        Map<String, Object> resp = new LinkedHashMap<>();
+        resp.put("status", "deleted");
+        resp.put("slug", updated.slug());
+        resp.put("alias", alias);
+        resp.put("default", updated.defaultVersion());
+        resp.put("latest", updated.latestVersion());
+        resp.put("versions", updated.versions());
+        resp.put("aliases", updated.aliases());
+        return resp;
+    }
+
+    // --------------------------------------------------------------- reload & unload
+
     @POST
     @Path("/{id}/reload")
     @LocalhostOnly
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> reload(@PathParam("id") String id) {
-        var reloaded = service.reloadModel(id);
-        return Map.of(
-                "status", "reloaded",
-                "id", reloaded.id(),
-                "path", reloaded.path().toString(),
-                "algorithm", reloaded.metadata().algorithm(),
-                "timestamp", Instant.now().getEpochSecond()
-        );
+        return reloadPayload(service.reloadModel(id));
     }
 
-    /**
-     * Unloads a model from active memory, gracefully waiting for in-flight requests.
-     * Accessible only from localhost.
-     *
-     * @param id           the model ID.
-     * @param timeoutSecs  grace period in seconds to wait for in-flight requests (default: 10s).
-     * @return unload confirmation.
-     */
+    @POST
+    @Path("/{id}/versions/{version}/reload")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> reloadVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version) {
+        return reloadPayload(service.reloadModelVersion(id, version));
+    }
+
+    private static Map<String, Object> reloadPayload(InferenceModel reloaded) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "reloaded");
+        map.put("id", reloaded.slug());
+        map.put("version", reloaded.version());
+        map.put("path", reloaded.path().toString());
+        map.put("algorithm", reloaded.metadata().algorithm());
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
+    }
+
     @POST
     @Path("/{id}/unload")
     @LocalhostOnly
@@ -141,15 +246,25 @@ public class InferenceResource {
         );
     }
 
-    /**
-     * Online updates a model with a single JSON observation, optionally persisting the model to disk.
-     * Accessible only from localhost.
-     *
-     * @param persist whether to persist the updated model to its {@code .sml} file on disk.
-     * @param id      the model ID.
-     * @param request JSON object containing feature values (and target value for supervised models).
-     * @return update confirmation.
-     */
+    @POST
+    @Path("/{id}/versions/{version}/unload")
+    @LocalhostOnly
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> unloadVersion(@PathParam("id") String id,
+                                             @PathParam("version") String version,
+                                             @QueryParam("timeout") @DefaultValue("10") long timeoutSecs) {
+        boolean drained = service.unloadModelVersion(id, version, Duration.ofSeconds(Math.max(1, timeoutSecs)));
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "unloaded");
+        map.put("id", id);
+        map.put("version", version);
+        map.put("drained", drained);
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
+    }
+
+    // --------------------------------------------------------------- online updates
+
     @POST
     @Path("/{id}/update")
     @LocalhostOnly
@@ -158,27 +273,45 @@ public class InferenceResource {
     public Map<String, Object> update(@QueryParam("persist") boolean persist,
                                       @PathParam("id") String id,
                                       JsonObject request) {
-        service.update(id, request, persist);
-        return Map.of(
-                "status", "updated",
-                "id", id,
-                "updated", 1,
-                "persisted", persist,
-                "timestamp", Instant.now().getEpochSecond()
-        );
+        return doUpdate(service.getModel(id), request, persist);
     }
 
-    /**
-     * Online updates a model over a multi-line request body (JSON lines or CSV),
-     * optionally persisting the model to disk after the batch completes.
-     * Accessible only from localhost.
-     *
-     * @param persist     whether to persist the updated model to its {@code .sml} file on disk.
-     * @param contentType the MIME type of each input line.
-     * @param id          the model ID.
-     * @param input       the request body input stream.
-     * @return update confirmation with the number of rows processed.
-     */
+    @POST
+    @Path("/{id}/versions/{version}/update")
+    @LocalhostOnly
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> updateVersion(@QueryParam("persist") boolean persist,
+                                             @PathParam("id") String id,
+                                             @PathParam("version") String version,
+                                             JsonObject request) {
+        return doUpdate(service.getModelVersion(id, version), request, persist);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}/update")
+    @LocalhostOnly
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> updateAlias(@QueryParam("persist") boolean persist,
+                                           @PathParam("id") String id,
+                                           @PathParam("alias") String alias,
+                                           JsonObject request) {
+        return doUpdate(service.getModelAlias(id, alias), request, persist);
+    }
+
+    private Map<String, Object> doUpdate(InferenceModel model, JsonObject request, boolean persist) {
+        service.update(model, request, persist);
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "updated");
+        map.put("id", model.slug());
+        map.put("version", model.version());
+        map.put("updated", 1);
+        map.put("persisted", persist);
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
+    }
+
     @POST
     @Path("/{id}/update/stream")
     @LocalhostOnly
@@ -188,9 +321,38 @@ public class InferenceResource {
                                             @HeaderParam("Content-Type") String contentType,
                                             @PathParam("id") String id,
                                             InputStream input) {
-        var model = service.getModel(id);
+        return doUpdateStream(service.getModel(id), contentType, input, persist);
+    }
+
+    @POST
+    @Path("/{id}/versions/{version}/update/stream")
+    @LocalhostOnly
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> updateStreamVersion(@QueryParam("persist") boolean persist,
+                                                   @HeaderParam("Content-Type") String contentType,
+                                                   @PathParam("id") String id,
+                                                   @PathParam("version") String version,
+                                                   InputStream input) {
+        return doUpdateStream(service.getModelVersion(id, version), contentType, input, persist);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}/update/stream")
+    @LocalhostOnly
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> updateStreamAlias(@QueryParam("persist") boolean persist,
+                                                 @HeaderParam("Content-Type") String contentType,
+                                                 @PathParam("id") String id,
+                                                 @PathParam("alias") String alias,
+                                                 InputStream input) {
+        return doUpdateStream(service.getModelAlias(id, alias), contentType, input, persist);
+    }
+
+    private Map<String, Object> doUpdateStream(InferenceModel model, String contentType, InputStream input, boolean persist) {
         if (!model.isOnline()) {
-            throw new BadRequestException("Model '" + id + "' (" + model.metadata().algorithm() + ") does not support online learning");
+            throw new BadRequestException("Model '" + model.slug() + "' (" + model.metadata().algorithm() + ") does not support online learning");
         }
         if (persist) {
             service.checkBeforePersist(model);
@@ -210,7 +372,8 @@ public class InferenceResource {
                     count++;
                     if (service.hasListeners()) {
                         service.notifyListeners(InferenceEvent.onlineUpdate(
-                                id,
+                                model.slug(),
+                                model.version(),
                                 line,
                                 persist,
                                 System.nanoTime() - start));
@@ -225,55 +388,70 @@ public class InferenceResource {
         if (persist && count > 0) {
             service.persistModel(model);
         }
-        return Map.of(
-                "status", "updated",
-                "id", id,
-                "updated", count,
-                "persisted", persist && count > 0,
-                "timestamp", Instant.now().getEpochSecond()
-        );
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("status", "updated");
+        map.put("id", model.slug());
+        map.put("version", model.version());
+        map.put("updated", count);
+        map.put("persisted", persist && count > 0);
+        map.put("timestamp", Instant.now().getEpochSecond());
+        return map;
     }
 
-    /**
-     * Performs a single inference on JSON-encoded feature values with optional explanations.
-     *
-     * @param explainQuery optional query parameter {@code ?explain=true}.
-     * @param samples      optional KernelSHAP coalition sample count {@code ?samples=N}.
-     * @param ridge        optional KernelSHAP L2 ridge regularization {@code ?ridge=R}.
-     * @param id           the model ID.
-     * @param request      JSON object whose keys are feature names and optional {@code enableExplanations},
-     *                     {@code shapSamples}, {@code shapRidge}, or {@code shap}.
-     * @return the prediction with optional probabilities and explanations.
-     */
+    // --------------------------------------------------------------- predict & stream
+
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Prediction predict(@QueryParam("explain") boolean explainQuery,
-                              @QueryParam("samples") Integer samples,
-                              @QueryParam("ridge") Double ridge,
-                              @PathParam("id") String id,
-                              JsonObject request) {
-        boolean explain = isExplainRequested(explainQuery, request);
-        KernelSHAP.Options shapOptions = resolveShapOptions(samples, ridge, request);
-        return service.predict(id, request, explain, shapOptions);
+    public RestResponse<Prediction> predict(@QueryParam("explain") boolean explainQuery,
+                                            @QueryParam("samples") Integer samples,
+                                            @QueryParam("ridge") Double ridge,
+                                            @PathParam("id") String id,
+                                            JsonObject request) {
+        return doPredict(service.getModel(id), explainQuery, samples, ridge, request);
     }
 
-    /**
-     * Performs streaming inference over a multi-line request body.
-     * Each non-blank line is treated as a separate sample:
-     * either a JSON object (if {@code Content-Type: application/json}) or
-     * a comma-separated row of values (if {@code Content-Type: text/plain}).
-     * Results are emitted as a server-sent stream of JSON objects.
-     *
-     * @param explainQuery optional query parameter {@code ?explain=true}.
-     * @param samples      optional KernelSHAP coalition sample count {@code ?samples=N}.
-     * @param ridge        optional KernelSHAP L2 ridge regularization {@code ?ridge=R}.
-     * @param contentType  the MIME type of each input line.
-     * @param id           the model ID.
-     * @param input        the request body input stream.
-     * @return a reactive stream of JSON prediction strings.
-     */
+    @POST
+    @Path("/{id}/versions/{version}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<Prediction> predictVersion(@QueryParam("explain") boolean explainQuery,
+                                                   @QueryParam("samples") Integer samples,
+                                                   @QueryParam("ridge") Double ridge,
+                                                   @PathParam("id") String id,
+                                                   @PathParam("version") String version,
+                                                   JsonObject request) {
+        return doPredict(service.getModelVersion(id, version), explainQuery, samples, ridge, request);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public RestResponse<Prediction> predictAlias(@QueryParam("explain") boolean explainQuery,
+                                                 @QueryParam("samples") Integer samples,
+                                                 @QueryParam("ridge") Double ridge,
+                                                 @PathParam("id") String id,
+                                                 @PathParam("alias") String alias,
+                                                 JsonObject request) {
+        return doPredict(service.getModelAlias(id, alias), explainQuery, samples, ridge, request);
+    }
+
+    private RestResponse<Prediction> doPredict(InferenceModel model,
+                                               boolean explainQuery,
+                                               Integer samples,
+                                               Double ridge,
+                                               JsonObject request) {
+        boolean explain = isExplainRequested(explainQuery, request);
+        KernelSHAP.Options shapOptions = resolveShapOptions(samples, ridge, request);
+        Prediction prediction = service.predict(model, request, explain, shapOptions);
+        return RestResponse.ResponseBuilder.ok(prediction)
+                .header(HEADER_MODEL_ID, model.slug())
+                .header(HEADER_MODEL_VERSION, model.version())
+                .build();
+    }
+
     @POST
     @Path("/{id}/stream")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -285,10 +463,46 @@ public class InferenceResource {
                                 @HeaderParam("Content-Type") String contentType,
                                 @PathParam("id") String id,
                                 InputStream input) {
-        var model = service.getModel(id);
+        return doStream(service.getModel(id), explainQuery, samples, ridge, contentType, input);
+    }
+
+    @POST
+    @Path("/{id}/versions/{version}/stream")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> streamVersion(@QueryParam("explain") boolean explainQuery,
+                                       @QueryParam("samples") Integer samples,
+                                       @QueryParam("ridge") Double ridge,
+                                       @HeaderParam("Content-Type") String contentType,
+                                       @PathParam("id") String id,
+                                       @PathParam("version") String version,
+                                       InputStream input) {
+        return doStream(service.getModelVersion(id, version), explainQuery, samples, ridge, contentType, input);
+    }
+
+    @POST
+    @Path("/{id}/aliases/{alias}/stream")
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.TEXT_PLAIN)
+    public Multi<String> streamAlias(@QueryParam("explain") boolean explainQuery,
+                                     @QueryParam("samples") Integer samples,
+                                     @QueryParam("ridge") Double ridge,
+                                     @HeaderParam("Content-Type") String contentType,
+                                     @PathParam("id") String id,
+                                     @PathParam("alias") String alias,
+                                     InputStream input) {
+        return doStream(service.getModelAlias(id, alias), explainQuery, samples, ridge, contentType, input);
+    }
+
+    private Multi<String> doStream(InferenceModel model,
+                                   boolean explainQuery,
+                                   Integer samples,
+                                   Double ridge,
+                                   String contentType,
+                                   InputStream input) {
         KernelSHAP.Options queryShapOptions = resolveShapOptions(samples, ridge, null);
-        // Treat any content-type that starts with "application/json" as JSON,
-        // including "application/json; charset=utf-8".
         boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
         return Multi.createFrom().emitter(emitter -> {
             Infrastructure.getDefaultWorkerPool().submit(() -> {
@@ -309,7 +523,8 @@ public class InferenceResource {
                             }
                             if (service.hasListeners()) {
                                 service.notifyListeners(InferenceEvent.smilePredict(
-                                        id,
+                                        model.slug(),
+                                        model.version(),
                                         InferenceEvent.Action.STREAM_PREDICT,
                                         line,
                                         response,
@@ -325,6 +540,16 @@ public class InferenceResource {
                 }
             });
         });
+    }
+
+    private static Map<String, Object> versionsPayload(ModelRegistry.SlugVersions info) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("slug", info.slug());
+        map.put("default", info.defaultVersion());
+        map.put("latest", info.latestVersion());
+        map.put("versions", info.versions());
+        map.put("aliases", info.aliases());
+        return map;
     }
 
     private static boolean isExplainRequested(boolean explainQuery, JsonObject request) {

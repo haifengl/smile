@@ -17,23 +17,23 @@
  */
 package smile.serve;
 
-import java.io.IOException;
 import java.io.InvalidClassException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 import io.quarkus.arc.All;
-import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -47,42 +47,52 @@ import org.jboss.logging.Logger;
 import smile.feature.importance.KernelSHAP;
 import smile.model.Model;
 import smile.model.Prediction;
+import smile.serve.model.ModelDiscovery;
+import smile.serve.model.ModelLoadOptions;
+import smile.serve.model.ModelManifest;
 import smile.serve.model.ModelObject;
+import smile.serve.model.ModelRef;
+import smile.serve.model.ModelRegistry;
+import smile.serve.model.ModelSource;
 import smile.serve.model.OpenAiModelContributor;
 import smile.serve.model.QuarantinedModel;
 import smile.serve.model.SmileModelDetails;
 
 /**
- * Application-scoped service that loads and manages serialized SMILE
- * models ({@code *.sml}) and delegates inference requests to them.
+ * Inference service that loads serialized SMILE models and executes predictions.
  *
- * <p>Models are discovered once at startup from the path configured by
- * {@code smile.serve.model}. The path may point to a single {@code .sml}
- * file or to a directory; in the latter case every {@code .sml} file in
- * the directory is loaded.
+ * <p>Models are registered by structured {@link ModelRef} {@code (slug, version)}
+ * in {@link ModelRegistry}, supporting flat files, versioned directory trees
+ * ({@code <dir>/<slug>/<version>/<file>.sml}), declarative {@code models.json}
+ * manifests, and mutable routing aliases ({@code default}, {@code latest}, and
+ * custom aliases).
  *
  * @author Haifeng Li
  */
-@Startup
 @ApplicationScoped
 public class InferenceService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
-    /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
-    private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
-    private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
-    /** Models on disk that failed verification or deserialization. */
+
+    private final ModelRegistry<InferenceModel> registry = new ModelRegistry<>();
     private final Map<Path, QuarantinedModel> quarantined = Collections.synchronizedMap(new TreeMap<>());
-    /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
-    /** Observes inference executions and model lifecycle events. */
     private final List<InferenceListener> listeners;
-    /** Synchronous pre-deserialization model artifact verifiers. */
     private final List<ModelArtifactVerifier> verifiers;
 
     /**
-     * Loads ML models upon application start.
+     * Loads models upon application start without external telemetry binders,
+     * inference listeners, or artifact verifiers.
      *
-     * @param config         the service configuration.
+     * @param config the inference service configuration.
+     */
+    public InferenceService(InferenceServiceConfig config) {
+        this(config, List.of(), List.of(), List.of());
+    }
+
+    /**
+     * Loads models upon application start without inference listeners or artifact verifiers.
+     *
+     * @param config         the inference service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
     public InferenceService(InferenceServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
@@ -90,9 +100,9 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     /**
-     * Loads ML models upon application start.
+     * Loads models upon application start without artifact verifiers.
      *
-     * @param config         the service configuration.
+     * @param config         the inference service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      * @param listeners      inference and lifecycle listeners discovered on the classpath.
      */
@@ -103,10 +113,9 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     /**
-     * Loads ML models upon application start.
-     * The {@code @ApplicationScoped} scope ensures the models are loaded once and reused.
+     * Loads models upon application start.
      *
-     * @param config         the service configuration.
+     * @param config         the inference service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      * @param listeners      inference and lifecycle listeners discovered on the classpath.
      * @param verifiers      synchronous pre-deserialization model artifact verifiers.
@@ -119,50 +128,92 @@ public class InferenceService implements OpenAiModelContributor {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
+
+        String servedId = config.servedModelId()
+                .map(String::strip)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
+        Path manifestPath = config.manifest()
+                .map(String::strip)
+                .filter(s -> !s.isEmpty())
+                .map(Path::of)
+                .orElse(null);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
-        if (Files.isRegularFile(path)) {
-            loadModel(path);
-        } else if (Files.isDirectory(path)) {
-            try (Stream<Path> files = Files.list(path)) {
-                files.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(".sml"))
-                     .forEach(this::loadModel);
-            } catch (IOException ex) {
-                logger.errorf(ex, "Failed to list model directory '%s'", path);
-                recordQuarantine(path, ex);
-            }
-        } else {
-            logger.errorf("'%s' is not a regular file or directory", path);
+
+        if (!Files.exists(path) && manifestPath == null) {
+            logger.infof("SMILE model path '%s' not found — SMILE inference service starting empty.", path);
+            return;
         }
+
+        ModelDiscovery.Plan plan = ModelDiscovery.discover(
+                path, ModelManifest.Kind.SML, manifestPath, servedId, false);
+        for (ModelDiscovery.DiscoveryError err : plan.errors()) {
+            logger.errorf(err.error(), "Model discovery failed for '%s'", err.path());
+            recordQuarantine(err.path(), err.error());
+        }
+
+        for (ModelDiscovery.Candidate candidate : plan.candidates()) {
+            loadStartupModel(candidate.source());
+        }
+
+        applyStartupRouting(plan);
     }
 
-    /**
-     * Loads a single model file and registers it by its ID.
-     *
-     * @param path the model file path.
-     */
-    private void loadModel(Path path) {
-        Path normalized = path.toAbsolutePath().normalize();
+    private void loadStartupModel(ModelSource source) {
+        Path normalized = source.path();
         try {
             logger.infof("Loading model from '%s'", normalized);
-            Model m = verifyAndReadModel(normalized);
-            var model = new InferenceModel(m, normalized);
-            models.put(model.id(), model);
-            modelPaths.put(model.id(), normalized);
+            Model m = verifyAndReadModel(source);
+            ModelRef ref = InferenceModel.resolveRef(m, source);
+            var model = new InferenceModel(m, source, ref);
+            registry.register(new ModelRegistry.Entry<>(ref, model, source));
             quarantined.remove(normalized);
-            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
+            registerMetrics(model);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.SMILE_NAMESPACE,
-                    model.id(),
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.MODEL_LOADED,
                     normalized.toString()));
-            logger.infof("Model '%s' loaded successfully", model.id());
+            logger.infof("Model '%s' (version '%s') loaded successfully", model.slug(), model.version());
         } catch (Throwable ex) {
             logger.errorf(ex, "Failed to load model from '%s'", normalized);
             recordQuarantine(normalized, ex);
         }
     }
 
-    private Model verifyAndReadModel(Path path) throws Exception {
+    private void applyStartupRouting(ModelDiscovery.Plan plan) {
+        for (var e : plan.defaultVersions().entrySet()) {
+            try {
+                if (registry.contains(new ModelRef(e.getKey(), e.getValue()))) {
+                    registry.setAlias(e.getKey(), ModelRef.ALIAS_DEFAULT, e.getValue());
+                } else {
+                    logger.warnf("Skipping manifest default version '%s' for '%s': version did not load",
+                            e.getValue(), e.getKey());
+                }
+            } catch (IllegalArgumentException ex) {
+                logger.warnf(ex, "Failed to apply default version '%s' for '%s'", e.getValue(), e.getKey());
+            }
+        }
+        for (var slugEntry : plan.aliases().entrySet()) {
+            String slug = slugEntry.getKey();
+            for (var aliasEntry : slugEntry.getValue().entrySet()) {
+                try {
+                    if (registry.contains(new ModelRef(slug, aliasEntry.getValue()))) {
+                        registry.setAlias(slug, aliasEntry.getKey(), aliasEntry.getValue());
+                    } else {
+                        logger.warnf("Skipping manifest alias '%s' -> '%s' for '%s': target version did not load",
+                                aliasEntry.getKey(), aliasEntry.getValue(), slug);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    logger.warnf(ex, "Failed to apply alias '%s' for '%s'", aliasEntry.getKey(), slug);
+                }
+            }
+        }
+    }
+
+    private Model verifyAndReadModel(ModelSource source) throws Exception {
+        Path path = source.path();
         long t0 = System.nanoTime();
         String fileName = path.getFileName() != null ? path.getFileName().toString() : path.toString();
         try {
@@ -174,8 +225,7 @@ public class InferenceService implements OpenAiModelContributor {
                 verifier.verifyLoadedSmileModel(path, m);
             }
             if (!verifiers.isEmpty() && !listeners.isEmpty()) {
-                String modelId = m.getTag(Model.ID, smile.io.Paths.getFileName(path)) + "-"
-                        + m.getTag(Model.VERSION, "1");
+                ModelRef ref = InferenceModel.resolveRef(m, source);
                 boolean allVerified = true;
                 String details = path.toString();
                 for (ModelArtifactVerifier verifier : verifiers) {
@@ -189,7 +239,8 @@ public class InferenceService implements OpenAiModelContributor {
                 }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.SMILE_NAMESPACE,
-                        modelId,
+                        ref.slug(),
+                        ref.version(),
                         allVerified,
                         details,
                         System.nanoTime() - t0));
@@ -206,7 +257,8 @@ public class InferenceService implements OpenAiModelContributor {
                 }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.SMILE_NAMESPACE,
-                        fileName,
+                        source.slugOverride() != null ? source.slugOverride() : fileName,
+                        source.versionOverride(),
                         false,
                         details,
                         System.nanoTime() - t0));
@@ -248,6 +300,16 @@ public class InferenceService implements OpenAiModelContributor {
         return true;
     }
 
+    private void registerMetrics(InferenceModel model) {
+        metricsBinders.forEach(b -> b.register(
+                ModelMetricsBinder.SMILE_NAMESPACE, model.slug(), model.version(), model.metrics()));
+    }
+
+    private void unregisterMetrics(ModelRef ref) {
+        metricsBinders.forEach(b -> b.unregister(
+                ModelMetricsBinder.SMILE_NAMESPACE, ref.slug(), ref.version()));
+    }
+
     @Override
     public List<QuarantinedModel> listQuarantinedModels() {
         synchronized (quarantined) {
@@ -256,25 +318,25 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     /**
-     * Returns OpenAI-shaped descriptors for every loaded SMILE {@code .sml} model.
+     * Returns one OpenAI-shaped descriptor per loaded SMILE model slug (representing
+     * the slug's active default version, with {@code version} and {@code versions}).
      *
-     * <p>{@code owned_by} comes from the model tag {@code author} or {@code owner}
-     * when present; otherwise {@link ModelObject#UNKNOWN_OWNER}.
-     *
-     * @return OpenAI model objects in id order.
+     * @return OpenAI model objects in slug order.
      */
     @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
-        synchronized (models) {
-            for (InferenceModel model : models.values()) {
-                var meta = model.metadata();
-                result.add(ModelObject.of(
-                        model.id(),
-                        ModelObject.createdFromPath(model.path()),
-                        ModelObject.ownedByFromTags(meta.tags()),
-                        meta.algorithm()));
-            }
+        for (var entry : registry.defaultEntries()) {
+            InferenceModel model = entry.model();
+            var info = registry.versionsInfo(model.slug()).orElse(null);
+            var meta = model.metadata();
+            result.add(ModelObject.of(
+                    model.slug(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromTags(meta.tags()),
+                    meta.algorithm(),
+                    model.version(),
+                    info != null ? info.versions() : List.of(model.version())));
         }
         return result;
     }
@@ -282,7 +344,10 @@ public class InferenceService implements OpenAiModelContributor {
     /**
      * Looks up a loaded SMILE model as an OpenAI {@link ModelObject}.
      *
-     * @param id       the model id.
+     * <p>Accepts a bare {@code {slug}}, {@code {slug}/versions/{version}}, or
+     * {@code {slug}/aliases/{alias}}.
+     *
+     * @param id       the model identifier or versioned/aliased selector.
      * @param detailed when {@code true}, include {@link SmileModelDetails}.
      * @return the model object when loaded; otherwise empty.
      */
@@ -291,104 +356,247 @@ public class InferenceService implements OpenAiModelContributor {
         if (id == null || id.isBlank()) {
             return Optional.empty();
         }
-        InferenceModel model = models.get(id);
-        if (model == null) {
+        Optional<ModelRegistry.Entry<InferenceModel>> entry = resolveOpenAiSelector(id);
+        if (entry.isEmpty()) {
             return Optional.empty();
         }
-        var meta = model.metadata();
-        SmileModelDetails smile = detailed ? SmileModelDetails.of(model.model(), meta) : null;
+        InferenceModel model = entry.get().model();
+        var info = registry.versionsInfo(model.slug()).orElse(null);
+        List<String> versions = info != null ? info.versions() : List.of(model.version());
+        String defaultVer = info != null ? info.defaultVersion() : model.version();
+        Map<String, String> aliases = info != null ? info.aliases() : Map.of();
+        var meta = model.metadata(versions, aliases);
+        SmileModelDetails smile = detailed
+                ? SmileModelDetails.of(model.model(), meta, defaultVer, versions, aliases)
+                : null;
         return Optional.of(ModelObject.of(
-                model.id(),
+                model.slug(),
                 ModelObject.createdFromPath(model.path()),
                 ModelObject.ownedByFromTags(meta.tags()),
                 meta.algorithm(),
+                model.version(),
+                versions,
                 smile,
                 null,
                 null));
     }
 
+    private Optional<ModelRegistry.Entry<InferenceModel>> resolveOpenAiSelector(String id) {
+        int versionsIdx = id.indexOf("/versions/");
+        if (versionsIdx > 0) {
+            String slug = id.substring(0, versionsIdx);
+            String version = id.substring(versionsIdx + "/versions/".length());
+            return registry.resolveVersion(slug, version);
+        }
+        int aliasesIdx = id.indexOf("/aliases/");
+        if (aliasesIdx > 0) {
+            String slug = id.substring(0, aliasesIdx);
+            String alias = id.substring(aliasesIdx + "/aliases/".length());
+            return registry.resolveAlias(slug, alias);
+        }
+        return registry.resolve(id);
+    }
+
     /**
      * Looks up a loaded SMILE model as a lean OpenAI {@link ModelObject}.
-     *
-     * @param id the model id.
-     * @return the model object when loaded; otherwise empty.
      */
     public Optional<ModelObject> findOpenAiModel(String id) {
         return findOpenAiModel(id, false);
     }
 
     /**
-     * Returns the model with the given ID.
-     *
-     * @param id the model ID.
-     * @return the model instance.
-     * @throws NotFoundException if no model with that ID has been loaded.
+     * Returns whether any version of {@code slug} is currently loaded.
      */
-    public InferenceModel getModel(String id) throws NotFoundException {
-        var model = models.get(id);
-        if (model == null) throw new NotFoundException("Model not found: " + id);
-        return model;
+    public boolean hasSlug(String slug) {
+        return registry.containsSlug(slug);
     }
 
     /**
-     * Returns a snapshot of the loaded models keyed by id, in id order.
+     * Returns the active default version for {@code slug}.
      *
-     * @return an immutable snapshot of the loaded models.
+     * @param slug the model slug.
+     * @return the default model instance.
+     * @throws NotFoundException if no version of {@code slug} is loaded.
+     */
+    public InferenceModel getModel(String slug) throws NotFoundException {
+        return registry.resolve(slug)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException("Model not found: " + slug));
+    }
+
+    /**
+     * Returns a specific version of {@code slug}.
+     *
+     * @param slug    the model slug.
+     * @param version the model version.
+     * @return the model instance.
+     * @throws NotFoundException if not loaded.
+     */
+    public InferenceModel getModelVersion(String slug, String version) throws NotFoundException {
+        return registry.resolveVersion(slug, version)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException(
+                        "Model '" + slug + "' version '" + version + "' not found"));
+    }
+
+    /**
+     * Returns the version of {@code slug} resolved by {@code alias}
+     * ({@code "default"}, {@code "latest"}, or a custom alias).
+     *
+     * @param slug  the model slug.
+     * @param alias the alias name.
+     * @return the resolved model instance.
+     * @throws NotFoundException if slug or alias is not found.
+     */
+    public InferenceModel getModelAlias(String slug, String alias) throws NotFoundException {
+        return registry.resolveAlias(slug, alias)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException(
+                        "Model '" + slug + "' alias '" + alias + "' not found"));
+    }
+
+    /**
+     * Returns metadata for {@code model} enriched with sibling version and alias info.
+     */
+    public ModelMetadata metadataFor(InferenceModel model) {
+        var info = registry.versionsInfo(model.slug()).orElse(null);
+        if (info == null) {
+            return model.metadata();
+        }
+        return model.metadata(info.versions(), info.aliases());
+    }
+
+    /**
+     * Returns version and alias summary for {@code slug}.
+     *
+     * @param slug the model slug.
+     * @return version and alias summary.
+     * @throws NotFoundException if {@code slug} is not loaded.
+     */
+    public ModelRegistry.SlugVersions getVersions(String slug) throws NotFoundException {
+        return registry.versionsInfo(slug)
+                .orElseThrow(() -> new NotFoundException("Model not found: " + slug));
+    }
+
+    /**
+     * Assigns or updates an alias (including {@code "default"}) for {@code slug}.
+     *
+     * @param slug    the model slug.
+     * @param alias   the alias name (cannot be {@code "latest"}).
+     * @param version target loaded version.
+     * @return updated version summary.
+     * @throws NotFoundException   if the slug or target version is not loaded.
+     * @throws BadRequestException if the alias name is invalid or reserved.
+     */
+    public ModelRegistry.SlugVersions setAlias(String slug, String alias, String version)
+            throws NotFoundException, BadRequestException {
+        String validSlug;
+        String validAlias;
+        String validVersion;
+        try {
+            validSlug = ModelRef.validateSlug(slug);
+            validAlias = ModelRef.validateAlias(alias);
+            validVersion = ModelRef.validateVersion(version);
+            if (ModelRef.ALIAS_LATEST.equals(validAlias)) {
+                throw new BadRequestException("Alias 'latest' is reserved and always resolves to the highest version");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+        if (!registry.containsSlug(validSlug)) {
+            throw new NotFoundException("Model not found: " + validSlug);
+        }
+        if (!registry.contains(new ModelRef(validSlug, validVersion))) {
+            throw new NotFoundException("Model '" + validSlug + "' version '" + validVersion + "' not found");
+        }
+        return registry.setAlias(validSlug, validAlias, validVersion);
+    }
+
+    /**
+     * Deletes a custom alias, or unpins {@code "default"} so it reverts to tracking {@code latest}.
+     *
+     * @param slug  the model slug.
+     * @param alias the alias name.
+     * @return updated version summary.
+     * @throws NotFoundException   if the slug or custom alias does not exist.
+     * @throws BadRequestException if the alias is invalid or reserved ({@code "latest"}).
+     */
+    public ModelRegistry.SlugVersions deleteAlias(String slug, String alias)
+            throws NotFoundException, BadRequestException {
+        String validSlug;
+        String validAlias;
+        try {
+            validSlug = ModelRef.validateSlug(slug);
+            validAlias = ModelRef.validateAlias(alias);
+            if (ModelRef.ALIAS_LATEST.equals(validAlias)) {
+                throw new BadRequestException("Alias 'latest' is reserved and cannot be deleted");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+        if (!registry.containsSlug(validSlug)) {
+            throw new NotFoundException("Model not found: " + validSlug);
+        }
+        boolean removed = registry.deleteAlias(validSlug, validAlias);
+        if (!removed && !ModelRef.ALIAS_DEFAULT.equals(validAlias)) {
+            throw new NotFoundException("Alias '" + validAlias + "' not found on model '" + validSlug + "'");
+        }
+        return getVersions(validSlug);
+    }
+
+    /**
+     * Returns a snapshot of the default loaded model per slug, in slug order.
      */
     public Map<String, InferenceModel> models() {
-        synchronized (models) {
-            return Map.copyOf(models);
+        Map<String, InferenceModel> map = new LinkedHashMap<>();
+        for (var entry : registry.defaultEntries()) {
+            map.put(entry.ref().slug(), entry.model());
         }
+        return Collections.unmodifiableMap(map);
     }
 
     /**
-     * Performs inference using JSON-encoded input.
-     *
-     * @param modelId the model ID.
-     * @param request the feature values as a JSON object.
-     * @return the inference result.
-     * @throws BadRequestException if the request body is malformed.
-     * @throws NotFoundException   if the model ID is unknown.
+     * Returns every active loaded model version across all slugs.
      */
-    public Prediction predict(String modelId, JsonObject request)
-            throws BadRequestException, NotFoundException {
-        return predict(modelId, request, false);
+    public List<InferenceModel> allModels() {
+        return registry.allEntries().stream().map(ModelRegistry.Entry::model).toList();
     }
 
     /**
-     * Performs inference using JSON-encoded input with optional explanations.
-     *
-     * @param modelId the model ID.
-     * @param request the feature values as a JSON object.
-     * @param explain whether to generate model explanations.
-     * @return the inference result.
-     * @throws BadRequestException if the request body is malformed.
-     * @throws NotFoundException   if the model ID is unknown.
+     * Performs inference using JSON-encoded input on the default version of {@code slug}.
      */
-    public Prediction predict(String modelId, JsonObject request, boolean explain)
+    public Prediction predict(String slug, JsonObject request)
             throws BadRequestException, NotFoundException {
-        return predict(modelId, request, explain, null);
+        return predict(slug, request, false, null);
     }
 
     /**
-     * Performs inference using JSON-encoded input with optional explanations
-     * and custom {@link KernelSHAP.Options}.
-     *
-     * @param modelId     the model ID.
-     * @param request     the feature values as a JSON object.
-     * @param explain     whether to generate model explanations.
-     * @param shapOptions optional KernelSHAP options (may be {@code null}).
-     * @return the inference result.
-     * @throws BadRequestException if the request body is malformed.
-     * @throws NotFoundException   if the model ID is unknown.
+     * Performs inference using JSON-encoded input with optional explanations on the default version of {@code slug}.
      */
-    public Prediction predict(String modelId, JsonObject request, boolean explain, KernelSHAP.Options shapOptions)
+    public Prediction predict(String slug, JsonObject request, boolean explain)
             throws BadRequestException, NotFoundException {
+        return predict(slug, request, explain, null);
+    }
+
+    /**
+     * Performs inference using JSON-encoded input on the default version of {@code slug}.
+     */
+    public Prediction predict(String slug, JsonObject request, boolean explain, KernelSHAP.Options shapOptions)
+            throws BadRequestException, NotFoundException {
+        return predict(getModel(slug), request, explain, shapOptions);
+    }
+
+    /**
+     * Performs inference against a resolved {@link InferenceModel} instance and emits audit events.
+     */
+    public Prediction predict(InferenceModel model, JsonObject request, boolean explain, KernelSHAP.Options shapOptions)
+            throws BadRequestException {
         long start = System.nanoTime();
-        Prediction prediction = getModel(modelId).predict(request, explain, shapOptions);
+        Prediction prediction = model.predict(request, explain, shapOptions);
         if (!listeners.isEmpty()) {
             notifyListeners(InferenceEvent.smilePredict(
-                    modelId,
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.PREDICT,
                     request != null ? request.encode() : null,
                     prediction,
@@ -400,8 +608,6 @@ public class InferenceService implements OpenAiModelContributor {
 
     /**
      * Notifies registered {@link InferenceListener} plugins of an event.
-     *
-     * @param event the event to publish.
      */
     void notifyListeners(InferenceEvent event) {
         for (InferenceListener listener : listeners) {
@@ -416,26 +622,26 @@ public class InferenceService implements OpenAiModelContributor {
 
     /**
      * Returns true if at least one {@link InferenceListener} is registered.
-     *
-     * @return true when listeners are present.
      */
     boolean hasListeners() {
         return !listeners.isEmpty();
     }
 
     /**
-     * Online updates a model using JSON-encoded input, optionally persisting to disk.
-     *
-     * @param modelId the model ID.
-     * @param request the feature (and optional target) values as a JSON object.
-     * @param persist whether to save the updated model to its {@code .sml} file on disk.
-     * @throws BadRequestException if the model is not online-capable or the request is malformed.
-     * @throws NotFoundException   if the model ID is unknown.
+     * Online updates the default version of {@code slug} using JSON-encoded input.
      */
-    public void update(String modelId, JsonObject request, boolean persist)
+    public void update(String slug, JsonObject request, boolean persist)
             throws BadRequestException, NotFoundException {
+        update(getModel(slug), request, persist);
+    }
+
+    /**
+     * Online updates a resolved {@link InferenceModel} using JSON-encoded input,
+     * optionally persisting to disk.
+     */
+    public void update(InferenceModel model, JsonObject request, boolean persist)
+            throws BadRequestException {
         long start = System.nanoTime();
-        InferenceModel model = getModel(modelId);
         if (persist) {
             checkBeforePersist(model);
         }
@@ -445,7 +651,8 @@ public class InferenceService implements OpenAiModelContributor {
         }
         if (!listeners.isEmpty()) {
             notifyListeners(InferenceEvent.onlineUpdate(
-                    modelId,
+                    model.slug(),
+                    model.version(),
                     request != null ? request.encode() : null,
                     persist,
                     System.nanoTime() - start));
@@ -455,9 +662,6 @@ public class InferenceService implements OpenAiModelContributor {
     /**
      * Checks registered {@link ModelArtifactVerifier} hooks before persisting an
      * online-updated model to disk.
-     *
-     * @param model the inference model.
-     * @throws ForbiddenException if online persistence is disallowed by policy.
      */
     public void checkBeforePersist(InferenceModel model) throws ForbiddenException {
         if (model.path() == null) {
@@ -476,9 +680,6 @@ public class InferenceService implements OpenAiModelContributor {
     /**
      * Atomically persists the in-memory model to disk and invokes post-persist
      * {@link ModelArtifactVerifier} hooks (such as local node re-signing).
-     *
-     * @param model the inference model.
-     * @throws ForbiddenException if post-persist verification/signing fails.
      */
     public void persistModel(InferenceModel model) throws ForbiddenException {
         checkBeforePersist(model);
@@ -497,170 +698,308 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     /**
-     * Reloads a model from its backing file on disk.
-     * If the model was previously unloaded, it is reloaded from its known file path.
+     * Reloads the default (or last known) version of {@code slug} from disk.
      *
-     * @param id the model ID.
+     * @param slug the model slug.
      * @return the reloaded inference model.
-     * @throws NotFoundException if the model or its file does not exist.
+     * @throws NotFoundException            if the model or its backing file does not exist.
+     * @throws ClientErrorException         if reloading would collide with another loaded version.
      * @throws InternalServerErrorException if the file fails to deserialize.
      */
-    public InferenceModel reloadModel(String id) throws NotFoundException, InternalServerErrorException {
-        Path path = modelPaths.get(id);
-        if (path == null) {
-            InferenceModel existing = models.get(id);
-            if (existing != null) {
-                path = existing.path();
-            }
-        }
-        if (path == null || !Files.isRegularFile(path)) {
-            throw new NotFoundException("Model file not found on disk: " + path);
-        }
+    public InferenceModel reloadModel(String slug)
+            throws NotFoundException, ClientErrorException, InternalServerErrorException {
+        ModelRef target = registry.reloadTargetForSlug(slug)
+                .orElseThrow(() -> new NotFoundException("Model not found: " + slug));
+        return reloadModelVersion(target.slug(), target.version());
+    }
+
+    /**
+     * Reloads a specific {@code (slug, version)} from its backing file on disk.
+     * Preserves any explicit slug/version overrides that were configured at load time.
+     *
+     * @param slug    the model slug.
+     * @param version the model version.
+     * @return the reloaded inference model.
+     */
+    public InferenceModel reloadModelVersion(String slug, String version)
+            throws NotFoundException, ClientErrorException, InternalServerErrorException {
+        ModelRef oldRef;
         try {
-            logger.infof("Reloading model '%s' from '%s'", id, path);
-            Path normalized = path.toAbsolutePath().normalize();
-            Model m = verifyAndReadModel(normalized);
-            var reloaded = new InferenceModel(m, normalized);
-            boolean idChanged = !reloaded.id().equals(id);
-            if (idChanged) {
-                models.remove(id);
-                modelPaths.remove(id);
+            oldRef = new ModelRef(slug, version);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("Model '" + slug + "' version '" + version + "' not found");
+        }
+        ModelSource source = registry.knownSource(oldRef).orElse(null);
+        if (source == null || !Files.isRegularFile(source.path())) {
+            throw new NotFoundException("Model file not found on disk for '" + oldRef + "'");
+        }
+
+        try {
+            logger.infof("Reloading model '%s' from '%s'", oldRef, source.path());
+            Model m = verifyAndReadModel(source);
+            ModelRef newRef = InferenceModel.resolveRef(m, source);
+            var reloaded = new InferenceModel(m, source, newRef);
+
+            try {
+                registry.replace(oldRef, new ModelRegistry.Entry<>(newRef, reloaded, source));
+            } catch (ModelRegistry.ConflictException ex) {
+                throw new ClientErrorException(ex.getMessage(), Response.Status.CONFLICT);
             }
-            models.put(reloaded.id(), reloaded);
-            modelPaths.put(reloaded.id(), normalized);
-            quarantined.remove(normalized);
-            metricsBinders.forEach(b -> {
-                if (idChanged) {
-                    b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id);
-                }
-                b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
-                b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
-            });
+
+            quarantined.remove(source.path());
+            if (!oldRef.equals(newRef)) {
+                unregisterMetrics(oldRef);
+            }
+            unregisterMetrics(newRef);
+            registerMetrics(reloaded);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.SMILE_NAMESPACE,
-                    reloaded.id(),
+                    reloaded.slug(),
+                    reloaded.version(),
                     InferenceEvent.Action.MODEL_RELOADED,
-                    normalized.toString()));
-            logger.infof("Model '%s' reloaded successfully", reloaded.id());
+                    source.path().toString()));
+            logger.infof("Model '%s' (version '%s') reloaded successfully", reloaded.slug(), reloaded.version());
             return reloaded;
+        } catch (ClientErrorException ex) {
+            throw ex;
         } catch (SecurityException ex) {
-            logger.errorf(ex, "Rejected reload of model '%s' from '%s'", id, path);
+            logger.errorf(ex, "Rejected reload of model '%s' from '%s'", oldRef, source.path());
             throw new ForbiddenException("Model artifact verification failed: " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            logger.errorf(ex, "Failed to reload model '%s' from '%s'", id, path);
+            logger.errorf(ex, "Failed to reload model '%s' from '%s'", oldRef, source.path());
             throw new InternalServerErrorException("Failed to reload model: " + ex.getMessage(), ex);
         }
     }
 
     /**
-     * Gracefully unloads a model from active memory, waiting for in-flight requests to complete.
+     * Gracefully unloads all active versions of {@code slug}, waiting for in-flight requests.
      *
-     * @param id           the model ID.
+     * @param slug         the model slug.
+     * @param graceTimeout max duration to wait per version for in-flight requests.
+     * @return {@code true} if all versions drained cleanly before timeout.
+     * @throws NotFoundException if {@code slug} is not loaded.
+     */
+    public boolean unloadModel(String slug, Duration graceTimeout) throws NotFoundException {
+        List<ModelRegistry.Entry<InferenceModel>> removed = registry.removeSlug(slug);
+        if (removed.isEmpty()) {
+            throw new NotFoundException("Model not found: " + slug);
+        }
+        boolean allDrained = true;
+        for (var entry : removed) {
+            InferenceModel existing = entry.model();
+            boolean drained = existing.unload(graceTimeout);
+            allDrained &= drained;
+            unregisterMetrics(entry.ref());
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.SMILE_NAMESPACE,
+                    existing.slug(),
+                    existing.version(),
+                    InferenceEvent.Action.MODEL_UNLOADED,
+                    "{\"drained\":" + drained + "}"));
+            logger.infof("Model '%s' (version '%s') unloaded (drained in-flight: %s)",
+                    existing.slug(), existing.version(), drained);
+        }
+        return allDrained;
+    }
+
+    /**
+     * Gracefully unloads a single {@code (slug, version)} from active memory.
+     *
+     * @param slug         the model slug.
+     * @param version      the model version.
      * @param graceTimeout max duration to wait for in-flight requests.
      * @return {@code true} if all in-flight requests completed before timeout.
-     * @throws NotFoundException if the model is not found.
+     * @throws NotFoundException if the version is not loaded.
      */
-    public boolean unloadModel(String id, Duration graceTimeout) throws NotFoundException {
-        InferenceModel existing = getModel(id);
+    public boolean unloadModelVersion(String slug, String version, Duration graceTimeout) throws NotFoundException {
+        ModelRef ref;
+        try {
+            ref = new ModelRef(slug, version);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("Model '" + slug + "' version '" + version + "' not found");
+        }
+        var removed = registry.removeVersion(ref)
+                .orElseThrow(() -> new NotFoundException(
+                        "Model '" + slug + "' version '" + version + "' not found"));
+        InferenceModel existing = removed.model();
         boolean drained = existing.unload(graceTimeout);
-        models.remove(id);
-        metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id));
+        unregisterMetrics(ref);
         notifyListeners(InferenceEvent.lifecycle(
                 ModelMetricsBinder.SMILE_NAMESPACE,
-                id,
+                existing.slug(),
+                existing.version(),
                 InferenceEvent.Action.MODEL_UNLOADED,
                 "{\"drained\":" + drained + "}"));
-        logger.infof("Model '%s' unloaded (drained in-flight: %s)", id, drained);
+        logger.infof("Model '%s' (version '%s') unloaded (drained in-flight: %s)",
+                existing.slug(), existing.version(), drained);
         return drained;
     }
 
     /**
      * Dynamically loads a model or directory of models from disk into active memory.
-     * Rejects with 409 Conflict if any model with the same ID is already loaded.
-     *
-     * @param path file or directory path.
-     * @return list of newly loaded inference models.
-     * @throws NotFoundException if path does not exist.
-     * @throws ClientErrorException if model with same ID is already loaded.
-     * @throws BadRequestException if the file is invalid.
      */
-    public List<InferenceModel> load(Path path) throws NotFoundException, ClientErrorException, BadRequestException {
+    public List<InferenceModel> load(Path path)
+            throws NotFoundException, ClientErrorException, BadRequestException {
+        return load(path, ModelLoadOptions.EMPTY);
+    }
+
+    /**
+     * Dynamically loads a model or directory of models from disk with optional
+     * slug, version, alias, and default-routing overrides.
+     *
+     * @param path    file or directory path.
+     * @param options optional identity and alias overrides.
+     * @return list of newly loaded inference models.
+     */
+    public List<InferenceModel> load(Path path, ModelLoadOptions options)
+            throws NotFoundException, ClientErrorException, BadRequestException {
+        ModelLoadOptions opts = options != null ? options : ModelLoadOptions.EMPTY;
         Path absPath = path.toAbsolutePath().normalize();
         if (!Files.exists(absPath)) {
             throw new NotFoundException("Path does not exist: " + path);
         }
-        List<Path> smlFiles = new ArrayList<>();
+
+        List<ModelSource> sources = new ArrayList<>();
+        Map<String, String> defaults = new LinkedHashMap<>();
+        Map<String, Map<String, String>> aliases = new LinkedHashMap<>();
+        Set<String> pinExistingDefaultSlugs = new HashSet<>();
+
         if (Files.isRegularFile(absPath)) {
-            smlFiles.add(absPath);
+            sources.add(new ModelSource(absPath, opts.slug(), opts.version()));
         } else if (Files.isDirectory(absPath)) {
-            try (Stream<Path> stream = Files.list(absPath)) {
-                stream.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".sml"))
-                      .forEach(smlFiles::add);
-            } catch (IOException e) {
-                throw new BadRequestException("Failed to read directory: " + path, e);
+            ModelDiscovery.Plan plan = ModelDiscovery.discover(
+                    absPath, ModelManifest.Kind.SML, null, null, false);
+            if (!plan.errors().isEmpty()) {
+                var first = plan.errors().getFirst();
+                throw new BadRequestException(
+                        "Failed to scan '" + first.path() + "': " + first.error().getMessage(),
+                        first.error());
             }
-        }
-        if (smlFiles.isEmpty()) {
-            throw new BadRequestException("No .sml models found at: " + path);
+            if (plan.candidates().isEmpty()) {
+                throw new BadRequestException("No .sml models found at: " + path);
+            }
+            if (opts.hasSingleArtifactOverrides() && plan.candidates().size() > 1) {
+                throw new BadRequestException(
+                        "Options 'slug', 'version', 'aliases', and 'set_default' are only supported when loading a single model");
+            }
+            if (plan.candidates().size() == 1 && opts.hasSingleArtifactOverrides()) {
+                ModelSource base = plan.candidates().getFirst().source();
+                sources.add(new ModelSource(
+                        base.path(),
+                        opts.slug() != null ? opts.slug() : base.slugOverride(),
+                        opts.version() != null ? opts.version() : base.versionOverride()));
+            } else {
+                for (var c : plan.candidates()) {
+                    sources.add(c.source());
+                }
+            }
+            defaults.putAll(plan.defaultVersions());
+            aliases.putAll(plan.aliases());
+        } else {
+            throw new BadRequestException("Path is not a regular file or directory: " + path);
         }
 
-        List<InferenceModel> loaded = new ArrayList<>();
-        Set<String> batchIds = new HashSet<>();
-        for (Path file : smlFiles) {
-            Path normalized = file.toAbsolutePath().normalize();
-            // Pre-deserialization duplicate ID check when SMLM extended header metadata is present
+        List<ModelRegistry.Entry<InferenceModel>> staged = new ArrayList<>();
+        Set<ModelRef> batchRefs = new HashSet<>();
+
+        for (ModelSource source : sources) {
+            Path normalized = source.path();
+            // Pre-deserialization duplicate check when SMLM extended header is present
             try {
                 smile.model.Format.Header header = smile.model.Format.inspect(normalized);
                 if (!header.legacy() && header.payloadSize() >= 0) {
-                    String headerId = header.modelId();
-                    String baseId = (headerId != null && !headerId.isBlank())
-                            ? headerId
-                            : smile.io.Paths.getFileName(normalized);
-                    String version = header.modelVersion() != null && !header.modelVersion().isBlank()
-                            ? header.modelVersion()
-                            : "1";
-                    String candidateId = baseId + "-" + version;
-                    if (models.containsKey(candidateId)) {
-                        throw new ClientErrorException(
-                                "Model '" + candidateId + "' is already loaded. Use POST /v1/smile/" + candidateId + "/reload to refresh it, or unload it first.",
-                                Response.Status.CONFLICT);
+                    ModelRef candidateRef = InferenceModel.resolveRefFromHeader(header, source);
+                    if (registry.contains(candidateRef) || batchRefs.contains(candidateRef)) {
+                        throw conflictException(candidateRef);
                     }
                 }
             } catch (ClientErrorException e) {
                 throw e;
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid model identity for " + normalized + ": " + e.getMessage(), e);
             } catch (IOException ignored) {
                 // Header/CRC/framing errors will be surfaced by verifyAndReadModel below
             }
 
             Model m;
             try {
-                m = verifyAndReadModel(normalized);
+                m = verifyAndReadModel(source);
             } catch (SecurityException e) {
-                throw new ForbiddenException("Model artifact verification failed for " + file + ": " + e.getMessage(), e);
+                throw new ForbiddenException("Model artifact verification failed for " + normalized + ": " + e.getMessage(), e);
             } catch (Exception e) {
-                throw new BadRequestException("Failed to read model from " + file + ": " + e.getMessage(), e);
+                throw new BadRequestException("Failed to read model from " + normalized + ": " + e.getMessage(), e);
             }
-            var model = new InferenceModel(m, normalized);
-            if (models.containsKey(model.id()) || !batchIds.add(model.id())) {
-                throw new ClientErrorException(
-                        "Model '" + model.id() + "' is already loaded. Use POST /v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
-                        Response.Status.CONFLICT);
+
+            ModelRef ref;
+            try {
+                ref = InferenceModel.resolveRef(m, source);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid model identity for " + normalized + ": " + e.getMessage(), e);
             }
-            loaded.add(model);
+
+            if (registry.contains(ref) || !batchRefs.add(ref)) {
+                throw conflictException(ref);
+            }
+            var model = new InferenceModel(m, source, ref);
+            staged.add(new ModelRegistry.Entry<>(ref, model, source));
         }
 
-        for (InferenceModel model : loaded) {
-            models.put(model.id(), model);
-            modelPaths.put(model.id(), model.path());
+        if (staged.size() == 1 && opts.hasSingleArtifactOverrides()) {
+            ModelRef singleRef = staged.getFirst().ref();
+            if (Boolean.TRUE.equals(opts.setDefault())) {
+                defaults.put(singleRef.slug(), singleRef.version());
+            } else if (Boolean.FALSE.equals(opts.setDefault())) {
+                pinExistingDefaultSlugs.add(singleRef.slug());
+            }
+            if (!opts.aliases().isEmpty()) {
+                Map<String, String> slugAliases = new HashMap<>(aliases.getOrDefault(singleRef.slug(), Map.of()));
+                for (String a : opts.aliases()) {
+                    if (ModelRef.ALIAS_LATEST.equals(a)) {
+                        throw new BadRequestException("Alias 'latest' is reserved and cannot be assigned");
+                    }
+                    if (ModelRef.ALIAS_DEFAULT.equals(a)) {
+                        defaults.put(singleRef.slug(), singleRef.version());
+                    } else {
+                        slugAliases.put(a, singleRef.version());
+                    }
+                }
+                if (!slugAliases.isEmpty()) {
+                    aliases.put(singleRef.slug(), slugAliases);
+                }
+            }
+        }
+
+        try {
+            registry.registerBatch(staged, defaults, aliases, pinExistingDefaultSlugs);
+        } catch (ModelRegistry.ConflictException ex) {
+            throw conflictException(ex.ref());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+
+        List<InferenceModel> loaded = new ArrayList<>(staged.size());
+        for (var entry : staged) {
+            InferenceModel model = entry.model();
+            loaded.add(model);
             quarantined.remove(model.path());
-            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
+            registerMetrics(model);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.SMILE_NAMESPACE,
-                    model.id(),
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.MODEL_LOADED,
                     model.path().toString()));
-            logger.infof("Dynamically loaded model '%s' from '%s'", model.id(), model.path());
+            logger.infof("Dynamically loaded model '%s' (version '%s') from '%s'",
+                    model.slug(), model.version(), model.path());
         }
         return loaded;
+    }
+
+    private static ClientErrorException conflictException(ModelRef ref) {
+        return new ClientErrorException(
+                "Model '" + ref.slug() + "' version '" + ref.version()
+                        + "' is already loaded. Use POST /v1/smile/" + ref.slug()
+                        + "/versions/" + ref.version() + "/reload to refresh it, or unload it first.",
+                Response.Status.CONFLICT);
     }
 }

@@ -24,9 +24,21 @@ function InferenceForm({ model }) {
     return <p className="toast">Select a model for inference...</p>;
   }
   if (model.type === "onnx") {
-    return <OnnxForm modelId={model.id} />;
+    return (
+      <OnnxForm
+        modelId={model.id}
+        versions={model.versions}
+        defaultVersion={model.version}
+      />
+    );
   }
-  return <SmileForm modelId={model.id} />;
+  return (
+    <SmileForm
+      modelId={model.id}
+      versions={model.versions}
+      defaultVersion={model.version}
+    />
+  );
 }
 
 export default InferenceForm;

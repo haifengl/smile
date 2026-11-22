@@ -19,8 +19,8 @@ import smile.serve.model.ModelCatalog;
 
 /**
  * Bootstraps {@link UserCache} at startup: preloads existing OIDC users when
- * OIDC mode is active (skipping local {@code me}), or creates the local
- * {@code me} account when OIDC is inactive.
+ * OIDC mode is active or local {@code me} is disabled, or creates the local
+ * {@code me} account when local-me auto-login is enabled.
  */
 @ApplicationScoped
 public class UserBootstrap {
@@ -39,9 +39,14 @@ public class UserBootstrap {
     @Inject
     OidcAuthProvider oidcAuthProvider;
 
+    @Inject
+    AuthConfig authConfig;
+
     @Transactional
     void onStart(@Observes StartupEvent event) {
-        if (oidcAuthProvider != null && oidcAuthProvider.isActive()) {
+        boolean oidcActive = oidcAuthProvider != null && oidcAuthProvider.isActive();
+        boolean localMeDisabled = authConfig != null && !authConfig.localMeEnabled();
+        if (oidcActive || localMeDisabled) {
             List<User> oidcUsers = User.<User>find("authProvider", AuthProviderKind.OIDC)
                     .page(Page.of(0, OIDC_PRELOAD_LIMIT))
                     .list();

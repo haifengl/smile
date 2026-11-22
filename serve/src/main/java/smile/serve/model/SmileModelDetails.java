@@ -10,6 +10,7 @@ package smile.serve.model;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -36,11 +37,15 @@ import smile.vq.NeuralMap;
 import smile.vq.SOM;
 
 /**
- * SMILE {@code .sml} details returned by {@code GET /models/{id}}.
+ * SMILE {@code .sml} details returned by {@code GET /v1/models/{id}}.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SmileModelDetails(
+        String version,
+        String defaultVersion,
+        List<String> versions,
+        Map<String, String> aliases,
         String formula,
         Map<String, ModelMetadata.FieldType> schema,
         Map<String, String> tags,
@@ -49,13 +54,13 @@ public record SmileModelDetails(
         Map<String, Object> test) {
 
     /**
-     * Builds details from a loaded SMILE {@link Model} and its serve metadata.
-     *
-     * @param model the loaded model.
-     * @param meta  schema-bearing metadata DTO.
-     * @return smile details for retrieve responses.
+     * Builds details from a loaded SMILE {@link Model}, its serve metadata, and version summary.
      */
-    public static SmileModelDetails of(Model model, ModelMetadata meta) {
+    public static SmileModelDetails of(Model model,
+                                       ModelMetadata meta,
+                                       String defaultVersion,
+                                       List<String> versions,
+                                       Map<String, String> aliases) {
         String formula = model.formula() != null ? model.formula().toString() : null;
         Map<String, Object> train = null;
         Map<String, Object> validation = null;
@@ -83,6 +88,10 @@ public record SmileModelDetails(
             default -> { }
         }
         return new SmileModelDetails(
+                meta.version(),
+                defaultVersion,
+                versions,
+                (aliases == null || aliases.isEmpty()) ? null : aliases,
                 formula,
                 meta.schema(),
                 tagsToMap(model.tags()),

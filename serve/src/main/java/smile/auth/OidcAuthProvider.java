@@ -23,7 +23,7 @@ public interface OidcAuthProvider {
      *
      * @param authorizationHeader raw {@code Authorization} header value, if present.
      * @param sessionCookieValue  raw {@code smile_session} cookie value, if present.
-     * @param requestPath         normalized request path relative to {@code /api/v1}.
+     * @param requestPath         normalized request path relative to {@code /v1} or {@code /api/v1}.
      * @param httpMethod          HTTP method (e.g. {@code GET}, {@code POST}).
      */
     record AuthRequest(

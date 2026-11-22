@@ -177,7 +177,36 @@ public final class ServeClient {
      * @throws InterruptedException if the request is interrupted.
      */
     public String loadModel(String modelPath) throws IOException, InterruptedException {
-        var response = post("/v1/models/load", Map.of("model", modelPath, "kind", "auto"));
+        return loadModel(modelPath, null, null);
+    }
+
+    /**
+     * Loads a model into the running serve instance with optional explicit slug and version.
+     *
+     * <p>A {@code 409 Conflict} means the model version is already loaded;
+     * that is treated as success.
+     *
+     * @param modelPath the model file or directory path.
+     * @param slug      optional explicit model slug override (may be {@code null}).
+     * @param version   optional explicit model version override (may be {@code null}).
+     * @return the loaded model slug, or {@code null} when the response carries none.
+     * @throws ServeManagementForbiddenException when the server rejects a
+     *         non-loopback caller ({@code 403}).
+     * @throws IOException          on transport failure.
+     * @throws InterruptedException if the request is interrupted.
+     */
+    public String loadModel(String modelPath, String slug, String version)
+            throws IOException, InterruptedException {
+        var payload = new java.util.LinkedHashMap<String, Object>();
+        payload.put("model", modelPath);
+        payload.put("kind", "auto");
+        if (slug != null && !slug.isBlank()) {
+            payload.put("slug", slug.strip());
+        }
+        if (version != null && !version.isBlank()) {
+            payload.put("version", version.strip());
+        }
+        var response = post("/v1/models/load", payload);
         int status = response.statusCode();
         if (status == 409) {
             return null;

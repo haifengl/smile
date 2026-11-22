@@ -17,30 +17,38 @@ import smile.onnx.ModelMetadata;
 import smile.serve.OnnxModelInfo;
 
 /**
- * ONNX graph details returned by {@code GET /models/{id}}.
+ * ONNX graph details returned by {@code GET /v1/models/{id}}.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record OnnxModelDetails(
+        String version,
+        String defaultVersion,
+        List<String> versions,
+        Map<String, String> aliases,
         String producerName,
         String domain,
         String graphName,
         String graphDescription,
         String description,
-        Long version,
+        Long onnxVersion,
         List<OnnxModelInfo.NodeDescriptor> inputs,
         List<OnnxModelInfo.NodeDescriptor> outputs,
         Map<String, String> customMetadata) {
 
     /**
-     * Builds details from ORT metadata and the serve info DTO.
-     *
-     * @param meta ORT model metadata.
-     * @param info serve ONNX info (inputs/outputs).
-     * @return onnx details for retrieve responses.
+     * Builds details from ORT metadata, serve info, and registry version summary.
      */
-    public static OnnxModelDetails of(ModelMetadata meta, OnnxModelInfo info) {
+    public static OnnxModelDetails of(ModelMetadata meta,
+                                      OnnxModelInfo info,
+                                      String defaultVersion,
+                                      List<String> versions,
+                                      Map<String, String> aliases) {
         return new OnnxModelDetails(
+                info.version(),
+                defaultVersion,
+                versions,
+                (aliases == null || aliases.isEmpty()) ? null : aliases,
                 meta.producerName(),
                 meta.domain(),
                 meta.graphName(),

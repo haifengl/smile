@@ -454,7 +454,7 @@ child; every saved model appears beneath it as a load candidate.
   first if it is not already running. Loading a second model reuses the same JVM
   and port.
 
-Models are loaded through `POST /api/v1/models/load`, so one process serves many
+Models are loaded through `POST /v1/models/load`, so one process serves many
 models instead of one process per model.
 
 **Studio attaches to an engine that is already running.** Before starting

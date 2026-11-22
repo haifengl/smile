@@ -163,6 +163,9 @@ public class MediaService {
             }
         }
         long maxBytes = config.maxUploadBytes();
+        if (maxBytes <= 0) {
+            throw new BadRequestException("Media uploads are disabled");
+        }
         long declaredSize = upload.size();
         if (declaredSize > maxBytes) {
             throw new BadRequestException(

@@ -31,19 +31,19 @@ public class ModelsResourceTest {
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
-                .body("data.id", hasItem("iris_random_forest-1"))
-                .body("data.find { it.id == 'iris_random_forest-1' }.object", equalTo("model"))
-                .body("data.find { it.id == 'iris_random_forest-1' }.owned_by", equalTo("Unknown"))
-                .body("data.find { it.id == 'iris_random_forest-1' }.kind", equalTo("random-forest"));
+                .body("data.id", hasItem("iris_random_forest"))
+                .body("data.find { it.id == 'iris_random_forest' }.object", equalTo("model"))
+                .body("data.find { it.id == 'iris_random_forest' }.owned_by", equalTo("Unknown"))
+                .body("data.find { it.id == 'iris_random_forest' }.kind", equalTo("random-forest"));
     }
 
     @Test
     public void testGivenLoadedSmileWhenRetrieveThenReturnsModelObject() {
         given()
-            .when().get("/v1/models/iris_random_forest-1")
+            .when().get("/v1/models/iris_random_forest")
             .then()
                 .statusCode(200)
-                .body("id", equalTo("iris_random_forest-1"))
+                .body("id", equalTo("iris_random_forest"))
                 .body("object", equalTo("model"))
                 .body("owned_by", equalTo("Unknown"))
                 .body("kind", equalTo("random-forest"))
@@ -61,9 +61,9 @@ public class ModelsResourceTest {
             .when().get("/v1/models")
             .then()
                 .statusCode(200)
-                .body("data.find { it.id == 'iris_random_forest-1' }.smile", nullValue())
-                .body("data.find { it.id == 'iris_random_forest-1' }.onnx", nullValue())
-                .body("data.find { it.id == 'iris_random_forest-1' }.llm", nullValue());
+                .body("data.find { it.id == 'iris_random_forest' }.smile", nullValue())
+                .body("data.find { it.id == 'iris_random_forest' }.onnx", nullValue())
+                .body("data.find { it.id == 'iris_random_forest' }.llm", nullValue());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class ModelsResourceTest {
 
     @Test
     public void testGivenAlreadyLoadedModelWhenLoadThenReturns409Conflict() {
-        // iris_random_forest-1 is already loaded at startup
+        // iris_random_forest is already loaded at startup
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\"}")
@@ -145,9 +145,9 @@ public class ModelsResourceTest {
 
     @Test
     public void testGivenUnloadedModelWhenDynamicLoadWithSmileAliasThenSucceeds() {
-        // Unload iris_random_forest-1
+        // Unload iris_random_forest
         given()
-            .when().post("/v1/smile/iris_random_forest-1/unload?timeout=5")
+            .when().post("/v1/smile/iris_random_forest/unload?timeout=5")
             .then()
                 .statusCode(200);
 
@@ -159,7 +159,7 @@ public class ModelsResourceTest {
             .then()
                 .statusCode(200)
                 .body("status", equalTo("loaded"))
-                .body("id", equalTo("iris_random_forest-1"))
+                .body("id", equalTo("iris_random_forest"))
                 .body("kind", equalTo("sml"));
 
         // Loading again returns 409 Conflict

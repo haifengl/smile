@@ -23,6 +23,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -35,6 +37,8 @@ import smile.data.type.StructType;
 import smile.feature.importance.KernelSHAP;
 import smile.io.Paths;
 import smile.model.*;
+import smile.serve.model.ModelRef;
+import smile.serve.model.ModelSource;
 
 /**
  * The metadata and runtime wrapper of a loaded SMILE model.
@@ -50,7 +54,7 @@ public class InferenceModel {
         UNLOADED
     }
 
-    private final String id;
+    private final ModelRef ref;
     private final Model model;
     private final Path path;
     private final boolean isSoft;
@@ -58,17 +62,83 @@ public class InferenceModel {
     private final ModelMetrics metrics = new ModelMetrics();
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    /** Constructor. */
+    /** Constructor deriving {@link ModelRef} from model tags or file stem. */
     public InferenceModel(Model model, Path path) {
-        this.id = model.getTag(Model.ID, Paths.getFileName(path)) + "-"
-                + model.getTag(Model.VERSION, "1");
+        this(model, ModelSource.of(path));
+    }
+
+    /**
+     * Constructor deriving {@link ModelRef} from {@link ModelSource} overrides,
+     * model metadata tags, or file stem.
+     *
+     * @param model  deserialized SMILE model.
+     * @param source model source path and optional slug/version overrides.
+     */
+    public InferenceModel(Model model, ModelSource source) {
+        this(model, source, resolveRef(model, source));
+    }
+
+    /**
+     * Constructor with an explicit validated {@link ModelRef}.
+     *
+     * @param model  deserialized SMILE model.
+     * @param source model source path and overrides.
+     * @param ref    resolved model identity.
+     */
+    public InferenceModel(Model model, ModelSource source, ModelRef ref) {
+        this.ref = ref;
         this.model = model;
-        this.path = path;
+        this.path = source.path();
         if (model instanceof ClassificationModel m) {
             isSoft = m.classifier().isSoft();
         } else {
             isSoft = false;
         }
+    }
+
+    /**
+     * Resolves a SMILE model's {@link ModelRef} using strict precedence:
+     * explicit source overrides &gt; embedded {@link Model#ID}/{@link Model#VERSION} tags
+     * &gt; file stem and default version {@code "1"}.
+     *
+     * @param model  deserialized SMILE model.
+     * @param source model source path and optional overrides.
+     * @return validated {@link ModelRef}.
+     */
+    public static ModelRef resolveRef(Model model, ModelSource source) {
+        String slug = source.slugOverride();
+        if (slug == null) {
+            String tagId = model.getTag(Model.ID);
+            slug = (tagId != null && !tagId.isBlank()) ? tagId : Paths.getFileName(source.path());
+        }
+        String version = source.versionOverride();
+        if (version == null) {
+            String tagVer = model.getTag(Model.VERSION);
+            version = (tagVer != null && !tagVer.isBlank()) ? tagVer : ModelRef.DEFAULT_VERSION;
+        }
+        return new ModelRef(slug, version);
+    }
+
+    /**
+     * Resolves a SMILE model's {@link ModelRef} prior to deserialization from an
+     * SMLM v1 extended header.
+     *
+     * @param header inspected SMLM header.
+     * @param source model source path and optional overrides.
+     * @return validated {@link ModelRef}.
+     */
+    public static ModelRef resolveRefFromHeader(Format.Header header, ModelSource source) {
+        String slug = source.slugOverride();
+        if (slug == null) {
+            String headerId = header.modelId();
+            slug = (headerId != null && !headerId.isBlank()) ? headerId : Paths.getFileName(source.path());
+        }
+        String version = source.versionOverride();
+        if (version == null) {
+            String headerVer = header.modelVersion();
+            version = (headerVer != null && !headerVer.isBlank()) ? headerVer : ModelRef.DEFAULT_VERSION;
+        }
+        return new ModelRef(slug, version);
     }
 
     /**
@@ -110,11 +180,35 @@ public class InferenceModel {
     }
 
     /**
-     * Returns the model id.
-     * @return the model id.
+     * Returns the model slug (public model id).
+     * @return the model slug.
      */
     public String id() {
-        return id;
+        return ref.slug();
+    }
+
+    /**
+     * Returns the model slug.
+     * @return the model slug.
+     */
+    public String slug() {
+        return ref.slug();
+    }
+
+    /**
+     * Returns the model version string.
+     * @return the model version.
+     */
+    public String version() {
+        return ref.version();
+    }
+
+    /**
+     * Returns the immutable {@code (slug, version)} model identity.
+     * @return the model ref.
+     */
+    public ModelRef ref() {
+        return ref;
     }
 
     /**
@@ -135,11 +229,22 @@ public class InferenceModel {
     }
 
     /**
-     * Returns the model metadata.
+     * Returns the model metadata without sibling version information.
      * @return the model metadata.
      */
     public ModelMetadata metadata() {
-        return new ModelMetadata(id, model);
+        return new ModelMetadata(ref, model);
+    }
+
+    /**
+     * Returns the model metadata enriched with registry version and alias details.
+     *
+     * @param versions loaded versions for this slug.
+     * @param aliases  active aliases for this slug.
+     * @return the model metadata.
+     */
+    public ModelMetadata metadata(List<String> versions, Map<String, String> aliases) {
+        return new ModelMetadata(ref, model, versions, aliases);
     }
 
     /**
@@ -276,7 +381,7 @@ public class InferenceModel {
      */
     public Prediction predict(Tuple x, boolean explain, KernelSHAP.Options shapOptions) {
         if (state.get() != State.ACTIVE) {
-            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+            throw new ServiceUnavailableException("Model " + ref + " is " + state.get().name().toLowerCase());
         }
         long start = metrics.startExecution();
         boolean success = false;
@@ -309,10 +414,10 @@ public class InferenceModel {
      */
     public void update(JsonObject request) throws BadRequestException {
         if (state.get() != State.ACTIVE) {
-            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+            throw new ServiceUnavailableException("Model " + ref + " is " + state.get().name().toLowerCase());
         }
         if (!model.isOnline()) {
-            throw new BadRequestException("Model '" + id + "' (" + model.algorithm() + ") does not support online learning");
+            throw new BadRequestException("Model '" + ref + "' (" + model.algorithm() + ") does not support online learning");
         }
         Tuple x = json(request);
         long start = metrics.startExecution();
@@ -346,10 +451,10 @@ public class InferenceModel {
      */
     public void update(String line) throws BadRequestException {
         if (state.get() != State.ACTIVE) {
-            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+            throw new ServiceUnavailableException("Model " + ref + " is " + state.get().name().toLowerCase());
         }
         if (!model.isOnline()) {
-            throw new BadRequestException("Model '" + id + "' (" + model.algorithm() + ") does not support online learning");
+            throw new BadRequestException("Model '" + ref + "' (" + model.algorithm() + ") does not support online learning");
         }
         if (line == null || line.isBlank()) {
             throw new BadRequestException("CSV line must not be blank");
@@ -414,10 +519,10 @@ public class InferenceModel {
      */
     void persist(Runnable afterMove) {
         if (path == null) {
-            throw new BadRequestException("Model '" + id + "' has no backing file path");
+            throw new BadRequestException("Model '" + ref + "' has no backing file path");
         }
         if (!(model instanceof Serializable)) {
-            throw new BadRequestException("Model '" + id + "' is not serializable");
+            throw new BadRequestException("Model '" + ref + "' is not serializable");
         }
         rwLock.writeLock().lock();
         Path tempPath = null;
@@ -443,7 +548,7 @@ public class InferenceModel {
             throw ex;
         } catch (Exception ex) {
             cleanupTempFile(tempPath);
-            throw new InternalServerErrorException("Failed to persist model '" + id + "': " + ex.getMessage(), ex);
+            throw new InternalServerErrorException("Failed to persist model '" + ref + "': " + ex.getMessage(), ex);
         } finally {
             rwLock.writeLock().unlock();
         }

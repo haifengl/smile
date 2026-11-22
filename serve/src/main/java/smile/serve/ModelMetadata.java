@@ -17,6 +17,7 @@
  */
 package smile.serve;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -24,21 +25,28 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import smile.model.ClassificationModel;
 import smile.model.Model;
 import smile.model.RegressionModel;
+import smile.serve.model.ModelRef;
 
 /**
  * Immutable metadata describing a loaded inference model.
  *
- * @param id           the model identifier ({@code <name>-<version>}).
+ * @param id           the model slug.
+ * @param version      the concrete model version string.
+ * @param versions     all loaded versions for this slug in ascending version order (optional).
+ * @param aliases      active aliases mapped to versions for this slug (optional).
  * @param algorithm    the learning algorithm name.
- * @param schema       the input feature schema ({@code field → type descriptor}).
+ * @param schema       the input feature schema ({@code field -> type descriptor}).
  * @param online       whether the model supports online learning updates.
  * @param response     the response variable name for supervised models, or {@code null} for unsupervised models.
- * @param responseType the response variable type ({@code "integer"} or {@code "number"}) for supervised models, or {@code null}.
+ * @param responseType the response variable type ({@code "integer"} or {@code "double"}) for supervised models, or {@code null}.
  * @param tags         arbitrary key/value properties stored with the model.
  * @author Haifeng Li
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ModelMetadata(String id,
+                             String version,
+                             List<String> versions,
+                             Map<String, String> aliases,
                              String algorithm,
                              Map<String, FieldType> schema,
                              boolean online,
@@ -55,26 +63,28 @@ public record ModelMetadata(String id,
     public record FieldType(String type, boolean nullable) {}
 
     /**
-     * Constructs metadata without online/response details.
+     * Constructs metadata from a loaded {@link Model} and its {@link ModelRef}.
      *
-     * @param id        the model identifier.
-     * @param algorithm the learning algorithm name.
-     * @param schema    the input feature schema.
-     * @param tags      model metadata tags.
+     * @param ref      the model identity ({@code slug, version}).
+     * @param model    the loaded model.
+     * @param versions optional list of all loaded versions for this slug.
+     * @param aliases  optional alias map for this slug.
      */
-    public ModelMetadata(String id, String algorithm, Map<String, FieldType> schema, Properties tags) {
-        this(id, algorithm, schema, false, null, null, tags);
+    public ModelMetadata(ModelRef ref, Model model, List<String> versions, Map<String, String> aliases) {
+        this(ref.slug(), ref.version(), versions,
+                (aliases == null || aliases.isEmpty()) ? null : aliases,
+                model.algorithm(), buildSchema(model), model.isOnline(),
+                extractResponseName(model), extractResponseType(model), model.tags());
     }
 
     /**
-     * Constructs metadata from a loaded {@link Model}.
+     * Constructs metadata from a loaded {@link Model} without sibling version info.
      *
-     * @param id    the composite model identifier.
+     * @param ref   the model identity ({@code slug, version}).
      * @param model the loaded model.
      */
-    public ModelMetadata(String id, Model model) {
-        this(id, model.algorithm(), buildSchema(model), model.isOnline(),
-                extractResponseName(model), extractResponseType(model), model.tags());
+    public ModelMetadata(ModelRef ref, Model model) {
+        this(ref, model, null, null);
     }
 
     private static String extractResponseName(Model model) {
