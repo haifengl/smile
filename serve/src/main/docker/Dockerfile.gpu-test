@@ -69,8 +69,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         g++ \
         make \
         unzip \
-        libnccl2 \
-        libnccl-dev \
         python3 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -93,6 +91,32 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
     && test -f /build/cpp/libsmile_torch.so
 
 # -----------------------------------------------------------------------------
+# ONNX Runtime from its PyPI wheel (same as Dockerfile.gpu's genai-builder stage)
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04 AS ort-builder
+
+ARG ORT_VERSION=1.31.1
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        python3 \
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# ONNX Runtime from its PyPI wheel (the microsoft/onnxruntime GitHub releases are gone, 404 since 2026-11-17).
+# Laid out like the old onnxruntime-linux-x64 tarball: lib/libonnxruntime.so -> .so.1 -> .so.${ORT_VERSION}.
+RUN python3 -m pip install --no-cache-dir --break-system-packages --no-deps \
+        --target /opt/ort-wheel \
+        "onnxruntime==${ORT_VERSION}" \
+    && mkdir -p /opt/onnxruntime/lib \
+    && cp -a /opt/ort-wheel/onnxruntime/capi/libonnxruntime.so.${ORT_VERSION} \
+             /opt/ort-wheel/onnxruntime/capi/libonnxruntime_providers_shared.so /opt/onnxruntime/lib/ \
+    && ln -s libonnxruntime.so.${ORT_VERSION} /opt/onnxruntime/lib/libonnxruntime.so.1 \
+    && ln -s libonnxruntime.so.1 /opt/onnxruntime/lib/libonnxruntime.so \
+    && test -f /opt/onnxruntime/lib/libonnxruntime.so.${ORT_VERSION} \
+    && ls -l /opt/onnxruntime/lib
+
+# -----------------------------------------------------------------------------
 # Stage 2: gpu-test image — JDK + full repo + the CUDA .so from stage 1,
 # compiled and ready to test. GPU access is supplied at `docker run` time.
 # -----------------------------------------------------------------------------
@@ -108,8 +132,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
-        libnccl2 \
-        libnccl-dev \
         libcusparselt0 \
         libcudnn9-cuda-13 \
         libnvshmem3-cuda-13 \
@@ -133,9 +155,7 @@ COPY --from=smile-torch-builder /usr/local/libtorch /usr/local/libtorch
 # smile.onnx.InferenceSessionTest and anything else that loads
 # libonnxruntime.so at class-init time — without this, every one of those
 # tests fails with ExceptionInInitializerError before running at all.
-RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
-    | tar -zx -C /usr/local/ \
-    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+COPY --from=ort-builder /opt/onnxruntime /usr/local/onnxruntime
 
 # /usr/lib/x86_64-linux-gnu/nvshmem/13 holds libnvshmem_host.so.3 (from the
 # libnvshmem3-cuda-13 package installed above) — a versioned, non-standard
