@@ -1,0 +1,3606 @@
+[
+ {
+  "name": "plain",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hello"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>Hello<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   32269,
+   200010
+  ]
+ },
+ {
+  "name": "system_first",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are terse."
+   },
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>You are terse.<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>Hi<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   1735,
+   149914,
+   172044,
+   13,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   4896,
+   200010
+  ]
+ },
+ {
+  "name": "system_only",
+  "messages": [
+   {
+    "role": "system",
+    "content": "Only a system prompt."
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Only a system prompt.<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   74790,
+   149878,
+   150200,
+   157282,
+   13,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010
+  ]
+ },
+ {
+  "name": "two_system",
+  "messages": [
+   {
+    "role": "system",
+    "content": "A"
+   },
+   {
+    "role": "system",
+    "content": "B"
+   },
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>A<|end_message|><|message_system|><|content_text|>B<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   32,
+   200010,
+   200002,
+   200004,
+   33,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "system_after_user",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "system",
+    "content": "late system"
+   },
+   {
+    "role": "user",
+    "content": "again"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_system|><|content_text|>late system<|end_message|><|message_user|><|content_text|>again<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200002,
+   200004,
+   1344,
+   150200,
+   200010,
+   200000,
+   200004,
+   1912,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'none'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "none",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'minimal'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "minimal",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.1<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   16,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'low'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "low",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.2<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   17,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'medium'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "medium",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.7<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   22,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'high'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "high",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'xhigh'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "xhigh",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.99<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   68436,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_'max'",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "max",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.99<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   68436,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_' low '",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": " low ",
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.2<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   17,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_0.5",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 0.5,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.5<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   20,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_0.0",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 0.0,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_0.99",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 0.99,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.99<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   68436,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_1e-05",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 1e-05,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 1e-05<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   16,
+   68,
+   12,
+   68435,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_0.25",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 0.25,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.25<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   68105,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_0",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 0,
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "effort_with_system_only",
+  "messages": [
+   {
+    "role": "system",
+    "content": "s"
+   }
+  ],
+  "reasoning_effort": "low",
+  "expected": "<|message_system|><|content_text|>s<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.2<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   82,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   17,
+   200010
+  ]
+ },
+ {
+  "name": "multiturn",
+  "messages": [
+   {
+    "role": "user",
+    "content": "My name is Ada."
+   },
+   {
+    "role": "assistant",
+    "content": "Nice to meet you."
+   },
+   {
+    "role": "user",
+    "content": "What is my name?"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>My name is Ada.<|end_message|><|message_model|><|content_text|>Nice to meet you.<|end_message|><|content_model_end_sampling|><|message_user|><|content_text|>What is my name?<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   2261,
+   150231,
+   149884,
+   177674,
+   13,
+   200010,
+   200001,
+   200004,
+   37365,
+   149882,
+   152750,
+   149941,
+   13,
+   200010,
+   200006,
+   200000,
+   200004,
+   1775,
+   149884,
+   150084,
+   150231,
+   30,
+   200010
+  ]
+ },
+ {
+  "name": "assistant_reasoning",
+  "messages": [
+   {
+    "role": "user",
+    "content": "2+2?"
+   },
+   {
+    "role": "assistant",
+    "content": "4",
+    "reasoning_content": "Add two and two."
+   },
+   {
+    "role": "user",
+    "content": "and 3+3?"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>2+2?<|end_message|><|message_model|><|content_thinking|>Add two and two.<|end_message|><|message_model|><|content_text|>4<|end_message|><|content_model_end_sampling|><|message_user|><|content_text|>and 3+3?<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   17,
+   10,
+   17,
+   30,
+   200010,
+   200001,
+   200008,
+   1947,
+   150103,
+   149880,
+   150103,
+   13,
+   200010,
+   200001,
+   200004,
+   19,
+   200010,
+   200006,
+   200000,
+   200004,
+   276,
+   220,
+   18,
+   10,
+   18,
+   30,
+   200010
+  ]
+ },
+ {
+  "name": "assistant_reasoning_empty_content",
+  "messages": [
+   {
+    "role": "user",
+    "content": "2+2?"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "reasoning_content": "thinking only"
+   },
+   {
+    "role": "user",
+    "content": "next"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>2+2?<|end_message|><|message_model|><|content_thinking|>thinking only<|end_message|><|content_model_end_sampling|><|message_user|><|content_text|>next<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   17,
+   10,
+   17,
+   30,
+   200010,
+   200001,
+   200008,
+   78168,
+   150130,
+   200010,
+   200006,
+   200000,
+   200004,
+   2157,
+   200010
+  ]
+ },
+ {
+  "name": "assistant_empty_content",
+  "messages": [
+   {
+    "role": "user",
+    "content": "hi"
+   },
+   {
+    "role": "assistant",
+    "content": ""
+   },
+   {
+    "role": "user",
+    "content": "again"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>hi<|end_message|><|message_model|><|content_text|><|end_message|><|content_model_end_sampling|><|message_user|><|content_text|>again<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   1910,
+   200010,
+   200001,
+   200004,
+   200010,
+   200006,
+   200000,
+   200004,
+   1912,
+   200010
+  ]
+ },
+ {
+  "name": "assistant_named",
+  "messages": [
+   {
+    "role": "user",
+    "content": "hi"
+   },
+   {
+    "role": "assistant",
+    "content": "yo",
+    "name": "alice"
+   },
+   {
+    "role": "user",
+    "content": "again"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>hi<|end_message|><|message_model|>alice<|content_text|>yo<|end_message|><|content_model_end_sampling|><|message_user|><|content_text|>again<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   1910,
+   200010,
+   200001,
+   32104,
+   200004,
+   4200,
+   200010,
+   200006,
+   200000,
+   200004,
+   1912,
+   200010
+  ]
+ },
+ {
+  "name": "user_multiline_unicode",
+  "messages": [
+   {
+    "role": "user",
+    "content": "line1\n\n  line2 你好 😀 <|x|> {{ y }}"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>line1\n\n  line2 你好 😀 <|x|> {{ y }}<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   909,
+   16,
+   68014,
+   220,
+   150264,
+   17,
+   220,
+   11739,
+   23643,
+   220,
+   110689,
+   196982,
+   91,
+   87,
+   91,
+   29,
+   154219,
+   149889,
+   150553,
+   200010
+  ]
+ },
+ {
+  "name": "tools_one",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather in Paris?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>Weather in Paris?<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   35120,
+   149881,
+   152717,
+   30,
+   200010
+  ]
+ },
+ {
+  "name": "tools_two_sorted",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string",
+        "description": "café <b> & \"quoted\""
+       },
+       "n": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"},{\"description\":\"\",\"name\":\"search\",\"parameters\":{\"properties\":{\"n\":{\"type\":\"integer\"},\"q\":{\"description\":\"café <b> & \\\"quoted\\\"\",\"type\":\"string\"}},\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   11,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   68723,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   1404,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   77,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   4252,
+   1,
+   92,
+   11,
+   1,
+   80,
+   1,
+   25,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   85593,
+   196982,
+   65,
+   29,
+   196992,
+   196978,
+   1,
+   32112,
+   3791,
+   59,
+   68723,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "tools_minimal_spec",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "tools": [
+   {
+    "function": {
+     "name": "noargs"
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"\",\"name\":\"noargs\",\"parameters\":{},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   68723,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   316,
+   70747,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   70044,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "tools_empty_list",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "tools": [],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "tool_call_roundtrip",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather in Paris?"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "call_1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "Paris"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "call_1",
+    "content": "{\"temp_c\": 12}"
+   },
+   {
+    "role": "assistant",
+    "content": "It is 12C."
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>Weather in Paris?<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"Paris\"}}<|end_message|><|content_model_end_sampling|><|message_tool|>get_weather<|content_text|>{\"temp_c\": 12}<|end_message|><|message_model|><|content_text|>It is 12C.<|end_message|><|content_model_end_sampling|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   35120,
+   149881,
+   152717,
+   30,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   3967,
+   1,
+   92,
+   92,
+   200010,
+   200006,
+   200003,
+   832,
+   62,
+   30847,
+   200004,
+   90,
+   1,
+   3286,
+   62,
+   66,
+   1,
+   25,
+   220,
+   68040,
+   92,
+   200010,
+   200001,
+   200004,
+   1256,
+   149884,
+   220,
+   68040,
+   34,
+   13,
+   200010,
+   200006
+  ]
+ },
+ {
+  "name": "tool_call_with_text_and_reasoning",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "Let me check.",
+    "reasoning_content": "need tool",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "Rome",
+        "unit": "c"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "name": "get_weather",
+    "content": "sunny"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|><|content_thinking|>need tool<|end_message|><|message_model|><|content_text|>Let me check.<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"Rome\",\"unit\":\"c\"}}<|end_message|><|content_model_end_sampling|><|message_tool|>get_weather<|content_text|>sunny<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   200008,
+   1281,
+   151955,
+   200010,
+   200001,
+   200004,
+   2918,
+   149991,
+   150918,
+   13,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   31974,
+   1,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   1,
+   66,
+   1,
+   92,
+   92,
+   200010,
+   200006,
+   200003,
+   832,
+   62,
+   30847,
+   200004,
+   3705,
+   3900,
+   200010
+  ]
+ },
+ {
+  "name": "tool_args_ordering_types",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "search",
+       "arguments": {
+        "q": "café <b> & \"x\"\n",
+        "n": 3,
+        "z": [
+         1,
+         2.5,
+         true,
+         null,
+         {
+          "b": 1,
+          "a": 2
+         }
+        ],
+        "a": {
+         "y": 1.0,
+         "x": 1e-07,
+         "w": 12345678901234567890
+        },
+        "B": false,
+        "": 1
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string",
+        "description": "café <b> & \"quoted\""
+       },
+       "n": {
+        "type": "integer"
+       }
+      }
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"\",\"name\":\"search\",\"parameters\":{\"properties\":{\"n\":{\"type\":\"integer\"},\"q\":{\"description\":\"café <b> & \\\"quoted\\\"\",\"type\":\"string\"}},\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|>search<|content_invoke_tool_json|>{\"name\":\"search\",\"args\":{\"\":1,\"B\":false,\"a\":{\"y\":1.0,\"x\":1e-07,\"w\":12345678901234567890},\"n\":3,\"q\":\"café <b> & \\\"x\\\"\\n\",\"z\":[1,2.5,true,null,{\"b\":1,\"a\":2}]}}<|end_message|><|content_model_end_sampling|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   68723,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   1404,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   77,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   4252,
+   1,
+   92,
+   11,
+   1,
+   80,
+   1,
+   25,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   85593,
+   196982,
+   65,
+   29,
+   196992,
+   196978,
+   1,
+   32112,
+   3791,
+   59,
+   68723,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   1404,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   1404,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   68723,
+   25,
+   16,
+   11,
+   1,
+   33,
+   1,
+   25,
+   2121,
+   11,
+   1,
+   64,
+   1,
+   25,
+   90,
+   1,
+   88,
+   1,
+   25,
+   16,
+   13,
+   15,
+   11,
+   1,
+   87,
+   1,
+   25,
+   16,
+   68,
+   12,
+   68620,
+   11,
+   1,
+   86,
+   1,
+   25,
+   70904,
+   81554,
+   91927,
+   77863,
+   81999,
+   97293,
+   68410,
+   92,
+   11,
+   1,
+   77,
+   1,
+   25,
+   18,
+   11,
+   1,
+   80,
+   1,
+   25,
+   1,
+   85593,
+   196982,
+   65,
+   29,
+   196992,
+   196978,
+   1,
+   87,
+   59,
+   1,
+   59,
+   77,
+   1,
+   11,
+   1,
+   89,
+   1,
+   25,
+   58,
+   16,
+   11,
+   17,
+   13,
+   20,
+   11,
+   1750,
+   11,
+   2451,
+   11,
+   90,
+   1,
+   65,
+   1,
+   25,
+   16,
+   11,
+   1,
+   64,
+   1,
+   25,
+   17,
+   92,
+   60,
+   92,
+   92,
+   200010,
+   200006
+  ]
+ },
+ {
+  "name": "tool_args_empty",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "noargs",
+       "arguments": {}
+      }
+     }
+    ]
+   }
+  ],
+  "tools": [
+   {
+    "function": {
+     "name": "noargs"
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"\",\"name\":\"noargs\",\"parameters\":{},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|>noargs<|content_invoke_tool_json|>{\"name\":\"noargs\",\"args\":{}}<|end_message|><|content_model_end_sampling|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   68723,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   316,
+   70747,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   70044,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   316,
+   70747,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   316,
+   70747,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   70044,
+   92,
+   200010,
+   200006
+  ]
+ },
+ {
+  "name": "two_parallel_calls",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "a",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "A"
+       }
+      }
+     },
+     {
+      "id": "b",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "B"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "a",
+    "content": "1"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "b",
+    "content": "2"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"A\"}}<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"B\"}}<|end_message|><|content_model_end_sampling|><|message_tool|>get_weather<|content_text|>1<|end_message|><|message_tool|>get_weather<|content_text|>2<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   32,
+   1,
+   92,
+   92,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   33,
+   1,
+   92,
+   92,
+   200010,
+   200006,
+   200003,
+   832,
+   62,
+   30847,
+   200004,
+   16,
+   200010,
+   200003,
+   832,
+   62,
+   30847,
+   200004,
+   17,
+   200010
+  ]
+ },
+ {
+  "name": "tool_without_known_id",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "zzz",
+    "content": "orphan"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_tool|><|content_text|>orphan<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200003,
+   200004,
+   36461,
+   200010
+  ]
+ },
+ {
+  "name": "tool_plain",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "tool",
+    "content": "no name or id"
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_tool|><|content_text|>no name or id<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200003,
+   200004,
+   316,
+   150231,
+   149918,
+   150412,
+   200010
+  ]
+ },
+ {
+  "name": "assistant_name_matches_call",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "name": "get_weather",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "X"
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"X\"}}<|end_message|><|content_model_end_sampling|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   55,
+   1,
+   92,
+   92,
+   200010,
+   200006
+  ]
+ },
+ {
+  "name": "multipart_user",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "a"
+     },
+     {
+      "type": "text",
+      "text": ""
+     },
+     "plain string part",
+     {
+      "type": "input_text",
+      "text": "b"
+     }
+    ]
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>a<|end_message|><|message_user|><|content_text|><|end_message|><|message_user|><|content_text|>plain string part<|end_message|><|message_user|><|content_text|>b<|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   64,
+   200010,
+   200000,
+   200004,
+   200010,
+   200000,
+   200004,
+   2550,
+   150379,
+   150162,
+   200010,
+   200000,
+   200004,
+   65,
+   200010
+  ]
+ },
+ {
+  "name": "image_user",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "what is this?"
+     },
+     {
+      "type": "image_url",
+      "image_url": {
+       "url": "x"
+      }
+     }
+    ]
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>what is this?<|end_message|><|message_user|><|content_image|><|unused_200054|><|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   1420,
+   149884,
+   149928,
+   30,
+   200010,
+   200000,
+   200005,
+   200054,
+   200010
+  ]
+ },
+ {
+  "name": "image_only_two",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "image"
+     },
+     {
+      "type": "input_image"
+     }
+    ]
+   }
+  ],
+  "expected": "<|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_image|><|unused_200054|><|end_message|><|message_user|><|content_image|><|unused_200054|><|end_message|>",
+  "ids": [
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200005,
+   200054,
+   200010,
+   200000,
+   200005,
+   200054,
+   200010
+  ]
+ },
+ {
+  "name": "image_in_tool",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "X"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c1",
+    "content": [
+     {
+      "type": "image_url",
+      "image_url": {
+       "url": "x"
+      }
+     }
+    ]
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|><|message_model|>get_weather<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"X\"}}<|end_message|><|content_model_end_sampling|><|message_tool|>get_weather<|content_image|><|unused_200054|><|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010,
+   200001,
+   832,
+   62,
+   30847,
+   200049,
+   90,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   70747,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   1,
+   55,
+   1,
+   92,
+   92,
+   200010,
+   200006,
+   200003,
+   832,
+   62,
+   30847,
+   200005,
+   200054,
+   200010
+  ]
+ },
+ {
+  "name": "system_then_tools_then_effort",
+  "messages": [
+   {
+    "role": "system",
+    "content": "sys"
+   },
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "c",
+         "f"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "reasoning_effort": "high",
+  "expected": "<|message_system|>tool_declare<|content_xml|>[{\"description\":\"Get the weather for a city\",\"name\":\"get_weather\",\"parameters\":{\"properties\":{\"city\":{\"type\":\"string\"},\"unit\":{\"enum\":[\"c\",\"f\"],\"type\":\"string\"}},\"required\":[\"city\"],\"type\":\"object\"},\"type\":\"function\"}]<|end_message|><|message_system|><|content_text|>sys<|end_message|><|message_system|><|content_text|>Thinking effort level: 0.9<|end_message|><|message_user|><|content_text|>q<|end_message|>",
+  "ids": [
+   200002,
+   2251,
+   62,
+   76529,
+   200024,
+   58,
+   90,
+   1,
+   70469,
+   1,
+   25,
+   1,
+   2131,
+   149876,
+   154046,
+   149887,
+   149878,
+   152652,
+   1,
+   11,
+   1,
+   930,
+   1,
+   25,
+   1,
+   832,
+   62,
+   30847,
+   1,
+   11,
+   1,
+   71968,
+   1,
+   25,
+   90,
+   1,
+   71961,
+   1,
+   25,
+   90,
+   1,
+   2958,
+   1,
+   25,
+   90,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   11,
+   1,
+   2095,
+   1,
+   25,
+   90,
+   1,
+   32529,
+   1,
+   25,
+   58,
+   1,
+   66,
+   1,
+   11,
+   1,
+   69,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   1485,
+   1,
+   92,
+   92,
+   11,
+   1,
+   69812,
+   1,
+   25,
+   58,
+   1,
+   2958,
+   1,
+   60,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   3156,
+   1,
+   92,
+   11,
+   1,
+   1008,
+   1,
+   25,
+   1,
+   36404,
+   1,
+   92,
+   60,
+   200010,
+   200002,
+   200004,
+   4496,
+   200010,
+   200002,
+   200004,
+   34182,
+   279,
+   154554,
+   150628,
+   25,
+   220,
+   15,
+   13,
+   24,
+   200010,
+   200000,
+   200004,
+   80,
+   200010
+  ]
+ },
+ {
+  "name": "ERR_effort_unknown",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": "turbo",
+  "error": "Unknown reasoning_effort: turbo"
+ },
+ {
+  "name": "ERR_effort_too_high",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": 1.5,
+  "error": "reasoning_effort must be in [0.0, 0.99]"
+ },
+ {
+  "name": "ERR_effort_negative",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   }
+  ],
+  "reasoning_effort": -0.1,
+  "error": "reasoning_effort must be in [0.0, 0.99]"
+ },
+ {
+  "name": "ERR_image_in_assistant",
+  "messages": [
+   {
+    "role": "assistant",
+    "content": [
+     {
+      "type": "image"
+     }
+    ]
+   }
+  ],
+  "error": "Image content is only supported for user and tool messages"
+ },
+ {
+  "name": "ERR_audio",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "audio"
+     }
+    ]
+   }
+  ],
+  "error": "Inkling 2 does not accept audio input"
+ },
+ {
+  "name": "ERR_bad_part",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "video"
+     }
+    ]
+   }
+  ],
+  "error": "Unsupported content part type: video"
+ },
+ {
+  "name": "ERR_name_mismatch",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "name": "other",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "X"
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "error": "assistant name other does not match its tool call get_weather"
+ }
+]

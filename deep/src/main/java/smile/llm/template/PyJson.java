@@ -100,11 +100,40 @@ final class PyJson {
      */
     static String dumps(Object value) {
         StringBuilder sb = new StringBuilder();
-        write(sb, value);
+        write(sb, value, ", ", ": ", false);
         return sb.toString();
     }
 
-    private static void write(StringBuilder sb, Object v) {
+    /**
+     * Serializes a value like Python's {@code json.dumps(value, ensure_ascii=False, separators=(",", ":"),
+     * sort_keys=sortKeys)}, which is what Jinja's {@code tojson(separators=(",", ":"))} gives in transformers.
+     *
+     * @param value   a JSON-like value, as for {@link #dumps}.
+     * @param sortKeys sort object keys (by code point, at every level).
+     * @return the compact JSON text.
+     */
+    static String dumpsCompact(Object value, boolean sortKeys) {
+        StringBuilder sb = new StringBuilder();
+        write(sb, value, ",", ":", sortKeys);
+        return sb.toString();
+    }
+
+    static int compareCodePoints(String a, String b) {
+        int i = 0;
+        int j = 0;
+        while (i < a.length() && j < b.length()) {
+            int x = a.codePointAt(i);
+            int y = b.codePointAt(j);
+            if (x != y) {
+                return Integer.compare(x, y);
+            }
+            i += Character.charCount(x);
+            j += Character.charCount(y);
+        }
+        return Integer.compare(a.length() - i, b.length() - j);
+    }
+
+    private static void write(StringBuilder sb, Object v, String itemSep, String keySep, boolean sort) {
         switch (v) {
             case null -> sb.append("null");
             case Boolean b -> sb.append(b ? "true" : "false");
@@ -115,14 +144,18 @@ final class PyJson {
             case Map<?, ?> m -> {
                 sb.append('{');
                 boolean first = true;
-                for (Map.Entry<?, ?> e : m.entrySet()) {
+                var entries = new java.util.ArrayList<Map.Entry<?, ?>>(m.entrySet());
+                if (sort) {
+                    entries.sort((x, y) -> compareCodePoints(String.valueOf(x.getKey()), String.valueOf(y.getKey())));
+                }
+                for (Map.Entry<?, ?> e : entries) {
                     if (!first) {
-                        sb.append(", ");
+                        sb.append(itemSep);
                     }
                     first = false;
                     quote(sb, String.valueOf(e.getKey()));
-                    sb.append(": ");
-                    write(sb, e.getValue());
+                    sb.append(keySep);
+                    write(sb, e.getValue(), itemSep, keySep, sort);
                 }
                 sb.append('}');
             }
@@ -131,15 +164,27 @@ final class PyJson {
                 boolean first = true;
                 for (Object o : c) {
                     if (!first) {
-                        sb.append(", ");
+                        sb.append(itemSep);
                     }
                     first = false;
-                    write(sb, o);
+                    write(sb, o, itemSep, keySep, sort);
                 }
                 sb.append(']');
             }
             default -> quote(sb, String.valueOf(v));
         }
+    }
+
+    /**
+     * Python's {@code json.dumps(s, ensure_ascii=False)} of a string.
+     *
+     * @param s the text.
+     * @return the quoted, escaped text.
+     */
+    static String quoted(String s) {
+        StringBuilder sb = new StringBuilder();
+        quote(sb, s);
+        return sb.toString();
     }
 
     private static void quote(StringBuilder sb, CharSequence s) {
