@@ -73,7 +73,11 @@ public class OidcSpiAndSecurityUnitTest {
         assertTrue(InternalAgentAuth.isInternalChatCompletionHop(
                 loopback, "POST", "/v1/chat/completions", secret, null));
         assertTrue(InternalAgentAuth.isInternalChatCompletionHop(
-                loopback, "POST", "/api/v1/chat/completions", null, secret));
+                loopback, "POST", "/v1/chat/completions", null, secret));
+
+        // Removed legacy /api/v1/chat/completions path -> rejected
+        assertFalse(InternalAgentAuth.isInternalChatCompletionHop(
+                loopback, "POST", "/api/v1/chat/completions", secret, null));
 
         // Spoofed static "true" -> rejected even on loopback
         assertFalse(InternalAgentAuth.isInternalChatCompletionHop(

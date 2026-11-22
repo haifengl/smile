@@ -18,7 +18,7 @@ import smile.serve.LocalhostGuard;
 
 /**
  * Per-process cryptographic loopback authenticator for internal {@code kirin}
- * LLM rounds targeting {@code POST /api/v1/chat/completions}.
+ * LLM rounds targeting {@code POST /v1/chat/completions}.
  *
  * <p>Lazily generates a 256-bit {@link SecureRandom} secret once per JVM process
  * (held exclusively in memory, never logged or serialized) and validates incoming
@@ -101,8 +101,7 @@ public final class InternalAgentAuth {
 
     /**
      * Validates that a request is an authorized internal loopback hop scoped
-     * strictly to {@code POST /chat/completions}, {@code /v1/chat/completions},
-     * or {@code /api/v1/chat/completions}.
+     * strictly to {@code POST /chat/completions} or {@code /v1/chat/completions}.
      *
      * @param routingContext Vert.x routing context.
      * @param method         HTTP method.
@@ -123,8 +122,7 @@ public final class InternalAgentAuth {
         }
         String normalized = normalizePath(path);
         if (!"/chat/completions".equals(normalized)
-                && !"/v1/chat/completions".equals(normalized)
-                && !"/api/v1/chat/completions".equals(normalized)) {
+                && !"/v1/chat/completions".equals(normalized)) {
             return false;
         }
         return isValidInternalHop(routingContext, tokenHeader, legacyHeader);

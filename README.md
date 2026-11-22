@@ -43,10 +43,10 @@ A production-ready, Quarkus-based inference server (available as JVM, CUDA GPU, 
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering (`ClusteringModel`), vector quantization (`VectorQuantizerModel`), and anomaly detection (`AnomalyModel`), with local SHAP explanations (`TreeSHAP` & `KernelSHAP`) |
-| **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions, tool calling, and SSE streaming |
-| **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
+| **Classic ML** | `/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering (`ClusteringModel`), vector quantization (`VectorQuantizerModel`), and anomaly detection (`AnomalyModel`), with local SHAP explanations (`TreeSHAP` & `KernelSHAP`) |
+| **ONNX Runtime** | `/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
+| **LLM Chat** | `/v1/chat` | OpenAI-compatible chat completions, tool calling, and SSE streaming |
+| **Models** | `/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
 | **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models |
 
 A React-based web UI is bundled and served from the same process.
