@@ -235,6 +235,27 @@ public record InklingModelArgs(
                 coreEnd, numPasses, gateRank, varLoop, eosTokenId, length, experts);
     }
 
+    /**
+     * Returns a truncated copy for slice tests: the first {@code layers} layers and {@code passes} passes. The loop
+     * end is clamped to the layer count, so the layers of a slice that lie inside the loop run their first pass only.
+     *
+     * @param layers new layer count, at most the current one.
+     * @param passes new number of passes through the looped layers.
+     * @return the new args.
+     */
+    public InklingModelArgs withLayers(int layers, int passes) {
+        if (layers < 1 || layers > numLayers || passes < 1) {
+            throw new IllegalArgumentException("invalid slice " + layers + " layers, " + passes + " passes");
+        }
+        return new InklingModelArgs(dim, layers, vocabSize, unpaddedVocabSize, numHeads, numKvHeads, headDim,
+                swaHeads, swaKvHeads, swaHeadDim, relDim, relExtent, normEps, valueNormNoGamma, qkL2ClipThreshold,
+                relL2ClipThreshold, logScalingNFloor, logScalingAlpha, Arrays.copyOf(local, layers), slidingWindow,
+                sconvKernel, finalLogitSoftcap, layersPerAttnResBlock, attnResNormalizeValues, numExperts,
+                numExpertsPerTok, numSharedExperts, intermediateSize, gateSoftcap, upSoftcap, routeScale, useGateBias,
+                Math.min(coreStart, layers), Math.min(coreEnd, layers), passes, gateRank, varLoop, eosTokenId,
+                maxSeqLen, Arrays.copyOf(experts, layers));
+    }
+
     private void check(int layer) {
         if (layer < 0 || layer >= numLayers) {
             throw new IndexOutOfBoundsException("layer " + layer);
