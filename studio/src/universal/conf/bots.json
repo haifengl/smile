@@ -28,6 +28,7 @@
           "routineId": "daily-log",
           "name": "7:00 PM Daily Memory Log",
           "enabled": true,
+          "model": "gemini-3.5-flash-lite",
           "trigger": {
             "source": "timer",
             "cron": "0 19 * * *",
@@ -63,6 +64,7 @@
           "routineId": "frank-daily-recap",
           "name": "8:00 PM End-of-Day Consolidation & Briefing",
           "enabled": true,
+          "model": "gemini-4-hydrogen",
           "trigger": {
             "source": "timer",
             "cron": "0 20 * * *",
@@ -146,6 +148,7 @@
           "routineId": "frank-bot-activity-recap",
           "name": "10:30 PM Bot Activity",
           "enabled": true,
+          "model": "gemini-3.5-flash-lite",
           "trigger": {
             "source": "timer",
             "cron": "30 22 * * *",
