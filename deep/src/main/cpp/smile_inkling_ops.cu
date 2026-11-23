@@ -7,6 +7,7 @@
  */
 #include <c10/cuda/CUDAStream.h>
 #include <cuda_bf16.h>
+#include <cuda_fp8.h>
 #include <cuda_runtime.h>
 
 #include <cfloat>
@@ -377,26 +378,64 @@ static bool dispatch_attnres_rms(int n, const States& st, const float* q, float*
  */
 __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict__ hin, const float* __restrict__ w,
                             const int64_t* __restrict__ tbl, int entry, float* __restrict__ res, bf16* __restrict__ blk,
-                            bf16* __restrict__ out, int dim, int boundary, int mode) {
+                            bf16* __restrict__ out, int dim, int boundary, int mode, int T) {
     const int b = blockIdx.x;
     const int c = blockIdx.y * blockDim.x + threadIdx.x;
     if (c >= dim) return;
     float* state = (float*) tbl[(int64_t) b * 8 + entry];
-    float x = mode == 0 ? __bfloat162float(((const bf16*) xin)[(int64_t) b * dim + c])
-                        : rnd(((const float*) xin)[(int64_t) b * dim + c]);
-    const float s0 = state[c], s1 = state[dim + c], s2 = state[2 * dim + c];
+    auto input = [&](int row) {
+        return mode == 0 ? __bfloat162float(((const bf16*) xin)[(int64_t) row * dim + c])
+                         : rnd(((const float*) xin)[(int64_t) row * dim + c]);
+    };
+    float x = input(b);
+    float s0, s1, s2;
+    if (T > 1) {
+        // verify: the T rows of a request are consecutive; earlier rows' inputs replace the state, which is only
+        // updated by the commit kernel (state rows 3.. hold the inputs of this chunk)
+        const int j = b % T;
+        const int b0 = b - j;
+        s0 = j >= 3 ? input(b0 + j - 3) : state[j * dim + c];
+        s1 = j >= 2 ? input(b0 + j - 2) : state[(j + 1) * dim + c];
+        s2 = j >= 1 ? input(b0 + j - 1) : state[(j + 2) * dim + c];
+        state[(3 + j) * (int64_t) dim + c] = x;
+    } else {
+        s0 = state[c]; s1 = state[dim + c]; s2 = state[2 * dim + c];
+    }
     const float* wc = w + (int64_t) c * 4;
     const float acc = wc[0] * s0 + wc[1] * s1 + wc[2] * s2 + wc[3] * x;
     const float conv = rnd((acc + x) * 0.4472135954999579f);       // 1 / sqrt(5)
-    state[c] = s1;
-    state[dim + c] = s2;
-    state[2 * dim + c] = x;
+    if (T == 1) {
+        state[c] = s1;
+        state[dim + c] = s2;
+        state[2 * dim + c] = x;
+    }
     if (mode == 0) {
         const float h = __bfloat162float(hin[(int64_t) b * dim + c]);
         res[(int64_t) b * dim + c] = boundary ? conv : h + conv;
         if (blk) blk[(int64_t) b * dim + c] = hin[(int64_t) b * dim + c];
     } else {
         out[(int64_t) b * dim + c] = __float2bfloat16(res[(int64_t) b * dim + c] + conv);
+    }
+}
+
+/**
+ * Rolls the convolution states forward after a verify: state[i] = ext[accepted + i] for i < 3, where ext is the state
+ * (rows 0..2) followed by the T inputs of the chunk. Grid (apps, requests, 4), one pass per channel in ascending row order
+ * (a source row is never below its destination row, so the in-place copy is safe).
+ */
+__global__ void commit_kernel(const int64_t* __restrict__ tbl, const int* __restrict__ accepted, int nbRows, int T, int dim) {
+    const int app = blockIdx.x, req = blockIdx.y, kind = blockIdx.z;
+    const int a = accepted[req];
+    if (a <= 0) return;
+    const int chan = kind < 2 ? 1024 : dim;
+    float* state = (float*) tbl[((int64_t) app * nbRows + (int64_t) req * T) * 8 + 2 + kind];
+    for (int c = threadIdx.x; c < chan; c += blockDim.x) {
+        const float v0 = state[(int64_t) a * chan + c];
+        const float v1 = state[(int64_t) (a + 1) * chan + c];
+        const float v2 = state[(int64_t) (a + 2) * chan + c];
+        state[c] = v0;
+        state[chan + c] = v1;
+        state[2 * chan + c] = v2;
     }
 }
 
@@ -410,14 +449,24 @@ struct PrepArgs {
     const float* kw; const float* vw;        // local: conv [1024, 4]; global: static [4, 1024]
     const int64_t* tbl; const int* pos;
     bf16* qn; float* rel; float* sink;
-    int global, nfloor;
+    int global, nfloor, T;
     float qclip, relclip, eps, alpha;
 };
 
 /** Short convolution of one key/value channel (static taps, or dynamic taps by lag for global layers). */
-__device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long ld, int off_proj, const float* w, float* state,
+__device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long ld, int off_x, int off_proj, const float* w, float* state,
                                          int b, int h, int c, float x, int global) {
-    const float s0 = state[c], s1 = state[1024 + c], s2 = state[2048 + c];
+    float s0, s1, s2;
+    if (a.T > 1) {
+        const int j = b % a.T;
+        const int b0 = b - j;
+        s0 = j >= 3 ? __bfloat162float(y[(int64_t) (b0 + j - 3) * ld + off_x + c]) : state[j * 1024 + c];
+        s1 = j >= 2 ? __bfloat162float(y[(int64_t) (b0 + j - 2) * ld + off_x + c]) : state[(j + 1) * 1024 + c];
+        s2 = j >= 1 ? __bfloat162float(y[(int64_t) (b0 + j - 1) * ld + off_x + c]) : state[(j + 2) * 1024 + c];
+        state[(3 + j) * 1024 + c] = x;
+    } else {
+        s0 = state[c]; s1 = state[1024 + c]; s2 = state[2048 + c];
+    }
     float acc, scale;
     if (!global) {
         const float* wc = w + (int64_t) c * 4;
@@ -430,9 +479,11 @@ __device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long 
         acc = (w[c] + d[0]) * x + (w[1024 + c] + d[1]) * s2 + (w[2048 + c] + d[2]) * s1 + (w[3072 + c] + d[3]) * s0;
         scale = 0.3333333333333333f;         // 1 / sqrt(9)
     }
-    state[c] = s1;
-    state[1024 + c] = s2;
-    state[2048 + c] = x;
+    if (a.T == 1) {
+        state[c] = s1;
+        state[1024 + c] = s2;
+        state[2048 + c] = x;
+    }
     return rnd((acc + x) * scale);
 }
 
@@ -479,15 +530,19 @@ __global__ void prep_kernel(PrepArgs a) {
     const int c = h * 128 + t;
     {
         const float x = __bfloat162float(a.yk[(int64_t) b * a.ldk + a.off_k + c]);
-        const float kv = kv_conv(a, a.yk, a.ldk, a.off_kproj, a.kw, (float*) e[2], b, h, c, x, a.global);
+        const float kv = kv_conv(a, a.yk, a.ldk, a.off_k, a.off_kproj, a.kw, (float*) e[2], b, h, c, x, a.global);
         const float n = sqrtf(block_sum(kv * kv, red));
-        kc[((int64_t) h * cap + slot) * 128 + t] = __float2bfloat16(kv * fminf(1.f, a.qclip / (n + 1e-6f)));
+        const float kval = kv * fminf(1.f, a.qclip / (n + 1e-6f));
+        if (e[7]) ((__nv_fp8_storage_t*) kc)[((int64_t) h * cap + slot) * 128 + t] = __nv_cvt_float_to_fp8(kval, __NV_SATFINITE, __NV_E4M3);
+        else kc[((int64_t) h * cap + slot) * 128 + t] = __float2bfloat16(kval);
     }
     {
         const float x = __bfloat162float(a.yv[(int64_t) b * a.ldv + a.off_v + c]);
-        const float vv = kv_conv(a, a.yv, a.ldv, a.off_vproj, a.vw, (float*) e[3], b, h, c, x, a.global);
+        const float vv = kv_conv(a, a.yv, a.ldv, a.off_v, a.off_vproj, a.vw, (float*) e[3], b, h, c, x, a.global);
         const float ms = block_sum(vv * vv, red) / 128.f;
-        vc[((int64_t) h * cap + slot) * 128 + t] = __float2bfloat16(vv * rsqrtf(ms + a.eps));
+        const float vval = vv * rsqrtf(ms + a.eps);
+        if (e[7]) ((__nv_fp8_storage_t*) vc)[((int64_t) h * cap + slot) * 128 + t] = __nv_cvt_float_to_fp8(vval, __NV_SATFINITE, __NV_E4M3);
+        else vc[((int64_t) h * cap + slot) * 128 + t] = __float2bfloat16(vval);
     }
 }
 
@@ -510,6 +565,37 @@ __device__ __forceinline__ void load4(const bf16* p, float* f) {
     f[0] = __low2float(a); f[1] = __high2float(a); f[2] = __low2float(c); f[3] = __high2float(c);
 }
 
+__device__ __forceinline__ float fp8_to_float(__nv_fp8_storage_t b) {
+    const __half_raw hr = __nv_cvt_fp8_to_halfraw(b, __NV_E4M3);
+    return __half2float(*reinterpret_cast<const __half*>(&hr));
+}
+
+/** 8 consecutive cache elements (bf16 or E4M3) starting at element {@code elem}. */
+__device__ __forceinline__ void load8(const bf16* base, int64_t elem, bool fp8, float* f) {
+    if (fp8) {
+        const uint2 u = *reinterpret_cast<const uint2*>(reinterpret_cast<const uint8_t*>(base) + elem);
+        const uint8_t* by = reinterpret_cast<const uint8_t*>(&u);
+#pragma unroll
+        for (int i = 0; i < 8; i++) f[i] = fp8_to_float(by[i]);
+    } else {
+        const uint4 u = *reinterpret_cast<const uint4*>(base + elem);
+        const __nv_bfloat162* b = reinterpret_cast<const __nv_bfloat162*>(&u);
+#pragma unroll
+        for (int i = 0; i < 4; i++) { f[2 * i] = __low2float(b[i]); f[2 * i + 1] = __high2float(b[i]); }
+    }
+}
+
+__device__ __forceinline__ void load4v(const bf16* base, int64_t elem, bool fp8, float* f) {
+    if (fp8) {
+        const uint32_t u = *reinterpret_cast<const uint32_t*>(reinterpret_cast<const uint8_t*>(base) + elem);
+        const uint8_t* by = reinterpret_cast<const uint8_t*>(&u);
+#pragma unroll
+        for (int i = 0; i < 4; i++) f[i] = fp8_to_float(by[i]);
+    } else {
+        load4(base + elem, f);
+    }
+}
+
 /**
  * Decode attention of one KV head (3 query heads) over a range of keys, with the relative bias, in an online softmax.
  * Grid (nb, 8, nsplit), block 128 (4 warps; a lane owns 4 of the 128 head dims). With nsplit 1 the sink, the output gate
@@ -527,70 +613,178 @@ __global__ void attn_kernel(AttnArgs a) {
     const int n = pos + 1 - lo;
     const int chunk = (n + a.nsplit - 1) / a.nsplit;
     const int j0 = lo + z * chunk, j1 = min(pos + 1, j0 + chunk);
-    float q[3][4], rel[3][16];
-#pragma unroll
-    for (int hh = 0; hh < 3; hh++) {
-        load4(a.qn + (int64_t) b * 3072 + (3 * g + hh) * 128 + lane * 4, q[hh]);
-#pragma unroll
-        for (int d = 0; d < 16; d++) rel[hh][d] = a.rel[(int64_t) b * 384 + (3 * g + hh) * 16 + d];
-    }
+    const bool fp8 = e[7] != 0;
     float m[3] = {-1e30f, -1e30f, -1e30f}, l[3] = {0.f, 0.f, 0.f}, acc[3][4] = {};
-    constexpr int U = 4;
-    for (int jb = j0 + warp; jb < j1; jb += 4 * U) {
-        float kf[U][4], vf[U][4], pw[U][16], dot[U][3];
-        bool live[U];
+    if (j1 - j0 <= 96) {
+        // short range: one key per warp step, the 32 lanes share its dimensions (little latency chain per key)
+        float q[3][4], rel[3][16];
 #pragma unroll
-        for (int u = 0; u < U; u++) {
-            const int j = jb + 4 * u;
-            live[u] = j < j1;
-            if (live[u]) {
+        for (int hh = 0; hh < 3; hh++) {
+            load4(a.qn + (int64_t) b * 3072 + (3 * g + hh) * 128 + lane * 4, q[hh]);
+#pragma unroll
+            for (int d = 0; d < 16; d++) rel[hh][d] = a.rel[(int64_t) b * 384 + (3 * g + hh) * 16 + d];
+        }
+        constexpr int U = 4;
+        for (int jb = j0 + warp; jb < j1; jb += 4 * U) {
+            float kf[U][4], vf[U][4], pw[U][16], dot[U][3];
+            bool live[U];
+#pragma unroll
+            for (int u = 0; u < U; u++) {
+                const int j = jb + 4 * u;
+                live[u] = j < j1;
+                if (live[u]) {
+                    const int slot = a.window ? j % cap : j;
+                    load4v(kc, ((int64_t) g * cap + slot) * 128 + lane * 4, fp8, kf[u]);
+                    load4v(vc, ((int64_t) g * cap + slot) * 128 + lane * 4, fp8, vf[u]);
+                    const int dist = pos - j;
+                    if (dist < 1024) {
+                        const uint4* pp = reinterpret_cast<const uint4*>(a.projT + (int64_t) dist * 16);
+                        const uint4 u0 = pp[0], u1 = pp[1];
+                        const __nv_bfloat162* b0 = reinterpret_cast<const __nv_bfloat162*>(&u0);
+                        const __nv_bfloat162* b1 = reinterpret_cast<const __nv_bfloat162*>(&u1);
+#pragma unroll
+                        for (int d = 0; d < 4; d++) {
+                            pw[u][2 * d] = __low2float(b0[d]); pw[u][2 * d + 1] = __high2float(b0[d]);
+                            pw[u][8 + 2 * d] = __low2float(b1[d]); pw[u][8 + 2 * d + 1] = __high2float(b1[d]);
+                        }
+                    } else {
+#pragma unroll
+                        for (int d = 0; d < 16; d++) pw[u][d] = 0.f;
+                    }
+#pragma unroll
+                    for (int hh = 0; hh < 3; hh++) {
+                        dot[u][hh] = q[hh][0] * kf[u][0] + q[hh][1] * kf[u][1] + q[hh][2] * kf[u][2] + q[hh][3] * kf[u][3];
+                    }
+                }
+            }
+#pragma unroll
+            for (int o = 16; o > 0; o >>= 1) {
+#pragma unroll
+                for (int u = 0; u < U; u++)
+#pragma unroll
+                    for (int hh = 0; hh < 3; hh++) dot[u][hh] += __shfl_xor_sync(0xffffffffu, dot[u][hh], o);
+            }
+#pragma unroll
+            for (int u = 0; u < U; u++) {
+                if (!live[u]) continue;
+#pragma unroll
+                for (int hh = 0; hh < 3; hh++) {
+                    float bias = 0.f;
+#pragma unroll
+                    for (int d = 0; d < 16; d++) bias += rel[hh][d] * pw[u][d];
+                    const float s = dot[u][hh] * 0.08838834764831845f + bias;
+                    const float mn = fmaxf(m[hh], s);
+                    const float al = __expf(m[hh] - mn), p = __expf(s - mn);
+                    l[hh] = l[hh] * al + p;
+#pragma unroll
+                    for (int i = 0; i < 4; i++) acc[hh][i] = acc[hh][i] * al + p * vf[u][i];
+                    m[hh] = mn;
+                }
+            }
+        }
+    } else {
+        __shared__ float4 q_s[3][32];
+        __shared__ float rel_s[3][16];
+        if (threadIdx.x < 96) {
+            const int hh = threadIdx.x >> 5, c = threadIdx.x & 31;
+            const uint2 u = *reinterpret_cast<const uint2*>(a.qn + (int64_t) b * 3072 + (3 * g + hh) * 128 + c * 4);
+            const __nv_bfloat162 x0 = *reinterpret_cast<const __nv_bfloat162*>(&u.x), x1 = *reinterpret_cast<const __nv_bfloat162*>(&u.y);
+            q_s[hh][c] = make_float4(__low2float(x0), __high2float(x0), __low2float(x1), __high2float(x1));
+        }
+        if (threadIdx.x < 48) rel_s[threadIdx.x >> 4][threadIdx.x & 15] = a.rel[(int64_t) b * 384 + (3 * g) * 16 + threadIdx.x];
+        __syncthreads();
+        // a warp scores 32 consecutive keys at a time, one key per lane, then accumulates the values lane-per-dimension
+        for (int tb = j0 + warp * 32; tb < j1; tb += 128) {
+            const int j = tb + lane;
+            float s[3] = {-1e30f, -1e30f, -1e30f};
+            if (j < j1) {
                 const int slot = a.window ? j % cap : j;
-                load4(kc + ((int64_t) g * cap + slot) * 128 + lane * 4, kf[u]);
-                load4(vc + ((int64_t) g * cap + slot) * 128 + lane * 4, vf[u]);
+                const int64_t row = ((int64_t) g * cap + slot) * 128;
+                float d[3] = {0.f, 0.f, 0.f};
+                uint4 raw[16];                      // all loads first: 16 requests in flight per lane
+    #pragma unroll
+                for (int c = 0; c < 16; c++) {
+                    if (fp8) {
+                        const uint2 u = *reinterpret_cast<const uint2*>(reinterpret_cast<const uint8_t*>(kc) + row + c * 8);
+                        raw[c] = make_uint4(u.x, u.y, 0u, 0u);
+                    } else {
+                        raw[c] = *reinterpret_cast<const uint4*>(kc + row + c * 8);
+                    }
+                }
+    #pragma unroll
+                for (int c = 0; c < 16; c++) {
+                    float f[8];
+                    if (fp8) {
+                        const uint8_t* by = reinterpret_cast<const uint8_t*>(&raw[c]);
+    #pragma unroll
+                        for (int i = 0; i < 8; i++) f[i] = fp8_to_float(by[i]);
+                    } else {
+                        const __nv_bfloat162* bb = reinterpret_cast<const __nv_bfloat162*>(&raw[c]);
+    #pragma unroll
+                        for (int i = 0; i < 4; i++) { f[2 * i] = __low2float(bb[i]); f[2 * i + 1] = __high2float(bb[i]); }
+                    }
+    #pragma unroll
+                    for (int hh = 0; hh < 3; hh++) {
+                        const float4 qa = q_s[hh][2 * c], qb = q_s[hh][2 * c + 1];
+                        d[hh] += qa.x * f[0] + qa.y * f[1] + qa.z * f[2] + qa.w * f[3] + qb.x * f[4] + qb.y * f[5] + qb.z * f[6] + qb.w * f[7];
+                    }
+                }
                 const int dist = pos - j;
-                if (dist < 1024) {
+                float pw[16];
+                const bool near = dist < 1024;
+                if (near) {
                     const uint4* pp = reinterpret_cast<const uint4*>(a.projT + (int64_t) dist * 16);
                     const uint4 u0 = pp[0], u1 = pp[1];
                     const __nv_bfloat162* b0 = reinterpret_cast<const __nv_bfloat162*>(&u0);
                     const __nv_bfloat162* b1 = reinterpret_cast<const __nv_bfloat162*>(&u1);
-#pragma unroll
-                    for (int d = 0; d < 4; d++) {
-                        pw[u][2 * d] = __low2float(b0[d]); pw[u][2 * d + 1] = __high2float(b0[d]);
-                        pw[u][8 + 2 * d] = __low2float(b1[d]); pw[u][8 + 2 * d + 1] = __high2float(b1[d]);
+    #pragma unroll
+                    for (int i = 0; i < 4; i++) {
+                        pw[2 * i] = __low2float(b0[i]); pw[2 * i + 1] = __high2float(b0[i]);
+                        pw[8 + 2 * i] = __low2float(b1[i]); pw[8 + 2 * i + 1] = __high2float(b1[i]);
                     }
-                } else {
-#pragma unroll
-                    for (int d = 0; d < 16; d++) pw[u][d] = 0.f;
                 }
-#pragma unroll
+    #pragma unroll
                 for (int hh = 0; hh < 3; hh++) {
-                    dot[u][hh] = q[hh][0] * kf[u][0] + q[hh][1] * kf[u][1] + q[hh][2] * kf[u][2] + q[hh][3] * kf[u][3];
+                    float bias = 0.f;
+                    if (near) {
+    #pragma unroll
+                        for (int i = 0; i < 16; i++) bias += rel_s[hh][i] * pw[i];
+                    }
+                    s[hh] = d[hh] * 0.08838834764831845f + bias;
                 }
             }
-        }
-        // the warp reductions of the U keys interleave
-#pragma unroll
-        for (int o = 16; o > 0; o >>= 1) {
-#pragma unroll
-            for (int u = 0; u < U; u++)
-#pragma unroll
-                for (int hh = 0; hh < 3; hh++) dot[u][hh] += __shfl_xor_sync(0xffffffffu, dot[u][hh], o);
-        }
-#pragma unroll
-        for (int u = 0; u < U; u++) {
-            if (!live[u]) continue;
-#pragma unroll
+            float p[3];
+    #pragma unroll
             for (int hh = 0; hh < 3; hh++) {
-                float bias = 0.f;
-#pragma unroll
-                for (int d = 0; d < 16; d++) bias += rel[hh][d] * pw[u][d];
-                const float s = dot[u][hh] * 0.08838834764831845f + bias;
-                const float mn = fmaxf(m[hh], s);
-                const float al = __expf(m[hh] - mn), p = __expf(s - mn);
-                l[hh] = l[hh] * al + p;
-#pragma unroll
-                for (int i = 0; i < 4; i++) acc[hh][i] = acc[hh][i] * al + p * vf[u][i];
+                const float mn = fmaxf(m[hh], warp_max(s[hh]));
+                const float al = __expf(m[hh] - mn);
+                p[hh] = __expf(s[hh] - mn);
+                l[hh] = l[hh] * al + warp_sum(p[hh]);
+    #pragma unroll
+                for (int i = 0; i < 4; i++) acc[hh][i] *= al;
                 m[hh] = mn;
+            }
+            // value rows in groups of 8 so that the loads of a group are in flight together (invalid keys have p = 0)
+            const int last = j1 - 1;
+    #pragma unroll 2
+            for (int kb = 0; kb < 32; kb += 8) {
+                if (tb + kb >= j1) break;
+                float vf[8][4];
+    #pragma unroll
+                for (int u = 0; u < 8; u++) {
+                    const int jk = min(tb + kb + u, last);
+                    const int slot = a.window ? jk % cap : jk;
+                    load4v(vc, ((int64_t) g * cap + slot) * 128 + lane * 4, fp8, vf[u]);
+                }
+    #pragma unroll
+                for (int u = 0; u < 8; u++) {
+    #pragma unroll
+                    for (int hh = 0; hh < 3; hh++) {
+                        const float pk = __shfl_sync(0xffffffffu, p[hh], kb + u);
+    #pragma unroll
+                        for (int i = 0; i < 4; i++) acc[hh][i] += pk * vf[u][i];
+                    }
+                }
             }
         }
     }
@@ -791,12 +985,127 @@ __global__ void embed_kernel(const int64_t* __restrict__ ids, const bf16* __rest
 }
 
 /** out = cap * tanh(x / cap), bf16 -> float32. */
-__global__ void softcap_kernel(const bf16* __restrict__ x, float* __restrict__ out, long total, float cap) {
+__global__ void softcap_kernel(const bf16* __restrict__ x, float* __restrict__ out, long total, float cap, long cols, long ld) {
     const long i = (long) blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < total) out[i] = cap * tanhf(__bfloat162float(x[i]) / cap);
+    if (i < total) {
+        const long src = ld == cols ? i : (i / cols) * ld + i % cols;
+        out[i] = cap * tanhf(__bfloat162float(x[src]) / cap);
+    }
 }
 
 }  // namespace
+
+
+// ------------------------------------------------------------------------------------------------ DSpark draft
+
+/**
+ * Writes rows of key and value ({@code [R, 1024]} bf16) into the draft's per-request caches {@code [8, cap, 128]} at the
+ * given positions. The table row of a request holds {@code stride} addresses: K and V of every layer, then the capacity.
+ */
+__global__ void draft_scatter_kernel(const bf16* __restrict__ K, const bf16* __restrict__ V, const int64_t* __restrict__ ptrs,
+                                     const int* __restrict__ pos, int stride, int layer, int rows_per) {
+    const int r = blockIdx.x;
+    const int64_t* e = ptrs + (int64_t) (r / rows_per) * stride;
+    bf16* kc = (bf16*) e[2 * layer];
+    bf16* vc = (bf16*) e[2 * layer + 1];
+    const int64_t cap = e[stride - 1];
+    const int p = pos[r];
+    for (int i = threadIdx.x; i < 1024; i += blockDim.x) {
+        const int h = i >> 7, d = i & 127;
+        kc[((int64_t) h * cap + p) * 128 + d] = K[(int64_t) r * 1024 + i];
+        vc[((int64_t) h * cap + p) * 128 + d] = V[(int64_t) r * 1024 + i];
+    }
+}
+
+struct DraftAttnArgs {
+    const bf16* q;              // [B * 8, 3072]
+    const int64_t* ptrs;
+    const int* endpos;          // [B]: anchor position + 8
+    bf16* out;                  // [B * 8, 3072]
+    float* pm; float* pl; float* pacc;     // partials [B, 8, S, 24] and [.., 128], S = 4 * nsplit
+    int stride, layer, window, nsplit;
+};
+
+/**
+ * Non-causal block attention of the draft: the 8 rows of a block (3 query heads each per KV head) read the context keys of
+ * the window and the block's own keys. Grid (B, 8, nsplit), block 128: every warp keeps an online softmax over its share of
+ * the keys for all 24 (head, row) queries and writes a partial result for the merge kernel.
+ */
+__global__ void draft_attn_kernel(DraftAttnArgs a) {
+    const int b = blockIdx.x, g = blockIdx.y, z = blockIdx.z;
+    const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31;
+    __shared__ float q[24][128];
+    const int64_t* e = a.ptrs + (int64_t) b * a.stride;
+    const bf16* kc = (const bf16*) e[2 * a.layer];
+    const bf16* vc = (const bf16*) e[2 * a.layer + 1];
+    const int64_t cap = e[a.stride - 1];
+    for (int i = threadIdx.x; i < 24 * 128; i += 128) {
+        const int qi = i >> 7, d = i & 127, c = qi >> 3, r = qi & 7;
+        q[qi][d] = __bfloat162float(a.q[(int64_t) (b * 8 + r) * 3072 + (g * 3 + c) * 128 + d]);
+    }
+    __syncthreads();
+    const int end = a.endpos[b];
+    const int lo = a.window > 0 ? max(0, end - a.window - 8) : 0;
+    const int len = end - lo;
+    const int chunk = (len + a.nsplit - 1) / a.nsplit;
+    const int k0 = lo + z * chunk, k1 = min(end, k0 + chunk);
+    float m[24], l[24], acc[24][4];
+#pragma unroll
+    for (int i = 0; i < 24; i++) {
+        m[i] = -INFINITY; l[i] = 0.f;
+        acc[i][0] = acc[i][1] = acc[i][2] = acc[i][3] = 0.f;
+    }
+    const float scale = 0.08838834764831845f;       // 128^-0.5
+    for (int k = k0 + warp; k < k1; k += 4) {
+        float kf[4], vf[4];
+        const int64_t off = ((int64_t) g * cap + k) * 128 + lane * 4;
+        const uint2 uk = *reinterpret_cast<const uint2*>(kc + off);
+        const uint2 uv = *reinterpret_cast<const uint2*>(vc + off);
+        {
+            const __nv_bfloat162 x0 = *reinterpret_cast<const __nv_bfloat162*>(&uk.x), x1 = *reinterpret_cast<const __nv_bfloat162*>(&uk.y);
+            kf[0] = __low2float(x0); kf[1] = __high2float(x0); kf[2] = __low2float(x1); kf[3] = __high2float(x1);
+            const __nv_bfloat162 y0 = *reinterpret_cast<const __nv_bfloat162*>(&uv.x), y1 = *reinterpret_cast<const __nv_bfloat162*>(&uv.y);
+            vf[0] = __low2float(y0); vf[1] = __high2float(y0); vf[2] = __low2float(y1); vf[3] = __high2float(y1);
+        }
+#pragma unroll
+        for (int i = 0; i < 24; i++) {
+            float sc = q[i][lane * 4] * kf[0] + q[i][lane * 4 + 1] * kf[1] + q[i][lane * 4 + 2] * kf[2] + q[i][lane * 4 + 3] * kf[3];
+            sc = warp_sum(sc) * scale;
+            const float mn = fmaxf(m[i], sc);
+            const float al = __expf(m[i] - mn), pr = __expf(sc - mn);
+            l[i] = l[i] * al + pr;
+            acc[i][0] = acc[i][0] * al + pr * vf[0];
+            acc[i][1] = acc[i][1] * al + pr * vf[1];
+            acc[i][2] = acc[i][2] * al + pr * vf[2];
+            acc[i][3] = acc[i][3] * al + pr * vf[3];
+            m[i] = mn;
+        }
+    }
+    const int S = 4 * a.nsplit, s = z * 4 + warp;
+#pragma unroll
+    for (int i = 0; i < 24; i++) {
+        const int64_t base = (((int64_t) b * 8 + g) * S + s) * 24 + i;
+        if (lane == 0) { a.pm[base] = m[i]; a.pl[base] = l[i]; }
+        float* pa = a.pacc + base * 128 + lane * 4;
+        pa[0] = acc[i][0]; pa[1] = acc[i][1]; pa[2] = acc[i][2]; pa[3] = acc[i][3];
+    }
+}
+
+/** Merges the partial softmaxes: grid (B * 8 rows, 24 heads), block 128 (one thread per head dim). */
+__global__ void draft_merge_kernel(DraftAttnArgs a) {
+    const int b = blockIdx.x >> 3, r = blockIdx.x & 7, h = blockIdx.y, d = threadIdx.x;
+    const int g = h / 3, c = h % 3, qi = c * 8 + r, S = 4 * a.nsplit;
+    float mx = -INFINITY;
+    for (int s = 0; s < S; s++) mx = fmaxf(mx, a.pm[(((int64_t) b * 8 + g) * S + s) * 24 + qi]);
+    float den = 0.f, num = 0.f;
+    for (int s = 0; s < S; s++) {
+        const int64_t base = (((int64_t) b * 8 + g) * S + s) * 24 + qi;
+        const float w = __expf(a.pm[base] - mx);
+        den += w * a.pl[base];
+        num += w * a.pacc[base * 128 + d];
+    }
+    a.out[(int64_t) blockIdx.x * 3072 + h * 128 + d] = __float2bfloat16(num / den);
+}
 
 // ------------------------------------------------------------------------------------------------ dispatcher
 
@@ -815,6 +1124,11 @@ enum Op {
     OP_SOFTCAP = 12,
     OP_ALIGN = 13,
     OP_ATTNRES_RMS = 14,
+    OP_COMMIT = 15,
+    OP_DRAFT_SCATTER = 16,
+    OP_DRAFT_ATTN = 17,
+    OP_DRAFT_MERGE = 18,
+    OP_PEER = 20,
 };
 
 extern "C" __attribute__((visibility("default"))) const char* smile_inkling_error(void) { return g_error.c_str(); }
@@ -878,7 +1192,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             // p: xin, hin, w, tbl, res, blk(0), out; iv: nb, dim, entry, boundary, mode
             const int nb = iv[0], dim = iv[1];
             conv_kernel<<<dim3(nb, (dim + 255) / 256), 256, 0, stream>>>((const void*) p[0], (const bf16*) p[1], (const float*) p[2],
-                    (const int64_t*) p[3], (int) iv[2], (float*) p[4], (bf16*) p[5], (bf16*) p[6], dim, (int) iv[3], (int) iv[4]);
+                    (const int64_t*) p[3], (int) iv[2], (float*) p[4], (bf16*) p[5], (bf16*) p[6], dim, (int) iv[3], (int) iv[4], ni > 5 && iv[5] > 1 ? (int) iv[5] : 1);
             CHECK_LAUNCH("conv");
             return 0;
         }
@@ -895,7 +1209,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.qn = (bf16*) p[9]; a.rel = (float*) p[10]; a.sink = (float*) p[11];
             a.ldq = iv[1]; a.ldk = iv[2]; a.ldv = iv[3];
             a.off_q = iv[4]; a.off_rel = iv[5]; a.off_sink = iv[6]; a.off_k = iv[7]; a.off_kproj = iv[8];
-            a.off_v = iv[9]; a.off_vproj = iv[10]; a.global = iv[11]; a.nfloor = iv[12];
+            a.off_v = iv[9]; a.off_vproj = iv[10]; a.global = iv[11]; a.nfloor = iv[12]; a.T = ni > 13 && iv[13] > 1 ? (int) iv[13] : 1;
             a.qclip = (float) dv[0]; a.relclip = (float) dv[1]; a.eps = (float) dv[2]; a.alpha = (float) dv[3];
             prep_kernel<<<dim3(iv[0], 24), 128, 0, stream>>>(a);
             CHECK_LAUNCH("prep");
@@ -946,7 +1260,8 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
         }
         case OP_SOFTCAP: {
             // p: x, out; iv: total; dv: cap
-            softcap_kernel<<<(unsigned) ((iv[0] + 255) / 256), 256, 0, stream>>>((const bf16*) p[0], (float*) p[1], iv[0], (float) dv[0]);
+            softcap_kernel<<<(unsigned) ((iv[0] + 255) / 256), 256, 0, stream>>>((const bf16*) p[0], (float*) p[1], iv[0], (float) dv[0],
+                    ni > 2 ? iv[1] : 1, ni > 2 ? iv[2] : 1);
             CHECK_LAUNCH("softcap");
             return 0;
         }
@@ -984,6 +1299,52 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
                 return -3;
             }
             CHECK_LAUNCH("attnres_rms");
+            return 0;
+        }
+        case OP_COMMIT: {
+            // p: tbl, accepted (int32 [requests]); iv: apps, requests, T, rows per app in tbl, dim
+            commit_kernel<<<dim3(iv[0], iv[1], 4), 256, 0, stream>>>((const int64_t*) p[0], (const int*) p[1], (int) iv[3], (int) iv[2], (int) iv[4]);
+            CHECK_LAUNCH("commit");
+            return 0;
+        }
+        case OP_DRAFT_SCATTER: {
+            // p: K, V, ptrs, pos; iv: rows, stride, layer, rows_per
+            draft_scatter_kernel<<<(int) iv[0], 256, 0, stream>>>((const bf16*) p[0], (const bf16*) p[1], (const int64_t*) p[2],
+                    (const int*) p[3], (int) iv[1], (int) iv[2], (int) iv[3]);
+            CHECK_LAUNCH("draft_scatter");
+            return 0;
+        }
+        case OP_DRAFT_ATTN:
+        case OP_DRAFT_MERGE: {
+            // p: q, ptrs, endpos, out, pm, pl, pacc; iv: B, stride, layer, window, nsplit
+            DraftAttnArgs a;
+            std::memset(&a, 0, sizeof(a));
+            a.q = (const bf16*) p[0]; a.ptrs = (const int64_t*) p[1]; a.endpos = (const int*) p[2]; a.out = (bf16*) p[3];
+            a.pm = (float*) p[4]; a.pl = (float*) p[5]; a.pacc = (float*) p[6];
+            a.stride = (int) iv[1]; a.layer = (int) iv[2]; a.window = (int) iv[3]; a.nsplit = (int) iv[4];
+            if (op == OP_DRAFT_ATTN) {
+                draft_attn_kernel<<<dim3(iv[0], 8, a.nsplit), 128, 0, stream>>>(a);
+            } else {
+                draft_merge_kernel<<<dim3(iv[0] * 8, 24), 128, 0, stream>>>(a);
+            }
+            CHECK_LAUNCH("draft_attn");
+            return 0;
+        }
+        case OP_PEER: {
+            // iv: peer device; lets kernels of the current device read and write its memory (KV caches spilled to a second GPU)
+            int cur = 0, can = 0;
+            cudaGetDevice(&cur);
+            cudaDeviceCanAccessPeer(&can, cur, (int) iv[0]);
+            if (!can) {
+                g_error = "peer access from device " + std::to_string(cur) + " to " + std::to_string(iv[0]) + " is not available";
+                return -4;
+            }
+            const cudaError_t e = cudaDeviceEnablePeerAccess((int) iv[0], 0);
+            if (e != cudaSuccess && e != cudaErrorPeerAccessAlreadyEnabled) {
+                g_error = std::string("peer access: ") + cudaGetErrorString(e);
+                return -4;
+            }
+            cudaGetLastError();
             return 0;
         }
         default:

@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import smile.util.AutoScope;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
@@ -75,6 +76,11 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private final Map<Integer, InklingPrefixCache.Entry> prefixMatches = new ConcurrentHashMap<>();
     private volatile boolean prefixReuse = true;
     private InklingDecoder decoder;
+    private InklingDraft draft;
+    /** Per request: the draft's context (target features of the processed positions). */
+    private final Map<Integer, InklingDraft.State> drafts = new ConcurrentHashMap<>();
+    private static final boolean SPECULATE = !"0".equals(System.getenv("SMILE_INKLING_SPECULATE"));
+    private final Map<Integer, DecodeGraph> verifyGraphs = new java.util.HashMap<>();
     private InklingVisionArgs visionArgs;
     private InklingVisionTower vision;
     private InklingImageProcessor imageProcessor;
@@ -91,6 +97,8 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private static final boolean FUSED = !"0".equals(System.getenv("SMILE_INKLING_FUSED"));
     /** Prefill takes a snapshot at every multiple of this many tokens (when the cache has room). */
     private static final int SNAPSHOT_EVERY = Integer.getInteger("smile.inkling.prefix.every", 1024);
+    /** Prefill takes no snapshots beyond this many tokens: they hold the whole history, churn the allocator and rarely repeat. */
+    private static final int SNAPSHOT_MAX = Integer.getInteger("smile.inkling.prefix.max", 32768);
     /** Shorter prefixes are not worth a snapshot. */
     private static final int SNAPSHOT_MIN = Integer.getInteger("smile.inkling.prefix.min", 256);
 
@@ -118,6 +126,17 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                 this.imageProcessor = new InklingImageProcessor(va);
                 logger.info("Inkling vision tower loaded ({} layers, up to {} tiles per image)", va.layers(), va.maxTokens());
             }
+            if (SPECULATE) {
+                this.draft = InklingDraft.load(dir.toString(), model, device);
+                if (draft != null) {
+                    logger.info("Inkling DSpark draft loaded ({} drafts per block)", draft.drafts());
+                }
+            }
+            if (InklingState.SPILL_DEVICE >= 0 && InklingDecoder.available()) {
+                smile.torch.InklingNative.op(20, new long[]{0}, new long[]{InklingState.SPILL_DEVICE}, new double[0]);
+                logger.info("Inkling KV caches of the last {} global applications live on device {}", InklingState.SPILL_APPS,
+                        InklingState.SPILL_DEVICE);
+            }
             if (FUSED && InklingDecoder.available()) {
                 this.decoder = new InklingDecoder(model);
                 logger.info("Inkling decode: fused kernels");
@@ -132,6 +151,12 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                         }
                     }
                     logger.info("Inkling decode CUDA graphs captured for batches 1..{}", top);
+                    if (hasDraft() && !graphsDisabled) {
+                        int rows = Math.min(draft.drafts() + 1, InklingState.VERIFY_ROWS);
+                        for (int reqs = 1; reqs <= Math.min(4, top); reqs <<= 1) {
+                            draftGraph(verifyGraph(reqs, rows), reqs, rows);
+                        }
+                    }
                 }
             } else {
                 logger.info("Inkling decode: reference ops (fused kernels unavailable or disabled)");
@@ -400,6 +425,13 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         }
         int[] ids = mm.inputIds();
         boolean last = to == ids.length;
+        InklingDraft.State noDraft = drafts.remove(requestId);      // image prompts are not speculated
+        if (noDraft != null) {
+            onWorker(() -> {
+                noDraft.close();
+                return null;
+            });
+        }
         return onWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
                 ImageState is = images.get(requestId);
@@ -486,9 +518,13 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         if (totalCapacity > args.maxSeqLen()) {
             throw new IllegalArgumentException("capacity " + totalCapacity + " exceeds max_seq_len " + args.maxSeqLen());
         }
-        InklingState state = onWorker(() -> model.newState(Math.max(1, totalCapacity)));
+        int margin = draft != null && decoder != null ? InklingState.VERIFY_ROWS : 0;
+        InklingState state = onWorker(() -> model.newState(Math.max(1, totalCapacity) + margin));
         int id = nextId.getAndIncrement();
         sessions.put(id, state);
+        if (margin > 0) {
+            drafts.put(id, onWorker(() -> draft.newState(Math.max(1, totalCapacity) + margin)));
+        }
         if (prefixCache != null && prefixReuse && prompt != null) {
             // the last prompt token is always processed (its logits are sampled)
             InklingPrefixCache.Entry hit;
@@ -577,7 +613,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                     // stop at the next position worth a snapshot: the state there is a prefix of later prompts
                     if (prefixCache != null && prefixReuse) {
                         int cut = (pos / SNAPSHOT_EVERY + 1) * SNAPSHOT_EVERY;
-                        if (cut < prompt.length && cut < end) {
+                        if (cut < prompt.length && cut < end && cut <= SNAPSHOT_MAX) {
                             end = cut;
                         }
                     }
@@ -586,12 +622,15 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                         ids[i] = prompt[pos + i];
                     }
                     boolean wantLogits = last && end == to;
-                    Tensor t = model.forward(st, ids, wantLogits ? null : new int[0], null);
+                    InklingDraft.State ds = drafts.get(requestId);
+                    final int at = pos;
+                    Tensor t = model.forward(st, ids, wantLogits ? null : new int[0], null, null, null,
+                            ds == null ? null : taps -> draft.absorb(ds, taps, at));
                     if (wantLogits) {
                         logits = t;
                     }
                     pos = end;
-                    if (prefixCache != null && prefixReuse && pos % SNAPSHOT_EVERY == 0 && pos < prompt.length) {
+                    if (prefixCache != null && prefixReuse && pos % SNAPSHOT_EVERY == 0 && pos < prompt.length && pos <= SNAPSHOT_MAX) {
                         store(st, Arrays.copyOf(prompt, pos));
                     }
                 }
@@ -651,17 +690,54 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     /** A captured decode step of {@code nb} rows: the fixed device inputs and the output logits. */
     private final class DecodeGraph {
         final int nb;
+        /** Rows per request: 1 for decode, the verify chunk length otherwise. */
+        final int rowsPer;
         final Tensor ids;
         final Tensor pos;
         final Tensor tbl;
+        /** Verify graphs: the draft's target features {@code [nb, 4, D]} and the rows kept per request. */
+        Tensor taps, accepted;
         Tensor logits;
         java.lang.foreign.MemorySegment graph;
 
         DecodeGraph(int nb) {
+            this(nb, 1);
+        }
+
+        DecodeGraph(int nb, int rowsPer) {
             this.nb = nb;
+            this.rowsPer = rowsPer;
+            if (rowsPer > 1) {
+                this.taps = Ix.keep(Ix.zeros(device, smile.deep.tensor.ScalarType.BFloat16, nb, 4, args.dim()));
+                this.accepted = Ix.keep(Tensor.of(new int[nb / rowsPer], nb / rowsPer).to(device));
+            }
             this.ids = Ix.keep(Tensor.of(new long[nb], nb).to(device));
             this.pos = Ix.keep(Tensor.of(new int[nb], nb).to(device));
             this.tbl = Ix.keep(Tensor.of(new long[args.numApplications() * nb * 8], args.numApplications() * nb * 8L).to(device));
+        }
+
+        /** Writes a verify chunk's inputs: {@code rows[i]} are the tokens of request {@code i} at its next positions. */
+        void fillVerify(InklingState[] states, int[][] rows) {
+            int apps = args.numApplications();
+            int reqs = nb / rowsPer;
+            long[] idv = new long[nb];
+            int[] pv = new int[nb];
+            long[] tv = new long[apps * nb * 8];
+            for (int r = 0; r < reqs; r++) {
+                InklingState st = r < states.length ? states[r] : padState;
+                long[] t = st.table();
+                for (int j = 0; j < rowsPer; j++) {
+                    int i = r * rowsPer + j;
+                    idv[i] = r < states.length ? rows[r][j] : 0;
+                    pv[i] = (r < states.length ? st.length : 0) + j;
+                    for (int a = 0; a < apps; a++) {
+                        System.arraycopy(t, a * 8, tv, (a * nb + i) * 8, 8);
+                    }
+                }
+            }
+            smile.torch.Aten.call("aten::copy_", ids, Tensor.of(idv, nb).to(device), false);
+            smile.torch.Aten.call("aten::copy_", pos, Tensor.of(pv, nb).to(device), false);
+            smile.torch.Aten.call("aten::copy_", tbl, Tensor.of(tv, tv.length).to(device), false);
         }
 
         /** Writes the inputs: real rows first, padding rows on the pad state. */
@@ -733,6 +809,258 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         return smile.torch.Aten.one("aten::clone", Ix.narrow(g.logits, 0, 0, n));
     }
 
+    /** The captured commit + absorb + draft of one (requests, rows) shape, chained after a verify graph. */
+    private final class DraftGraph {
+        final int reqs, rowsPer;
+        final DecodeGraph verify;
+        final Tensor anchor, p0, ptrs, rowT, row8, first, freq;
+        Tensor drafts;
+        java.lang.foreign.MemorySegment graph;
+
+        DraftGraph(DecodeGraph verify, int reqs, int rowsPer) {
+            this.verify = verify;
+            this.reqs = reqs;
+            this.rowsPer = rowsPer;
+            int block = draft.drafts() + 1;
+            anchor = Ix.keep(Tensor.of(new long[reqs], reqs).to(device));
+            p0 = Ix.keep(Tensor.of(new int[reqs], reqs).to(device));
+            ptrs = Ix.keep(Tensor.of(new long[reqs * draft.pointerStride()], (long) reqs * draft.pointerStride()).to(device));
+            int[] rt = new int[rowsPer];
+            int[] r8 = new int[block];
+            long[] f = new long[reqs];
+            for (int i = 0; i < rt.length; i++) {
+                rt[i] = i;
+            }
+            for (int i = 0; i < r8.length; i++) {
+                r8[i] = i;
+            }
+            for (int i = 0; i < reqs; i++) {
+                f[i] = (long) i * rowsPer;
+            }
+            rowT = Ix.keep(Tensor.of(rt, rt.length).to(device));
+            row8 = Ix.keep(Tensor.of(r8, r8.length).to(device));
+            first = Ix.keep(Tensor.of(f, reqs).to(device));
+            freq = draft.frequencies();
+        }
+
+        void fill(InklingDraft.State[] ds, InklingState[] states, int[] anchors) {
+            int stride = draft.pointerStride();
+            long[] pt = new long[reqs * stride];
+            long[] av = new long[reqs];
+            int[] pv = new int[reqs];
+            for (int i = 0; i < reqs; i++) {
+                boolean real = i < ds.length;
+                long[] row = (real ? ds[i] : padDraft).pointers();
+                System.arraycopy(row, 0, pt, i * stride, stride);
+                av[i] = real ? anchors[i] : 0;
+                pv[i] = real ? states[i].length : 0;
+            }
+            smile.torch.Aten.call("aten::copy_", ptrs, Tensor.of(pt, pt.length).to(device), false);
+            smile.torch.Aten.call("aten::copy_", anchor, Tensor.of(av, reqs).to(device), false);
+            smile.torch.Aten.call("aten::copy_", p0, Tensor.of(pv, reqs).to(device), false);
+        }
+
+        Tensor body() {
+            decoder.commit(reqs, rowsPer, verify.tbl, verify.accepted);
+            return draft.round(reqs, rowsPer, verify.taps, verify.accepted, p0, anchor, ptrs, rowT, row8, first, freq);
+        }
+    }
+
+    private final Map<Integer, DraftGraph> draftGraphs = new java.util.HashMap<>();
+    private InklingDraft.State padDraft;
+
+    private DraftGraph draftGraph(DecodeGraph verify, int reqs, int rowsPer) {
+        int key = reqs * 64 + rowsPer;
+        DraftGraph d = draftGraphs.get(key);
+        if (d != null) {
+            return d;
+        }
+        if (padDraft == null) {
+            padDraft = draft.newState(64);
+        }
+        long t0 = System.nanoTime();
+        DraftGraph dg = new DraftGraph(verify, reqs, rowsPer);
+        dg.fill(new InklingDraft.State[0], new InklingState[0], new int[0]);
+        // warm-up with accepted = 0 (commit and absorb leave every real state alone: nothing is real here)
+        Tensor warm = stepScoped(dg::body);
+        smile.torch.Aten.one("aten::sum", warm).doubleValue();
+        warm.close();
+        dg.graph = smile.torch.Native.cudaGraphCreate();
+        smile.torch.Native.cudaGraphCaptureBegin(dg.graph, device.index());
+        try {
+            dg.drafts = stepScoped(dg::body);
+        } finally {
+            smile.torch.Native.cudaGraphCaptureEnd(dg.graph);
+        }
+        dg.drafts.detachFromScopes();
+        draftGraphs.put(key, dg);
+        logger.info("Inkling draft CUDA graph captured for {} request(s) x {} rows in {} ms", reqs, rowsPer,
+                (System.nanoTime() - t0) / 1_000_000);
+        return dg;
+    }
+
+    /** The verify graph of {@code reqs} requests (a power of two) of {@code rowsPer} rows; captured on first use. */
+    private DecodeGraph verifyGraph(int reqs, int rowsPer) {
+        int key = reqs * 64 + rowsPer;
+        DecodeGraph g = verifyGraphs.get(key);
+        if (g != null) {
+            return g;
+        }
+        if (padState == null) {
+            padState = model.newState(16);
+        }
+        long t0 = System.nanoTime();
+        int nb = reqs * rowsPer;
+        g = new DecodeGraph(nb, rowsPer);
+        DecodeGraph gg = g;
+        gg.fillVerify(new InklingState[0], new int[0][]);
+        Tensor warm = stepScoped(() -> decoder.forward(nb, rowsPer, gg.ids, gg.pos, gg.tbl, null, gg.taps));
+        smile.torch.Aten.one("aten::sum", warm).doubleValue();
+        warm.close();
+        gg.graph = smile.torch.Native.cudaGraphCreate();
+        smile.torch.Native.cudaGraphCaptureBegin(gg.graph, device.index());
+        try {
+            gg.logits = stepScoped(() -> decoder.forward(nb, rowsPer, gg.ids, gg.pos, gg.tbl, null, gg.taps));
+        } finally {
+            smile.torch.Native.cudaGraphCaptureEnd(gg.graph);
+        }
+        gg.logits.detachFromScopes();
+        verifyGraphs.put(key, gg);
+        logger.info("Inkling verify CUDA graph captured for {} request(s) x {} rows in {} ms", reqs, rowsPer,
+                (System.nanoTime() - t0) / 1_000_000);
+        return gg;
+    }
+
+    /** Whether the draft model is loaded and the fused decoder can verify chunks. */
+    public boolean hasDraft() {
+        return draft != null && decoder != null && GRAPHS && smile.torch.Native.cudaGraphAvailable();
+    }
+
+    /** Draft tokens per block. */
+    public int draftBlock() {
+        return draft == null ? 0 : draft.drafts();
+    }
+
+    @Override
+    public boolean speculationMayOvershoot() {
+        return true;
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions, int numDrafts, double temperature,
+                                 double topp) {
+        double[] t = new double[requestIds.length];
+        double[] p = new double[requestIds.length];
+        java.util.Arrays.fill(t, temperature);
+        java.util.Arrays.fill(p, topp);
+        return speculateStep(requestIds, lastTokens, positions, numDrafts, t, p);
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions, int numDrafts, double[] temperatures,
+                                 double[] topps) {
+        if (!hasDraft()) {
+            throw new UnsupportedOperationException("no draft model");
+        }
+        int n = requestIds.length;
+        InklingState[] states = new InklingState[n];
+        InklingDraft.State[] ds = new InklingDraft.State[n];
+        for (int i = 0; i < n; i++) {
+            states[i] = session(requestIds[i]);
+            ds[i] = drafts.get(requestIds[i]);
+            if (states[i].length != positions[i]) {
+                throw new IllegalStateException("request " + requestIds[i] + " is at position " + states[i].length
+                        + ", not " + positions[i]);
+            }
+            if (ds[i] == null || ds[i].absorbed < positions[i]) {
+                throw new UnsupportedOperationException("request " + requestIds[i] + " has no draft context");
+            }
+        }
+        int rowsPer = Math.max(2, Math.min(numDrafts + 1, Math.min(draft.drafts() + 1, InklingState.VERIFY_ROWS)));
+        int reqs = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
+        return onWorker(() -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return speculateRound(states, ds, lastTokens, rowsPer, reqs, temperatures, topps);
+            }
+        });
+    }
+
+    /** One verify + commit + absorb + draft round of {@code states.length} requests (on the worker thread). */
+    private int[][] speculateRound(InklingState[] states, InklingDraft.State[] ds, int[] lastTokens, int rowsPer, int reqs,
+                                   double[] temperatures, double[] topps) {
+        int n = states.length;
+        long t0 = System.nanoTime();
+        int[][] rows = new int[n][rowsPer];
+        for (int i = 0; i < n; i++) {
+            if (ds[i].pending == null) {
+                int idx = i;
+                ds[i].pending = scoped(() -> draft.draft(ds[idx], lastTokens[idx], states[idx].length));
+            }
+            rows[i][0] = lastTokens[i];
+            System.arraycopy(ds[i].pending, 0, rows[i], 1, rowsPer - 1);
+        }
+        long t1 = System.nanoTime();
+        DecodeGraph g = verifyGraph(reqs, rowsPer);
+        DraftGraph dg = draftGraph(g, reqs, rowsPer);
+        g.fillVerify(states, rows);
+        smile.torch.Native.cudaGraphReplay(g.graph);
+        int[][] out = new int[n][];
+        int[] kept = new int[reqs];
+        int[] anchors = new int[n];
+        long t2 = System.nanoTime();
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            for (int i = 0; i < n; i++) {
+                Tensor lg = Ix.narrow(g.logits, 0, (long) i * rowsPer, rowsPer);
+                int[] s = Sampling.sampleTokenIds(lg, temperatures[i], topps[i]);
+                int a = 0;
+                while (a < rowsPer - 1 && rows[i][a + 1] == s[a]) {
+                    a++;
+                }
+                out[i] = new int[a + 1];
+                System.arraycopy(rows[i], 1, out[i], 0, a);
+                out[i][a] = s[a];
+                kept[i] = a + 1;
+                anchors[i] = s[a];
+            }
+            long t3 = System.nanoTime();
+            smile.torch.Aten.call("aten::copy_", g.accepted, Tensor.of(kept, reqs).to(device), false);
+            dg.fill(ds, states, anchors);
+            smile.torch.Native.cudaGraphReplay(dg.graph);
+            long[] next = dg.drafts.to(smile.deep.tensor.Device.CPU()).longArray();
+            int nd = draft.drafts();
+            for (int i = 0; i < n; i++) {
+                ds[i].pending = new int[nd];
+                for (int j = 0; j < nd; j++) {
+                    ds[i].pending[j] = (int) next[i * nd + j];
+                }
+                ds[i].absorbed = states[i].length + kept[i];
+                states[i].length += kept[i];
+            }
+            if (TIMING) {
+                logger.info("spec round: draft {} ms, verify+fill {} ms, sample+accept {} ms, commit+absorb+draft {} ms", (t1 - t0) / 1e6,
+                        (t2 - t1) / 1e6, (t3 - t2) / 1e6, (System.nanoTime() - t3) / 1e6);
+            }
+        } finally {
+            Tensor.pop();
+        }
+        return out;
+    }
+
+    private static final boolean TIMING = System.getProperty("smile.inkling.timing") != null;
+
+    /** Runs {@code task} in its own tensor scope (the draft's temporaries are freed on return). */
+    private static <T> T scoped(java.util.function.Supplier<T> task) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            return task.get();
+        } finally {
+            Tensor.pop();
+        }
+    }
+
     /** One decode step of all requests with the fused kernels (on the worker thread). */
     private Tensor fusedStep(InklingState[] states, int[] lastTokens) {
         if (GRAPHS && !graphsDisabled && states.length <= MAX_GRAPH_BATCH && smile.torch.Native.cudaGraphAvailable()) {
@@ -794,6 +1122,13 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                 return null;
             });
         }
+        InklingDraft.State ds = drafts.remove(requestId);
+        if (ds != null) {
+            onWorker(() -> {
+                ds.close();
+                return null;
+            });
+        }
         InklingState s = sessions.remove(requestId);
         if (s != null) {
             onWorker(() -> {
@@ -831,6 +1166,28 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                 }
             }
             graphs.clear();
+            for (DecodeGraph g : verifyGraphs.values()) {
+                if (g.graph != null) {
+                    smile.torch.Native.cudaGraphDestroy(g.graph);
+                    g.graph = null;
+                }
+            }
+            verifyGraphs.clear();
+            for (DraftGraph d : draftGraphs.values()) {
+                if (d.graph != null) {
+                    smile.torch.Native.cudaGraphDestroy(d.graph);
+                    d.graph = null;
+                }
+            }
+            draftGraphs.clear();
+            if (padDraft != null) {
+                padDraft.close();
+                padDraft = null;
+            }
+            for (InklingDraft.State d : drafts.values()) {
+                d.close();
+            }
+            drafts.clear();
             if (padState != null) {
                 padState.close();
                 padState = null;

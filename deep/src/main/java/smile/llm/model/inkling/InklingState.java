@@ -36,6 +36,16 @@ final class InklingState implements AutoCloseable {
     /** Extra tokens a sliding-window cache holds beyond the window, i.e. the largest chunk one forward may process. */
     static final int LOCAL_SLACK = Integer.getInteger("smile.inkling.chunk", 2048);
 
+    /** Most rows of one request a verify chunk may carry. */
+    static final int VERIFY_ROWS = Integer.getInteger("smile.inkling.verify.rows", 8);
+
+    /** Global-layer keys and values are stored as E4M3 (half the memory; they are L2-clipped / RMS-normalized, so no scale is needed). */
+    static final boolean KV_FP8 = Boolean.getBoolean("smile.inkling.kv.fp8") || "1".equals(System.getenv("SMILE_INKLING_KV_FP8"));
+
+    /** Device whose memory holds the caches of the last {@link #SPILL_APPS} global applications (-1: all on the model's device). */
+    static final int SPILL_DEVICE = Integer.getInteger("smile.inkling.kv.spill.device", -1);
+    static final int SPILL_APPS = Integer.getInteger("smile.inkling.kv.spill.apps", 6);
+
     final int capacity;
     /** Cache capacity (tokens) of every application. */
     final int[] cacheCapacity;
@@ -43,7 +53,10 @@ final class InklingState implements AutoCloseable {
     private long[] table;
     final Tensor[] k;
     final Tensor[] v;
+    /** The four convolution states of every application: the first {@code sconvKernel - 1} rows of the full buffers. */
     final Tensor[][] conv;
+    /** The same buffers with {@link #VERIFY_ROWS} extra rows that hold a speculative chunk's inputs until the commit. */
+    private final Tensor[][] convFull;
     /** Tokens processed so far. */
     int length;
 
@@ -54,19 +67,31 @@ final class InklingState implements AutoCloseable {
         k = new Tensor[apps];
         v = new Tensor[apps];
         conv = new Tensor[apps][4];
+        convFull = new Tensor[apps][4];
+        int globals = 0;
+        for (int a = 0; a < apps; a++) {
+            if (!args.isLocal(args.layerOfApplication(a))) {
+                globals++;
+            }
+        }
+        int seenGlobals = 0;
         for (int a = 0; a < apps; a++) {
             int layer = args.layerOfApplication(a);
+            boolean spill = SPILL_DEVICE >= 0 && !args.isLocal(layer) && seenGlobals++ >= globals - SPILL_APPS;
+            Device cacheDevice = spill ? Device.CUDA((byte) SPILL_DEVICE) : device;
             int heads = args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads();
             int dim = args.isLocal(layer) ? args.swaHeadDim() : args.headDim();
             // a sliding-window layer only needs the last window - 1 tokens plus the chunk being processed
             cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + LOCAL_SLACK) : capacity;
-            k[a] = keep(zeros(device, ScalarType.BFloat16, heads, cacheCapacity[a], dim));
-            v[a] = keep(zeros(device, ScalarType.BFloat16, heads, cacheCapacity[a], dim));
+            ScalarType kvType = KV_FP8 && !args.isLocal(layer) ? ScalarType.Float8e4m3fn : ScalarType.BFloat16;
+            k[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
+            v[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
             int rows = args.sconvKernel() - 1;
-            conv[a][CONV_K] = keep(zeros(device, ScalarType.Float, rows, heads * dim));
-            conv[a][CONV_V] = keep(zeros(device, ScalarType.Float, rows, heads * dim));
-            conv[a][CONV_ATTN] = keep(zeros(device, ScalarType.Float, rows, args.dim()));
-            conv[a][CONV_MLP] = keep(zeros(device, ScalarType.Float, rows, args.dim()));
+            int[] channels = {heads * dim, heads * dim, args.dim(), args.dim()};
+            for (int c = 0; c < 4; c++) {
+                convFull[a][c] = keep(zeros(device, ScalarType.Float, rows + VERIFY_ROWS, channels[c]));
+                conv[a][c] = keep(narrow(convFull[a][c], 0, 0, rows));
+            }
         }
     }
 
@@ -86,6 +111,7 @@ final class InklingState implements AutoCloseable {
                     t[a * 8 + 2 + c] = smile.torch.InklingNative.dataPtr(conv[a][c]);
                 }
                 t[a * 8 + 6] = cacheCapacity[a];
+                t[a * 8 + 7] = k[a].dtype() == ScalarType.Float8e4m3fn ? 1 : 0;
             }
             table = t;
         }
@@ -143,7 +169,7 @@ final class InklingState implements AutoCloseable {
             int heads = local ? args.swaKvHeads() : args.numKvHeads();
             int dim = local ? args.swaHeadDim() : args.headDim();
             long n = local ? Math.min(tokens, args.slidingWindow() - 1) : tokens;
-            bytes += 2L * heads * n * dim * 2 + 4L * (args.sconvKernel() - 1) * (2L * heads * dim + 2L * args.dim()) / 2;
+            bytes += 2L * heads * n * dim * (KV_FP8 && !local ? 1 : 2) + 4L * (args.sconvKernel() - 1) * (2L * heads * dim + 2L * args.dim()) / 2;
         }
         return bytes;
     }
@@ -170,7 +196,7 @@ final class InklingState implements AutoCloseable {
             for (int c = 0; c < 4; c++) {
                 cs[a][c] = keep(conv[a][c].copy());
             }
-            bytes += (elements(ks[a]) + elements(vs[a])) * 2;
+            bytes += (elements(ks[a]) + elements(vs[a])) * (k[a].dtype() == ScalarType.Float8e4m3fn ? 1 : 2);
             for (Tensor c : cs[a]) {
                 bytes += elements(c) * 4;
             }
@@ -229,8 +255,9 @@ final class InklingState implements AutoCloseable {
         for (int a = 0; a < k.length; a++) {
             k[a].close();
             v[a].close();
-            for (Tensor c : conv[a]) {
-                c.close();
+            for (int c = 0; c < 4; c++) {
+                conv[a][c].close();
+                convFull[a][c].close();
             }
         }
     }

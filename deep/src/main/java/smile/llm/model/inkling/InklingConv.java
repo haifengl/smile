@@ -32,6 +32,36 @@ final class InklingConv {
     private InklingConv() { }
 
     /**
+     * When set, every conv call appends {@code {state, ctx}} (the state tensor and the {@code [taps - 1 + T, C]} input
+     * history it was updated from) so that a speculative verify can roll the state back to any accepted prefix.
+     */
+    static final ThreadLocal<java.util.List<Tensor[]>> RECORD = new ThreadLocal<>();
+
+    private static void record(Tensor state, Tensor ctx) {
+        java.util.List<Tensor[]> r = RECORD.get();
+        if (r != null) {
+            ctx.detachFromScopes();
+            r.add(new Tensor[]{state, ctx});
+        }
+    }
+
+    /** Frees the recorded histories. */
+    static void release(java.util.List<Tensor[]> recorded) {
+        for (Tensor[] r : recorded) {
+            r[1].close();
+        }
+        recorded.clear();
+    }
+
+    /** Sets every recorded state to the history after {@code accepted} of the recorded rows. */
+    static void commit(java.util.List<Tensor[]> recorded, int accepted) {
+        for (Tensor[] r : recorded) {
+            long keep = r[0].size(0);
+            o("aten::copy_", r[0], narrow(r[1], 0, accepted, keep));
+        }
+    }
+
+    /**
      * Static kernel (one weight per channel and tap).
      *
      * @param x      {@code [T, C]} (any float dtype).
@@ -49,6 +79,7 @@ final class InklingConv {
             Tensor term = mul(narrow(ctx, 0, j, t), o("aten::select.int", w, 1L, (long) j));
             acc = acc == null ? term : add(acc, term);
         }
+        record(state, ctx);
         o("aten::copy_", state, narrow(ctx, 0, t, taps - 1));
         return bf16(mul(add(acc, xf), 1.0 / Math.sqrt(taps + 1)));
     }
@@ -79,6 +110,7 @@ final class InklingConv {
             Tensor term = mul(reshape(narrow(ctx, 0, taps - 1 - lag, t), t, heads, headDim), weight);
             acc = acc == null ? term : add(acc, term);
         }
+        record(state, ctx);
         o("aten::copy_", state, narrow(ctx, 0, t, taps - 1));
         return bf16(mul(add(reshape(acc, t, c), xf), 1.0 / Math.sqrt(2 * taps + 1)));
     }

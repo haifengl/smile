@@ -51,6 +51,8 @@ public final class InklingModel implements AutoCloseable {
     final Tensor embed;
     final Tensor embedNorm;
     final Tensor unembed;
+    /** MXFP8 copy of the output head for the fused decoder, or {@code null}. */
+    final InklingFp8 unembed8;
     final Tensor finalNorm;
     final Tensor outputQuery;
     final Tensor messageQueries;    // [loop layers, 4, D]
@@ -63,6 +65,7 @@ public final class InklingModel implements AutoCloseable {
         this.embed = embed;
         this.embedNorm = embedNorm;
         this.unembed = unembed;
+        this.unembed8 = InklingFp8.enabled() ? InklingFp8.quantize(unembed) : null;
         this.finalNorm = finalNorm;
         this.outputQuery = outputQuery;
         this.messageQueries = messageQueries;
@@ -268,6 +271,40 @@ public final class InklingModel implements AutoCloseable {
         } finally {
             Tensor.pop();
         }
+    }
+
+    /**
+     * Speculative verify: processes {@code tokens} (the last committed token and the drafts) as one chunk and returns the
+     * logits of every row plus the taps. The convolution states are left as after all rows; {@link #commit} rolls them
+     * back to the accepted prefix.
+     *
+     * @param tapSink receives bf16 {@code [T, 4, D]} taps, or {@code null}.
+     * @param recorded receives the convolution histories needed by {@link #commit}.
+     * @return float32 {@code [T, vocab]}.
+     */
+    Tensor verify(InklingState st, long[] tokens, Consumer<Tensor> tapSink, List<Tensor[]> recorded) {
+        int[] rows = new int[tokens.length];
+        for (int i = 0; i < rows.length; i++) {
+            rows[i] = i;
+        }
+        InklingConv.RECORD.set(recorded);
+        try {
+            return forward(st, tokens, rows, null, null, null, tapSink);
+        } finally {
+            InklingConv.RECORD.remove();
+        }
+    }
+
+    /**
+     * Keeps the first {@code accepted} rows of a {@link #verify}: the sequence ends after them and the convolution states
+     * equal those after exactly that many rows. Key/value rows beyond are overwritten by later tokens.
+     *
+     * @param start the sequence length before the verify.
+     */
+    void commit(InklingState st, int start, int accepted, List<Tensor[]> recorded) {
+        InklingConv.commit(recorded, accepted);
+        InklingConv.release(recorded);
+        st.length = start + accepted;
     }
 
     @Override

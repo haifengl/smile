@@ -39,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Haifeng Li
  */
 public class InklingDraftTest {
+    private static InklingModel model;
+    private static InklingDraft draft;
+
     @Test
     public void testGivenGreedyTextWhenDraftedThenBlocksAreAccepted() throws Exception {
         String ckpt = System.getenv("INKLING_CKPT");
@@ -47,8 +50,10 @@ public class InklingDraftTest {
         InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, 4096);
         Device device = Device.CUDA(Byte.parseByte(System.getenv().getOrDefault("INKLING_DEVICE", "0")));
         int count = Integer.parseInt(System.getenv().getOrDefault("INKLING_TOKENS", "96"));
-        InklingModel model = InklingModel.load(ckpt, args, device);
-        InklingDraft draft = InklingDraft.load(ckpt, model, device);
+        if (model == null) {
+            model = InklingModel.load(ckpt, args, device);
+            draft = InklingDraft.load(ckpt, model, device);
+        }
         assertNotNull(draft);
         InklingTokenizer tokenizer = InklingTokenizer.of(ckpt);
         JsonNode input = new ObjectMapper().readTree(new File(dialogs));
@@ -63,6 +68,7 @@ public class InklingDraftTest {
             long[] prompt = java.util.Arrays.stream(tokenizer.encodeWithSpecials(
                     new InklingChatTemplate().encode(messages, InklingGenerateTest.options(d)))).asLongStream().toArray();
             int total = prompt.length + count;
+            int blocks0 = blocks, accepted0 = accepted;
             List<Tensor> tapRows = new ArrayList<>();
             long[] seq = new long[total];
             System.arraycopy(prompt, 0, seq, 0, prompt.length);
@@ -100,9 +106,106 @@ public class InklingDraftTest {
                     blocks++;
                 }
             }
+            System.out.printf("dialog %d: %d blocks, mean accepted drafts %.2f%n", k, blocks - blocks0, (accepted - accepted0) / (double) (blocks - blocks0));
         }
         System.out.printf("draft: %d blocks, mean accepted drafts %.2f, per position %s%n", blocks, accepted / (double) blocks,
                 java.util.Arrays.toString(byPos));
         assertTrue(accepted / (double) blocks > 0.8, "the draft is not predicting");
+    }
+
+    private static int argmax(float[] a, int from, int n) {
+        int best = 0;
+        for (int v = 1; v < n; v++) {
+            if (a[from + v] > a[from + best]) {
+                best = v;
+            }
+        }
+        return best;
+    }
+
+    /** Speculative decoding with the reference verify must reproduce greedy decoding (up to rounding noise). */
+    @Test
+    public void testGivenSpeculativeRoundsWhenDecodedGreedilyThenTextMatchesPlainDecoding() throws Exception {
+        String ckpt = System.getenv("INKLING_CKPT");
+        String dialogs = System.getenv("INKLING_DIALOGS");
+        Assumptions.assumeTrue(ckpt != null && dialogs != null, "set INKLING_CKPT and INKLING_DIALOGS");
+        InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, 4096);
+        Device device = Device.CUDA(Byte.parseByte(System.getenv().getOrDefault("INKLING_DEVICE", "0")));
+        int count = Integer.parseInt(System.getenv().getOrDefault("INKLING_TOKENS", "64"));
+        if (model == null) {
+            model = InklingModel.load(ckpt, args, device);
+            draft = InklingDraft.load(ckpt, model, device);
+        }
+        InklingTokenizer tokenizer = InklingTokenizer.of(ckpt);
+        JsonNode input = new ObjectMapper().readTree(new File(dialogs));
+        int vocab = args.unpaddedVocabSize();
+        for (int k = 0; k < Math.min(3, input.size()); k++) {
+            JsonNode d = input.get(k);
+            List<Message> messages = new ArrayList<>();
+            for (JsonNode m : d.get("messages")) {
+                messages.add(InklingGenerateTest.message(m));
+            }
+            long[] prompt = java.util.Arrays.stream(tokenizer.encodeWithSpecials(
+                    new InklingChatTemplate().encode(messages, InklingGenerateTest.options(d)))).asLongStream().toArray();
+            // plain greedy
+            long[] plain = new long[count];
+            try (InklingState st = model.newState(prompt.length + count + 16)) {
+                Tensor logits = model.forward(st, prompt, null, null);
+                for (int i = 0; i < count; i++) {
+                    plain[i] = argmax(logits.to(Device.CPU()).floatArray(), 0, vocab);
+                    logits = model.forward(st, new long[]{plain[i]}, null, null);
+                }
+            }
+            // speculative
+            List<Long> out = new ArrayList<>();
+            int rounds = 0, drafted = 0;
+            try (InklingState st = model.newState(prompt.length + count + 32); InklingDraft.State ds = draft.newState(prompt.length + count + 32)) {
+                List<Tensor> tap = new ArrayList<>();
+                Tensor logits = model.forward(st, prompt, null, null, null, null, t -> tap.add(Ix.keep(t.to(device))));
+                draft.absorb(ds, tap.get(0), 0);
+                int anchor = argmax(logits.to(Device.CPU()).floatArray(), 0, vocab);
+                out.add((long) anchor);
+                int pos = prompt.length;                 // position of the anchor
+                while (out.size() < count) {
+                    int[] dr = draft.draft(ds, anchor, pos);
+                    long[] rows = new long[dr.length + 1];
+                    rows[0] = anchor;
+                    for (int i = 0; i < dr.length; i++) {
+                        rows[i + 1] = dr[i];
+                    }
+                    List<Tensor[]> rec = new ArrayList<>();
+                    tap.clear();
+                    Tensor lg = model.verify(st, rows, t -> tap.add(Ix.keep(t.to(device))), rec);
+                    float[] all = lg.to(Device.CPU()).floatArray();
+                    int V = (int) lg.size(1);
+                    int a = 0;
+                    while (a < dr.length && dr[a] == argmax(all, a * V, vocab)) {
+                        a++;
+                    }
+                    int bonus = argmax(all, a * V, vocab);
+                    model.commit(st, pos, a + 1, rec);
+                    draft.absorb(ds, Ix.narrow(tap.get(0), 0, 0, a + 1), pos);
+                    for (int i = 0; i < a; i++) {
+                        out.add((long) dr[i]);
+                    }
+                    out.add((long) bonus);
+                    anchor = bonus;
+                    pos += a + 1;
+                    if (System.getenv("INKLING_DEBUG") != null) {
+                        System.out.println("round " + rounds + " pos " + pos + " a " + a + " draft " + java.util.Arrays.toString(dr) + " bonus " + bonus + " plain " + java.util.Arrays.toString(java.util.Arrays.copyOfRange(plain, out.size() - a - 1, Math.min(count, out.size()))));
+                    }
+                    rounds++;
+                    drafted += a;
+                    tap.forEach(Tensor::close);
+                }
+            }
+            int same = 0;
+            while (same < count && same < out.size() && out.get(same) == plain[same]) {
+                same++;
+            }
+            System.out.printf("dialog %d: %d tokens in %d rounds (%.2f drafts accepted per round), identical to plain greedy for %d tokens%n",
+                    k, out.size(), rounds, drafted / (double) rounds, same);
+            assertTrue(same >= 6, "speculative text diverges from plain decoding almost at once");
+        }
     }
 }

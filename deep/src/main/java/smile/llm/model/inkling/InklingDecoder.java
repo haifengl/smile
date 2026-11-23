@@ -38,13 +38,15 @@ import static smile.llm.model.inkling.Ix.*;
 final class InklingDecoder {
     private static final int OP_ATTNRES = 1, OP_RMS = 2, OP_GATE_DOWN = 3, OP_GATE_APPLY = 4, OP_CONV = 5, OP_PREP = 6,
             OP_ATTN = 7, OP_MERGE = 8, OP_ROUTE = 9, OP_EMBED = 11, OP_SOFTCAP = 12;
-    private static final int LOCAL_SPLITS = Integer.getInteger("smile.inkling.local.splits", 4);
-    private static final int GLOBAL_SPLITS = Integer.getInteger("smile.inkling.global.splits", 8);
+    private static final int LOCAL_SPLITS = Integer.getInteger("smile.inkling.local.splits", 8);
+    private static final int GLOBAL_SPLITS = Integer.getInteger("smile.inkling.global.splits", 64);
 
     private final InklingModel model;
     private final InklingModelArgs args;
     private final Device device;
     private final int dim;
+    /** Use the MXFP8 copies of the dense weights where they exist (switchable for A/B tests). */
+    boolean fp8 = true;
 
     InklingDecoder(InklingModel model) {
         this.model = model;
@@ -185,6 +187,18 @@ final class InklingDecoder {
      * @return float32 logits {@code [nb, vocab]}, soft-capped.
      */
     Tensor forward(int nb, Tensor ids, Tensor pos, Tensor tbl, Consumer<Tensor> trace) {
+        return forward(nb, 1, ids, pos, tbl, trace, null);
+    }
+
+    /**
+     * The decode step, or a speculative verify chunk.
+     *
+     * @param rowsPer rows per request: {@code nb} rows are {@code nb / rowsPer} requests of {@code rowsPer} consecutive
+     *                tokens at consecutive positions. With {@code rowsPer > 1} the convolution states are not updated
+     *                ({@link #commit} does it for the accepted rows).
+     * @param taps    bf16 {@code [nb, 4, D]} receiving the draft's target features, or {@code null}.
+     */
+    Tensor forward(int nb, int rowsPer, Tensor ids, Tensor pos, Tensor tbl, Consumer<Tensor> trace, Tensor taps) {
         Tensor h = empty(ScalarType.BFloat16, nb, dim);
         InklingNative.op(OP_EMBED, new long[]{p(ids), p(model.embed), p(model.embedNorm), p(h)}, new long[]{nb, dim},
                 new double[]{args.normEps()});
@@ -210,9 +224,12 @@ final class InklingDecoder {
                 blocks = new ArrayList<>(preBlocks);
             }
             InklingLayer layer = model.layers[layerIndex];
-            Tensor next = layerStep(nb, app, layer, inLoop && pass > 0, h, blocks, prevBlocks, prevH, pos, tbl);
+            Tensor next = layerStep(nb, rowsPer, app, layer, inLoop && pass > 0, h, blocks, prevBlocks, prevH, pos, tbl);
             if (trace != null) {
                 trace.accept(next);
+            }
+            if (taps != null && (app == 4 || app == 22 || app == 40)) {
+                o("aten::copy_", o("aten::select.int", taps, 1L, app == 4 ? 0L : app == 22 ? 1L : 2L), next);
             }
             if (layer.blockBoundary) {
                 blocks.add(h);
@@ -222,14 +239,30 @@ final class InklingDecoder {
         List<Tensor> states = new ArrayList<>(blocks);
         states.add(h);
         Tensor x = attnResRms(nb, states, model.outputQuery, new Tensor[]{model.finalNorm}, false, null)[0];
-        Tensor raw = linear(x, model.unembed);
+        if (taps != null) {
+            o("aten::copy_", o("aten::select.int", taps, 1L, 3L), x);
+        }
+        boolean q = fp8 && model.unembed8 != null;
+        Tensor raw = q ? model.unembed8.forward(x) : linear(x, model.unembed);
         Tensor logits = empty(ScalarType.Float, nb, args.unpaddedVocabSize());
-        InklingNative.op(OP_SOFTCAP, new long[]{p(raw), p(logits)}, new long[]{(long) nb * args.unpaddedVocabSize()},
+        InklingNative.op(OP_SOFTCAP, new long[]{p(raw), p(logits)},
+                new long[]{(long) nb * args.unpaddedVocabSize(), args.unpaddedVocabSize(), q ? model.unembed8.npad : args.unpaddedVocabSize()},
                 new double[]{args.finalLogitSoftcap()});
         return logits;
     }
 
-    private Tensor layerStep(int nb, int app, InklingLayer layer, boolean messages, Tensor h, List<Tensor> blocks,
+    /**
+     * Rolls the convolution states of {@code requests} requests forward after a verify chunk of {@code rowsPer} rows.
+     *
+     * @param tbl      the chunk's address table ({@code [apps, requests * rowsPer, 8]}).
+     * @param accepted int32 {@code [requests]}: rows kept per request (0 leaves the state alone).
+     */
+    void commit(int requests, int rowsPer, Tensor tbl, Tensor accepted) {
+        InklingNative.op(15, new long[]{p(tbl), p(accepted)},
+                new long[]{args.numApplications(), requests, rowsPer, (long) requests * rowsPer, dim}, new double[0]);
+    }
+
+    private Tensor layerStep(int nb, int rowsPer, int app, InklingLayer layer, boolean messages, Tensor h, List<Tensor> blocks,
                              List<Tensor> prevBlocks, Tensor prevH, Tensor pos, Tensor tbl) {
         InklingAttention at = layer.attention;
         boolean local = layer.local;
@@ -296,26 +329,27 @@ final class InklingDecoder {
         Tensor yq, yk, yv;
         long ldq, ldk, ldv;
         int offK = at.offK(), offV = at.offV(), offKProj = local ? -1 : at.offKProj();
+        boolean q8 = fp8 && at.f8Wo != null;
         if (local && !messages) {
-            yq = yk = yv = linear(qIn, at.wAll);
-            ldq = ldk = ldv = at.wAll.size(0);
+            yq = yk = yv = q8 ? at.f8All.forward(qIn) : linear(qIn, at.wAll);
+            ldq = ldk = ldv = q8 ? at.f8All.npad : at.wAll.size(0);
         } else if (local) {
             // with messages the key and value inputs differ from the query input
-            yq = linear(qIn, narrow(at.wAll, 0, 0, at.offK()));
-            yk = linear(kIn, narrow(at.wAll, 0, at.offK(), at.kRows));
-            yv = linear(vIn, narrow(at.wAll, 0, at.offV(), at.vRows));
-            ldq = at.offK();
+            yq = q8 ? at.f8Qm.forward(qIn) : linear(qIn, narrow(at.wAll, 0, 0, at.offK()));
+            yk = q8 ? at.f8Km.forward(kIn) : linear(kIn, narrow(at.wAll, 0, at.offK(), at.kRows));
+            yv = q8 ? at.f8Vm.forward(vIn) : linear(vIn, narrow(at.wAll, 0, at.offV(), at.vRows));
+            ldq = q8 ? at.f8Qm.npad : at.offK();
             ldk = at.kRows;
             ldv = at.vRows;
             offK = 0;
             offV = 0;
         } else {
-            yq = linear(qIn, at.wQ);
-            yk = linear(kIn, at.wK);
-            yv = linear(vIn, at.wV);
-            ldq = at.wQ.size(0);
-            ldk = at.wK.size(0);
-            ldv = at.wV.size(0);
+            yq = q8 ? at.f8Q.forward(qIn) : linear(qIn, at.wQ);
+            yk = q8 ? at.f8K.forward(kIn) : linear(kIn, at.wK);
+            yv = q8 ? at.f8V.forward(vIn) : linear(vIn, at.wV);
+            ldq = q8 ? at.f8Q.npad : at.wQ.size(0);
+            ldk = q8 ? at.f8K.npad : at.wK.size(0);
+            ldv = q8 ? at.f8V.npad : at.wV.size(0);
         }
         int heads = 24;
         Tensor qn = empty(ScalarType.BFloat16, nb, 3072);
@@ -324,7 +358,7 @@ final class InklingDecoder {
         InklingNative.op(6, new long[]{p(yq), p(yk), p(yv), p(at.qScale), p(at.relScale), p(at.kConv), p(at.vConv), tblApp,
                         p(pos), p(qn), p(rel), p(sink)},
                 new long[]{nb, ldq, ldk, ldv, at.offQ(), at.offRel(), at.offSink(), offK, offKProj,
-                        offV, offKProj, local ? 0 : 1, args.logScalingNFloor()},
+                        offV, offKProj, local ? 0 : 1, args.logScalingNFloor(), rowsPer},
                 new double[]{args.qkL2ClipThreshold(), args.relL2ClipThreshold(), args.normEps(), args.logScalingAlpha()});
         // attention
         int splits = local ? LOCAL_SPLITS : GLOBAL_SPLITS;
@@ -343,13 +377,13 @@ final class InklingDecoder {
             InklingNative.op(OP_MERGE, ap, aiv, new double[0]);
         }
         InklingDebug.tap("qin", app, qIn);
-        Tensor o = linear(attnOut, at.wo);
+        Tensor o = q8 ? at.f8Wo.forward(attnOut) : linear(attnOut, at.wo);
         InklingDebug.tap("attn", app, o);
         // post-attention convolution and residual
         Tensor residual = empty(ScalarType.Float, nb, dim);
         boolean boundary = layer.blockBoundary;
         InklingNative.op(5, new long[]{p(o), p(h), p(layer.attnConv), tblApp, p(residual), 0, 0},
-                new long[]{nb, dim, 4, boundary ? 1 : 0, 0}, new double[0]);
+                new long[]{nb, dim, 4, boundary ? 1 : 0, 0, rowsPer}, new double[0]);
         // MLP input
         List<Tensor> st = new ArrayList<>(blocks);
         if (boundary) {
@@ -367,9 +401,9 @@ final class InklingDecoder {
             x = rms(nb, new long[]{p(g[0])}, new Tensor[]{layer.postNorm}, dim, false, true, x32)[0];
         }
         // routing and experts
-        Tensor logits = linear(x32[0], layer.router);
         Tensor idx = empty(ScalarType.Int32, nb, args.numExpertsPerTok());
         Tensor wts = empty(ScalarType.Float, nb, args.numExpertsPerTok());
+        Tensor logits = linear(x32[0], layer.router);
         InklingNative.op(OP_ROUTE, new long[]{p(logits), p(layer.routerBias), p(idx), p(wts)},
                 new long[]{nb, args.numExperts(), args.numExpertsPerTok()}, new double[]{args.routeScale()});
         Tensor moe = layer.experts.decode(x, idx, wts);
@@ -377,7 +411,7 @@ final class InklingDecoder {
         // post-MLP convolution and output
         Tensor out = empty(ScalarType.BFloat16, nb, dim);
         InklingNative.op(5, new long[]{p(moe), 0, p(layer.mlpConv), tblApp, p(residual), 0, p(out)},
-                new long[]{nb, dim, 5, 0, 1}, new double[0]);
+                new long[]{nb, dim, 5, 0, 1, rowsPer}, new double[0]);
         return out;
     }
 }

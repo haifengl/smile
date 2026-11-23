@@ -55,6 +55,9 @@ public class InklingEngineTest {
         JsonNode input = new ObjectMapper().readTree(new File(dialogs));
         try (Inkling model = Inkling.build(ckpt, 0, 8192, device)) {
             var engine = new InferenceEngine(model, 3, 3, budget, 0);
+            boolean spec = System.getenv("INKLING_SPEC") != null;
+            double temperature = Double.parseDouble(System.getenv().getOrDefault("INKLING_TEMP", "0.0"));
+            engine.setMaxSpeculativeConcurrency(4);
             List<GenerationHandle> handles = new ArrayList<>();
             List<ChatOptions> options = new ArrayList<>();
             long t0 = System.nanoTime();
@@ -66,7 +69,7 @@ public class InklingEngineTest {
                 ChatOptions o = InklingGenerateTest.options(d);
                 options.add(o);
                 int[] ids = model.encodeChat(messages.toArray(Message[]::new), o);
-                handles.add(engine.submit(GenerationRequest.ofTokens(ids, tokens, 0.0, 1.0, false, 0, null)));
+                handles.add(engine.submit(GenerationRequest.ofTokens(ids, tokens, temperature, 1.0, false, 0, null, o, spec, 7)));
             }
             long generated = 0;
             List<ChatCompletion> results = new ArrayList<>();

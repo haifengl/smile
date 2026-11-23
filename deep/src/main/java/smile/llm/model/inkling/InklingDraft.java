@@ -54,6 +54,8 @@ public final class InklingDraft {
         int absorbed;
         /** The four taps {@code [4, D]} of the position {@code absorbed - 1} (feeds the Markov head). */
         Tensor lastTap;
+        /** Drafts already computed for the next anchor (by the graphed round), or {@code null}. */
+        int[] pending;
 
         State(Config c, int capacity, Device device) {
             this.capacity = capacity;
@@ -63,6 +65,17 @@ public final class InklingDraft {
                 k[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
                 v[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
             }
+        }
+
+        /** Device addresses of the caches: K and V of every layer, then the capacity ({@code 2 * layers + 1} values). */
+        long[] pointers() {
+            long[] t = new long[2 * k.length + 1];
+            for (int i = 0; i < k.length; i++) {
+                t[2 * i] = smile.torch.InklingNative.dataPtr(k[i]);
+                t[2 * i + 1] = smile.torch.InklingNative.dataPtr(v[i]);
+            }
+            t[2 * k.length] = capacity;
+            return t;
         }
 
         @Override
@@ -86,6 +99,10 @@ public final class InklingDraft {
     private final Tensor alpha;           // softmax(fuse_weight) [layers + 1, taps] f32
     private final Tensor maskEmbed, finalNorm, markovDflare;
     private final Tensor markovW1, rnnState, rnnCtx, rnnBias, foldWeight, foldBias;
+    /** MXFP8 copy of the fold weight for the graphed round (null when disabled). */
+    private final InklingFp8 fold8;
+    /** Which draft head matrices run in MXFP8: {@code base}, {@code fold}, both or neither (the default). */
+    private static final String DRAFT_FP8 = System.getProperty("smile.inkling.draft.fp8", "");
     private final float[] invFreq;
 
     private static final int QKV = 0, KV_CTX = 1, O = 2, GATE_UP = 3, DOWN = 4, IN = 5, POST = 6, DFLARE = 7, QN = 8, KN = 9, KNC = 10;
@@ -133,6 +150,8 @@ public final class InklingDraft {
         }
         foldWeight = keep(fw);
         foldBias = keep(fb);
+        // an MXFP8 draft head saves ~0.7 ms per round but lowers the accept length (net 8% slower), so it is opt-in
+        fold8 = InklingFp8.enabled() && DRAFT_FP8.contains("fold") ? InklingFp8.quantize(fw) : null;
         hw.close();
         hb.close();
         invFreq = new float[c.headDim() / 2];
@@ -347,5 +366,141 @@ public final class InklingDraft {
             result[i] = (int) tokens[i];
         }
         return result;
+    }
+
+    /** Entries of a request's pointer row. */
+    int pointerStride() {
+        return 2 * c.layers() + 1;
+    }
+
+    /** {@code [N, 1, headDim / 2]} cos and sin of int32 positions on the device (graph-safe). */
+    private Tensor[] ropeDevice(Tensor pos, Tensor freq) {
+        Tensor angle = mul(unsqueeze(f32(pos), 1), unsqueeze(freq, 0));
+        return new Tensor[]{unsqueeze(o("aten::cos", angle), 1), unsqueeze(o("aten::sin", angle), 1)};
+    }
+
+    /** Float32 inverse frequencies on the device (a constant of the graphed round). */
+    Tensor frequencies() {
+        return keep(Tensor.of(invFreq, invFreq.length).to(device));
+    }
+
+    /**
+     * One graphed round for {@code B} requests after a verify chunk of {@code T} rows: absorbs the chunk's target features
+     * (all rows; rows beyond the accepted ones are overwritten by the next block), then drafts the block of the new anchor.
+     * Every shape is static and every request-dependent value is a device tensor, so the whole call can be captured.
+     *
+     * @param taps   bf16 {@code [B * T, 4, D]} of the verify chunk.
+     * @param kept   int32 {@code [B]} rows kept per request (0 for padding requests).
+     * @param p0     int32 {@code [B]} position of the chunk's first row.
+     * @param anchor int64 {@code [B]} the new anchor tokens (at position {@code p0 + kept}).
+     * @param ptrs   int64 {@code [B * pointerStride]} cache addresses.
+     * @param rowT   int32 {@code [T]} 0..T-1.
+     * @param row8   int32 {@code [block]} 0..block-1.
+     * @param first  int64 {@code [B]} {@code i * T}.
+     * @param freq   float32 inverse frequencies.
+     * @return int64 {@code [B, block - 1]} the draft tokens.
+     */
+    Tensor round(int B, int T, Tensor taps, Tensor kept, Tensor p0, Tensor anchor, Tensor ptrs, Tensor rowT, Tensor row8,
+                 Tensor first, Tensor freq) {
+        int block = c.block(), hid = c.hidden(), heads = c.heads(), kvh = c.kvHeads(), hd = c.headDim();
+        int stride = pointerStride();
+        // 1. context rows of the chunk
+        Tensor posAbs = reshape(add(unsqueeze(p0, 1), unsqueeze(rowT, 0)), (long) B * T);
+        Tensor[] cs = ropeDevice(posAbs, freq);
+        for (int i = 0; i < c.layers(); i++) {
+            Tensor ctx = mix(taps, i, layer[i][DFLARE]);
+            Tensor kv = linear(ctx, layer[i][KV_CTX]);
+            int kvw = kvh * hd;
+            Tensor k = applyRope(headNorm(reshape(narrow(kv, 1, 0, kvw), (long) B * T, kvh, hd), layer[i][KNC]), cs[0], cs[1]);
+            Tensor v = contiguous(narrow(kv, 1, kvw, kvw));
+            scatter(reshape(k, (long) B * T, kvw), v, ptrs, posAbs, stride, i, T, (long) B * T);
+        }
+        // 2. the block of the new anchor
+        Tensor aPos = add(p0, kept);
+        Tensor end = o("aten::add.Scalar", aPos, (long) block);
+        Tensor blockPos = reshape(add(unsqueeze(aPos, 1), unsqueeze(row8, 0)), (long) B * block);
+        Tensor[] bs = ropeDevice(blockPos, freq);
+        Tensor anchorEmbed = bf16(rms(o("aten::index_select", model.embed, 0L, anchor), model.embedNorm, args.normEps()));
+        Tensor x = reshape(cat(1, unsqueeze(anchorEmbed, 1), o("aten::expand", reshape(maskEmbed, 1, 1, hid), new long[]{B, block - 1, hid})),
+                (long) B * block, hid);
+        Tensor[] residual = {null};
+        long R = (long) B * block;
+        for (int i = 0; i < c.layers(); i++) {
+            Tensor[] w = layer[i];
+            if (residual[0] == null) {
+                residual[0] = x;
+                x = rms(x, w[IN], c.eps());
+            } else {
+                x = fusedAddNorm(residual, x, w[IN]);
+            }
+            Tensor qkv = linear(x, w[QKV]);
+            Tensor q = applyRope(headNorm(reshape(narrow(qkv, 1, 0, heads * hd), R, heads, hd), w[QN]), bs[0], bs[1]);
+            Tensor k = applyRope(headNorm(reshape(narrow(qkv, 1, heads * hd, kvh * hd), R, kvh, hd), w[KN]), bs[0], bs[1]);
+            Tensor v = contiguous(narrow(qkv, 1, (heads + kvh) * hd, kvh * hd));
+            scatter(reshape(k, R, kvh * hd), v, ptrs, blockPos, stride, i, block, R);
+            boolean local = isLocal(i);
+            int nsplit = local ? 1 : 8;
+            int S = 4 * nsplit;
+            Tensor pm = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24);
+            Tensor pl = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24);
+            Tensor pacc = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24, 128);
+            Tensor attn = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.BFloat16).device(device), R, heads * hd);
+            long[] ap = {ptr(q), ptr(ptrs), ptr(end), ptr(attn), ptr(pm), ptr(pl), ptr(pacc)};
+            long[] aiv = {B, stride, i, local ? c.window() : 0, nsplit};
+            smile.torch.InklingNative.op(17, ap, aiv, new double[0]);
+            smile.torch.InklingNative.op(18, ap, aiv, new double[0]);
+            Tensor out = linear(attn, w[O]);
+            x = fusedAddNorm(residual, out, w[POST]);
+            Tensor gu = linear(x, w[GATE_UP]);
+            Tensor g = f32(narrow(gu, 1, 0, c.intermediate())), u = f32(narrow(gu, 1, c.intermediate(), c.intermediate()));
+            x = linear(bf16(mul(mul(g, sigmoid(g)), u)), w[DOWN]);
+        }
+        Tensor hidden = bf16(mul(finalNorm, unweightedRms(add(f32(residual[0]), f32(x)), c.eps())));      // [B * block, D]
+        Tensor rows = reshape(narrow(reshape(hidden, B, block, hid), 1, 1, block - 1), (long) B * (block - 1), hid);
+        int nd = block - 1;
+        boolean qBase = model.unembed8 != null && DRAFT_FP8.contains("base");
+        boolean qFold = fold8 != null;
+        Tensor base = qBase ? narrow(reshape(model.unembed8.forward(rows), B, nd, model.unembed8.npad), 2, 0, vocab)
+                : reshape(linear(rows, model.unembed), B, nd, vocab);
+        // 3. the Markov head, all requests at once
+        Tensor lastIdx = o("aten::clamp", add(first, sub(kept.to(smile.deep.tensor.ScalarType.Int64), o("aten::ones_like", first))), 0L, null);
+        Tensor lastTap = o("aten::index_select", taps, 0L, lastIdx);                                       // [B, 4, D]
+        Tensor fRnn = mix(lastTap, c.layers(), markovDflare);                                              // [B, D]
+        Tensor ctxIn = f32(cat(2, reshape(rows, B, nd, hid), o("aten::expand", unsqueeze(fRnn, 1), new long[]{B, nd, hid})));
+        Tensor ctx = add(o("aten::matmul", ctxIn, o("aten::t", rnnCtx)), rnnBias);                          // [B, nd, 3 rank]
+        int rank = c.rank();
+        Tensor state = zeros(device, smile.deep.tensor.ScalarType.BFloat16, B, rank);
+        Tensor prev = anchor;
+        Tensor[] out = new Tensor[nd];
+        Tensor rnnT = o("aten::t", f32(rnnState));
+        Tensor foldT = o("aten::t", foldWeight);
+        for (int i = 0; i < nd; i++) {
+            Tensor inputs = cat(1, state, o("aten::index_select", markovW1, 0L, prev));                    // [B, 2 rank]
+            Tensor raw = add(reshape(narrow(ctx, 1, i, 1), B, 3L * rank), o("aten::matmul", f32(inputs), rnnT));
+            Tensor r = bf16(raw);
+            Tensor gate = bf16(sigmoid(f32(narrow(r, 1, 0, rank))));
+            Tensor cand = bf16(tanh(f32(narrow(r, 1, rank, rank))));
+            Tensor keepPart = bf16(mul(f32(gate), f32(state)));
+            Tensor update = bf16(mul(f32(bf16(o("aten::rsub.Scalar", f32(gate), 1.0))), f32(cand)));
+            Tensor latent = bf16(tanh(f32(narrow(r, 1, 2L * rank, rank))));
+            state = bf16(add(f32(keepPart), f32(update)));
+            Tensor bias = qFold ? add(narrow(fold8.forward(latent), 1, 0, vocab), unsqueeze(foldBias, 0))
+                    : o("aten::addmm", unsqueeze(foldBias, 0), latent, foldT);
+            Tensor sum = bf16(add(f32(reshape(narrow(base, 1, i, 1), B, vocab)), f32(bias)));
+            Tensor capped = o("aten::mul.Scalar", o("aten::tanh", o("aten::div.Scalar", sum, args.finalLogitSoftcap())),
+                    args.finalLogitSoftcap());
+            prev = o("aten::argmax", capped, -1L, false);
+            out[i] = unsqueeze(prev, 1);
+        }
+        return cat(1, out);
+    }
+
+    private static long ptr(Tensor t) {
+        return smile.torch.InklingNative.dataPtr(t);
+    }
+
+    private void scatter(Tensor k, Tensor v, Tensor ptrs, Tensor pos, int stride, int layer, int rowsPer, long rows) {
+        smile.torch.InklingNative.op(16, new long[]{ptr(k), ptr(v), ptr(ptrs), ptr(pos)}, new long[]{rows, stride, layer, rowsPer},
+                new double[0]);
     }
 }

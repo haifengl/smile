@@ -35,8 +35,9 @@ A React-based web UI is bundled and served from the same process.
    - [DeepSeek-V4.1-Flash](#21-deepseek-v41-flash)
    - [GLM-5.3-Flash](#22-glm-53-flash)
    - [MiniMax-M3.1-Flash](#23-minimax-m31-flash)
-   - [Qwen3.8 27B](#24-qwen38-27b)
-   - [Llama 3.1 8B Instruct](#25-llama-31-8b-instruct)
+   - [Inkling-2-Mini](#24-inkling-2-mini)
+   - [Qwen3.8 27B](#25-qwen38-27b)
+   - [Llama 3.1 8B Instruct](#26-llama-31-8b-instruct)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
    - [Packaging as a JAR](#32-packaging-as-a-jar)
@@ -519,7 +520,31 @@ The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB
 reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower), `SMILE_MM_TC=0` (per-token sparse-attention kernels),
 `SMILE_MM_FUSED_COMBINE=0` and `SMILE_MM_ROUTER_X3=0` (composed MoE combine and fp32 router GEMM).
 
-### 2.4 Qwen3.8 27B
+### 2.4 Inkling-2-Mini
+
+[thinkingmachines/Inkling-2-Mini](https://huggingface.co/thinkingmachines/Inkling-2-Mini) (a looped MoE with relative-bias attention; NVFP4 / MXFP8 experts, text and
+images, 1M-token context) runs on **one A100-40GB** (`smile.chat.model=thinkingmachines/Inkling-2-Mini` or a local directory, `smile.chat.devices=0`).
+The GPU image builds the fused kernels into `libsmile_torch`; nothing else is needed. The image needs a writable `/model` (`-v /path/to/model_dir:/model`) and the
+build needs `--build-arg GRADLE_ARGS=-Pserve.agent=false` when `studio/lib` holds an `ioa-agent` jar that does not match `serve/src/agent`.
+
+| Greedy, one A100-40GB | Throughput |
+|---|---|
+| Plain decode, 1 request (CUDA graph, MXFP8 dense weights) | 100 tok/s in process, 78 over HTTP |
+| DSpark speculation, 1 request, chat / code | about 150 tok/s (x1.5) |
+| DSpark speculation, 1 request, open prose | x1.14 |
+| Plain, 2 / 4 concurrent requests (HTTP, prose) | 144 / 233 tok/s aggregate |
+| Prefill | 1900 tok/s at 8k tokens, 1030 at 131k, 715 at 250k |
+
+Speculation (`smile.chat.speculative=true`, 7 drafts) is lossless and helps latency at low concurrency (x1.2 at 4 requests on chat text, x0.93 on open prose)
+(`smile.chat.speculative-max-concurrency`). It needs the checkpoint's `mtp.safetensors`; `SMILE_INKLING_SPECULATE=0` disables the draft, `SMILE_INKLING_FP8=0` the
+MXFP8 copies of the dense weights (about 1.9 GB more GPU memory with them), `SMILE_INKLING_VISION=0` the image tower.
+
+Long prompts: `smile.chat.max-seq-len` up to the model's 1,048,576. Global-layer KV costs 32 KB per token in bf16, so add `-Dsmile.inkling.kv.fp8=true`
+(16 KB per token, no measurable quality change) beyond ~120k tokens; one 40 GB GPU holds about 300k tokens with it. For more, spill the caches of the last global layers to a second
+GPU with `-Dsmile.inkling.kv.spill.device=1 -Dsmile.inkling.kv.spill.apps=7`. Decode slows with the context (14 ms per token at 35k, 33 ms at 131k, 53 ms at 250k, 214 ms at 980k with the spill); a 980k-token prompt prefills at 245 tok/s (67 min) and the needle test passes.
+The implementation and the knobs are in [deep/LLM.md](../deep/LLM.md#inkling-2-mini-smilellmmodelinkling).
+
+### 2.5 Qwen3.8 27B
 
 Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With
 `smile.chat.speculative=true` the engine drafts `speculative-tokens` tokens with
@@ -567,7 +592,7 @@ Notes:
   original recurrent kernel and `SMILE_FUSED_OPS=0` disables all fused elementwise kernels (A/B and debugging only).
 - With MTP the draft depth matters little: 2 / 3 / 4 / 5 drafts gave 65 / 72 / 74 / 73 tok/s on a 3-prompt set.
 
-### 2.5 Llama 3.1 8B Instruct
+### 2.6 Llama 3.1 8B Instruct
 
 | Checkpoint | Weight path | Step | Aggregate | Step time | Forward / sample |
 |---|---|---|---|---|---|
@@ -1633,7 +1658,7 @@ There are therefore two ways to run a chat model:
 ### 7.1 Supported Models
 
 The native path covers **Llama-3.1**, **Qwen3.5/3.8**, **MiniMax-M3 / M3.1-Flash**,
-**DeepSeek-V4.1**, and **GLM-5.3-Flash** checkpoints (see
+**DeepSeek-V4.1**, **GLM-5.3-Flash**, and **Inkling-2-Mini** checkpoints (see
 [§2](#2-llm-decode-benchmarks) for benchmarks and
 [deep/LLM.md](../deep/LLM.md) for the implementation). Every other family is
 served through ONNX Runtime GenAI and requires only a GenAI-ready package —

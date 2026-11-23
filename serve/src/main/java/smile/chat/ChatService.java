@@ -382,9 +382,15 @@ public class ChatService implements OpenAiModelContributor {
                 logger.infof("Speculative decoding is on but this DeepSeek checkpoint has no DSpark draft head; "
                         + "using plain decoding");
             }
-        } else if (model instanceof smile.llm.model.inkling.Inkling) {
-            // no draft model yet: a request flagged speculative would leave the batched decode and run one row at a time
-            this.speculative = false;
+        } else if (model instanceof smile.llm.model.inkling.Inkling inkling) {
+            // DSpark draft (mtp.safetensors): requests are only flagged speculative when it is loaded and the fused verify
+            // graphs are available, because a flagged request without them would run one row at a time
+            this.speculative = config.speculative() && inkling.hasDraft();
+            if (this.speculative) {
+                this.speculativeTokens = config.speculativeTokens() > 0
+                        ? Math.min(config.speculativeTokens(), inkling.draftBlock()) : inkling.draftBlock();
+                logger.infof("DSpark speculative decoding enabled for Inkling (drafts=%d)", this.speculativeTokens);
+            }
         } else if (model instanceof smile.llm.model.glm.Glm glm) {
             // The MTP layer is loaded only with -Dsmile.glm.speculative=true (or SMILE_GLM_MTP=1): the first version verifies
             // eagerly and is slower than the plain CUDA-graph decode.
@@ -413,6 +419,7 @@ public class ChatService implements OpenAiModelContributor {
             // (measured through the engine on 8 A100); beyond 32 requests the verify rows stop paying, the rest decode plain.
             int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
                     : model instanceof smile.llm.model.deepseek.DeepSeek ? Math.min(32, Math.max(1, config.maxBatchSize()))
+                    : model instanceof smile.llm.model.inkling.Inkling ? Math.min(4, Math.max(1, config.maxBatchSize()))   // one A100: x1.5 (chat, code) / x1.14 (prose) for one request, x1.2 / x0.93 at 4; a cap below the batch size leaves a mixed cohort that is slower than either mode (141 vs 218 tok/s at 4 prose requests)
                     : model instanceof smile.llm.model.glm.Glm ? Math.min(32, Math.max(1, config.maxBatchSize()))   // batched verify windows pay up to 32 (+1.25x at 8, 1.2x at 16, 1.07x at 32 aggregate)
                     : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
