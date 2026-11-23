@@ -182,6 +182,13 @@ public final class LocalLlmDetector {
                     "NVIDIA CUDA (Marlin FP8 + DeltaNet + MTP) • 27B • Full Tool Profile (27B+)"
             ),
             new CuratedModel(
+                    "thinkingmachines/Inkling-2-Mini",
+                    RuntimeBackend.NVIDIA_CUDA,
+                    26.0,
+                    "~31 GB VRAM (1x A100 40GB)",
+                    "NVIDIA CUDA (Looped MoE NVFP4/MXFP8 + Vision + DSpark, 1M ctx) • 26B • Full Tool Profile"
+            ),
+            new CuratedModel(
                     "Qwen/Qwen3.8-27B",
                     RuntimeBackend.NVIDIA_CUDA,
                     27.0,
@@ -194,6 +201,20 @@ public final class LocalLlmDetector {
                     27.0,
                     "~40 GB+ VRAM",
                     "NVIDIA CUDA (Multimodal MoE + DSpark 7-token speculation) • Full Tool Profile (27B+)"
+            ),
+            new CuratedModel(
+                    "zai-org/GLM-5.3-Flash",
+                    RuntimeBackend.NVIDIA_CUDA,
+                    321.0,
+                    "~340 GB VRAM (8x A100 80GB, TP8+EP8)",
+                    "NVIDIA CUDA (Marlin FP8 MoE + KDA/MLA + Vision + MTP) • 321B • Full Tool Profile"
+            ),
+            new CuratedModel(
+                    "deepseek-ai/DeepSeek-V4.1-Flash",
+                    RuntimeBackend.NVIDIA_CUDA,
+                    763.0,
+                    "~376 GB VRAM + ~190 GB RAM (8x A100 80GB, EP8)",
+                    "NVIDIA CUDA (MXFP4 Marlin MoE + Engram + DSpark, 1M ctx) • 763B • Full Tool Profile"
             )
     );
 

@@ -156,15 +156,27 @@ class LocalLlmDetectorTest {
         // All curated ONNX GenAI CPU/DirectML models are <= 14B and use the compact tool profile
         assertTrue(onnxModels.stream().allMatch(CuratedModel::usesCompactToolProfile));
 
-        // 8B CUDA Llama models use compact profile; 27B+ Qwen/MiniMax models use full profile
+        // 8B CUDA Llama models use compact profile; 26B+ Qwen/Inkling/MiniMax/GLM/DeepSeek models use full profile
         CuratedModel llama8b = LocalLlmDetector.findCuratedModel("meta-llama/Llama-3.1-8B-Instruct").orElseThrow();
         assertTrue(llama8b.usesCompactToolProfile());
 
         CuratedModel qwen27b = LocalLlmDetector.findCuratedModel("Qwen/Qwen3.8-27B-FP8").orElseThrow();
         assertFalse(qwen27b.usesCompactToolProfile());
 
+        CuratedModel inkling = LocalLlmDetector.findCuratedModel("thinkingmachines/Inkling-2-Mini").orElseThrow();
+        assertEquals(RuntimeBackend.NVIDIA_CUDA, inkling.backend());
+        assertFalse(inkling.usesCompactToolProfile());
+
         CuratedModel minimax = LocalLlmDetector.findCuratedModel("MiniMaxAI/MiniMax-M3").orElseThrow();
         assertFalse(minimax.usesCompactToolProfile());
+
+        CuratedModel glm = LocalLlmDetector.findCuratedModel("zai-org/GLM-5.3-Flash").orElseThrow();
+        assertEquals(RuntimeBackend.NVIDIA_CUDA, glm.backend());
+        assertFalse(glm.usesCompactToolProfile());
+
+        CuratedModel deepseek = LocalLlmDetector.findCuratedModel("deepseek-ai/DeepSeek-V4.1-Flash").orElseThrow();
+        assertEquals(RuntimeBackend.NVIDIA_CUDA, deepseek.backend());
+        assertFalse(deepseek.usesCompactToolProfile());
     }
 
     @Test
