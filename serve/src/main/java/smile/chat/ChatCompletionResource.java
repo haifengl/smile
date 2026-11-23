@@ -82,10 +82,10 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
 public class ChatCompletionResource {
 
     /**
-     * Internal HTTP header added by {@code KirinAgentBridge}'s loopback
-     * {@code ChatCompletions} client so inner LLM tool-loop rounds hit
-     * {@link ChatService} directly without re-entering {@code kirin} or
-     * creating duplicate database conversation rows.
+     * Internal HTTP header recognized alongside {@link InternalAgentAuth#HEADER_TOKEN}
+     * on loopback calls from {@code ioa.kirin.LocalChatCompletions} so inner LLM
+     * tool-loop rounds hit {@link ChatService} directly without re-entering
+     * {@code kirin} or creating duplicate database conversation rows.
      */
     public static final String INTERNAL_AGENT_HEADER = "X-Smile-Internal-Agent";
 
@@ -427,7 +427,7 @@ public class ChatCompletionResource {
      * Evaluates the strict OAuth activation gate ({@code REQ-KIRIN-03}):
      * <ol>
      *   <li>User is authenticated via Google or Microsoft OAuth (not guest, not localhost {@code me} auto-login).</li>
-     *   <li>Request is not an internal loopback hop ({@code X-Smile-Internal-Agent: true}).</li>
+     *   <li>Request is not a verified internal loopback hop ({@link InternalAgentAuth#HEADER_TOKEN}).</li>
      *   <li>Request does not carry custom external {@code tools} or multimodal media.</li>
      *   <li>The server-side {@code kirin} {@link ChatAgentBridge} is available.</li>
      * </ol>

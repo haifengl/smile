@@ -28,9 +28,8 @@ import smile.chat.CompletionRequest;
 import smile.llm.ChatCompletion;
 
 /**
- * Default no-op {@link ChatAgentBridge} used in non-GPU container flavors
- * ({@code Dockerfile.native}, CPU {@code Dockerfile}) and public CI builds
- * when {@code ioa-agent} is not packaged.
+ * Default no-op {@link ChatAgentBridge} used when no server-side agent plugin
+ * is staged in {@code serve/plugins/}.
  *
  * @author Haifeng Li
  */

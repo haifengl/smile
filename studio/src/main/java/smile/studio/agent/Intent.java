@@ -802,6 +802,11 @@ public class Intent extends JPanel {
         return SmileStudio.llmServices().defaultModel();
     }
 
+    /** Overrides the resolved model for this intent. Package-private for testing. */
+    void setSelectedModel(LlmServices.AvailableModel model) {
+        this.selectedModel = model;
+    }
+
     /** Initializes the intent type combo box. */
     private void initIntentTypeComboBox() {
         intentTypeComboBox.setSelectedItem(Instructions);

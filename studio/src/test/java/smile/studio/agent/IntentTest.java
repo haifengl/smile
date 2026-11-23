@@ -120,7 +120,7 @@ class IntentTest {
         Intent followupIntent = new Intent(null);
         assertNotNull(followupIntent.resolveModel());
         assertEquals("claude-sonnet-5", followupIntent.resolveModel().model().id());
-        assertEquals("anthropic", followupIntent.resolveModel().serviceKey());
+        assertEquals("Anthropic", followupIntent.resolveModel().serviceKey());
     }
 
     @Test

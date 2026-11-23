@@ -24,6 +24,8 @@ import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import smile.chat.agent.ChatAgentBridge;
+import smile.chat.agent.NoOpChatAgentBridge;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,6 +46,31 @@ public class ChatServiceTest {
 
     @Inject
     ChatServiceConfig chatServiceConfig;
+
+    @Inject
+    ChatAgentBridge agentBridge;
+
+    @Test
+    public void testGivenPluginClasspathWhenStartedThenArcWiresExpectedChatAgentBridge() {
+        // Given Quarkus ArC discovery with or without the kirin plugin on the classpath
+        boolean kirinPresent;
+        try {
+            Class.forName("ioa.kirin.KirinAgentBridge");
+            kirinPresent = true;
+        } catch (ClassNotFoundException e) {
+            kirinPresent = false;
+        }
+
+        // When ChatAgentBridge is injected
+        // Then ArC overrides @DefaultBean NoOpChatAgentBridge whenever kirin is staged
+        if (kirinPresent) {
+            assertTrue(agentBridge.isAvailable(), "KirinAgentBridge should override NoOpChatAgentBridge");
+            assertFalse(agentBridge instanceof NoOpChatAgentBridge,
+                    "Expected KirinAgentBridge CDI bean, got NoOpChatAgentBridge");
+        } else {
+            assertFalse(agentBridge.isAvailable(), "NoOpChatAgentBridge should report unavailable without kirin plugin");
+        }
+    }
 
     @Test
     public void testGivenNoConfiguredModelWhenStartedThenChatServiceIsUnavailable() {

@@ -26,12 +26,12 @@ import smile.llm.ChatCompletion;
 
 /**
  * SPI bridging SMILE Serve's OAuth authentication and {@code /v1/chat/completions}
- * endpoint to the server-side {@code kirin} personal assistant agent when the
- * {@code ioa-agent} runtime is packaged (specifically in {@code Dockerfile.gpu}).
+ * endpoint to an optional server-side {@code kirin} personal assistant plugin
+ * staged in {@code serve/plugins/}.
  *
- * <p>Kept free of {@code ioa.*} imports so non-GPU builds ({@code Dockerfile.micro},
- * {@code Dockerfile.native}, CPU {@code Dockerfile}, and public CI checkouts without
- * {@code studio/lib}) compile and run cleanly using {@link NoOpChatAgentBridge}.
+ * <p>Kept free of external agent dependencies so all builds without the plugin
+ * ({@code Dockerfile.micro}, {@code Dockerfile.native}, CPU {@code Dockerfile},
+ * and public CI checkouts) compile and run cleanly using {@link NoOpChatAgentBridge}.
  *
  * @author Haifeng Li
  */

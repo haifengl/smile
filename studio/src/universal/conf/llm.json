@@ -1,5 +1,5 @@
 {
-  "defaultService": "openai",
+  "defaultService": "OpenAI",
   "defaultModel": "",
   "services": [
     {

@@ -192,7 +192,7 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and twe
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
 | `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30), `frank-weekly-briefing` (Mon 07:30) |
-| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Every 2h) |
+| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Daily 12:00) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
 ### 3.1 `all-agents-memory` — Daily Memory Logger (`*`)
@@ -226,13 +226,13 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and twe
 
 - **`julien-community-watch` (4-Hour Community Watch & LinkedIn Thought Leadership)**
   - **Trigger:** `timer` (`intervalSeconds: 14400`, `missedFirePolicy: "SKIP"`, `quietStart: "22:00"`, `quietEnd: "08:00"`)
-  - **Workflow:** Scans Hacker News, Reddit (read-only), GitHub Discussions, and Stack Overflow for new relevant threads not yet recorded in `.smile/memory/community-feed.json`, forwards buying signals to `@mike`, and triggers `julien-community-post` if urgent questions need answers. Also scans top front-page HN and engineering/AI/ML Reddit discussions beyond SMILE topics to draft at most one non-promotional, first-person LinkedIn thought-leadership post per run (capped at 3 posts/day, polished with `/social-writing` + `/humanize`, and staged into the Batch Draft Queue for approval).
+  - **Workflow:** Scans Hacker News, Reddit (read-only), GitHub Discussions, and Stack Overflow for new relevant threads not yet recorded in `.smile/memory/community-feed.json`, forwards buying signals to `@mike`, and triggers `julien-community-post` if urgent questions need answers. Also scans top front-page Hacker News stories and other top community forums beyond SMILE topics to draft at most one non-promotional, first-person LinkedIn thought-leadership post per run on major news, macro industry trends, or significant technical breakthroughs—explicitly skipping small or narrow technical discussions (capped at 3 posts/day, polished with `/social-writing` + `/humanize`, and staged into the Batch Draft Queue for approval).
 - **`julien-community-post` (Mon/Wed/Fri Proactive Community Post & Answer Sweep)**
   - **Trigger:** `timer` (`cron: "0 10 * * MON,WED,FRI"`, `missedFirePolicy: "SKIP"`)
   - **Workflow:** Runs the `/social-writing` skill to draft technical answers for queued threads and one proactive educational post, polishes prose with `/humanize`, stages all drafts into the Batch Draft Queue for review, and refreshes `$SMILE_HOME/bot/pages/community-radar.html`.
-- **`julien-campaign-driver` (2-Hour Proactive Community Campaign Driver)**
-  - **Trigger:** `timer` (`intervalSeconds: 7200`, `missedFirePolicy: "FIRE_ONCE"`, `quietStart: "22:00"`, `quietEnd: "08:00"`, `maxTurnsPerHour: 2`)
-  - **Workflow:** Runs `/community-building` (`useContextProjects: true`) with a Drain-Before-Draft workflow to publish approved community replies and approved LinkedIn thought-leadership posts (strictly after human approval, capped at 1 post per domain per run and 3 LinkedIn posts per calendar day), verify live visibility, advance active community awareness campaigns in `docs/business/campaigns/`, track per-community state in `.smile/memory/campaign-state.json`, stage drafts in the Batch Draft Queue, forward buying signals to `@mike`, and update `$SMILE_HOME/bot/pages/community-radar.html`.
+- **`julien-campaign-driver` (Daily Community Campaign & LinkedIn Peer Driver (12:00))**
+  - **Trigger:** `timer` (`cron: "0 12 * * *"`, `missedFirePolicy: "FIRE_ONCE"`)
+  - **Workflow:** Runs `/community-building` (`useContextProjects: true`) with a Drain-Before-Draft workflow focused strictly on 4 developer communities (Hacker News [manual-post only], Reddit [draft-only / manual-post by user until account stabilizes; anonymous logged-out Playwright without `u/pdsminer` or public JSON/RSS allowed for topic discovery on `r/LocalLLaMA`, `r/ChatGPT`, `r/ClaudeAI`, and `r/MachineLearning`], LangChain Forum, and Hugging Face Forum — other forums dropped). Auto-publishes approved forum posts on LangChain Forum and Hugging Face Forum plus LinkedIn thought-leadership posts (capped at 1 engagement reply per forum per daily run and 3 LinkedIn posts per calendar day), drafts at most 1 engagement reply per forum/subreddit per day on today's top posts (with Reddit drafts explicitly marked manual-post by the user to earn per-subreddit karma) and at most 1 weekly original post raising awareness of the SMILE product line (new features or thought leadership), manages approval-gated LinkedIn peer engineer outreach, verifies live visibility, updates `.smile/memory/campaign-state.json` and `$SMILE_HOME/bot/pages/community-radar.html`, and forwards warm commercial leads to `@mike`.
 
 ### 3.4 `mike` — Founder-Led B2B Sales
 
@@ -281,7 +281,7 @@ Agent Hub (Running)
 ├── @julien (Julien — Developer & Product Evangelist)
 │   ├── ● julien-community-watch — 4-Hour Community Watch & LinkedIn Thought Leadership
 │   ├── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
-│   └── ● julien-campaign-driver — 2-Hour Proactive Community Campaign Driver
+│   └── ● julien-campaign-driver — Daily Community Campaign & LinkedIn Peer Driver (12:00)
 └── @mike (Mike — Founder-Led B2B Sales)
     ├── ● mike-signal-watch — Weekday Morning Signal Watch (08:00)
     ├── ● mike-outreach-sweep — Weekday Multi-Channel Outreach Sweep (08:30)
