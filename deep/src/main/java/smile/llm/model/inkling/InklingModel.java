@@ -123,7 +123,11 @@ public final class InklingModel implements AutoCloseable {
         return true;       // the layer keeps what it needs; the rest is released with the thread's scope
     }
 
-    /** Hyperparameters. */
+    /**
+     * Returns the model hyperparameters.
+     *
+     * @return the model hyperparameters.
+     */
     public InklingModelArgs args() {
         return args;
     }

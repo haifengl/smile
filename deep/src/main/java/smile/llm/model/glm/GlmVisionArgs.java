@@ -50,12 +50,21 @@ public record GlmVisionArgs(int depth, int hiddenSize, int numHeads, int interme
                             int projectionIntermediate, int patchSize, int temporalPatchSize, int mergeSize, int inChannels,
                             double rmsNormEps, double swigluLimit, double ropeTheta, int imageTokenId, int minImageTokens,
                             int maxImageTokens, double[] mean, double[] std) {
-    /** Values of one patch row the processor produces: channels * patch * patch (the repeated frame is dropped). */
+    /**
+     * Returns the number of values in one patch row produced by the processor:
+     * {@code inChannels * patchSize * patchSize} (the repeated frame is dropped).
+     *
+     * @return the number of values per patch row.
+     */
     public int patchDim() {
         return inChannels * patchSize * patchSize;
     }
 
-    /** Head width of the vision attention. */
+    /**
+     * Returns the head width of the vision attention.
+     *
+     * @return the vision attention head dimension.
+     */
     public int headDim() {
         return hiddenSize / numHeads;
     }

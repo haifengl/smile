@@ -36,12 +36,19 @@ public final class GlmVisionProcessor {
     private static final long MAX_SOURCE_PIXELS = 100_000_000L;
     private static final int MAX_RATIO = 200;
 
-    /** Patch rows {@code [N, C * P * P]} (float32, CPU) and the {@code (1, gridH, gridW)} grid in patches. */
+    /**
+     * Preprocessed image patches and their spatial grid.
+     *
+     * @param pixels patch rows {@code [N, C * P * P]} (float32, CPU).
+     * @param grid   the {@code (1, gridH, gridW)} grid in patches.
+     */
     public record Patches(Tensor pixels, int[] grid) { }
 
     private final GlmVisionArgs args;
 
     /**
+     * Constructor.
+     *
      * @param args the vision arguments.
      */
     public GlmVisionProcessor(GlmVisionArgs args) {

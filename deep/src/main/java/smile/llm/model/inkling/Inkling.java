@@ -207,7 +207,11 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         return s;
     }
 
-    /** Hyperparameters. */
+    /**
+     * Returns the model hyperparameters.
+     *
+     * @return the model hyperparameters.
+     */
     public InklingModelArgs args() {
         return args;
     }
@@ -931,12 +935,20 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         return gg;
     }
 
-    /** Whether the draft model is loaded and the fused decoder can verify chunks. */
+    /**
+     * Returns whether the draft model is loaded and the fused decoder can verify chunks.
+     *
+     * @return {@code true} if speculative drafting is active.
+     */
     public boolean hasDraft() {
         return draft != null && decoder != null && GRAPHS && smile.torch.Native.cudaGraphAvailable();
     }
 
-    /** Draft tokens per block. */
+    /**
+     * Returns the number of draft tokens per block.
+     *
+     * @return the draft block size, or {@code 0} when no draft model is loaded.
+     */
     public int draftBlock() {
         return draft == null ? 0 : draft.drafts();
     }

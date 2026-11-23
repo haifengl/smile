@@ -29,13 +29,20 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public final class InklingImageProcessor {
-    /** Tiles {@code [N, tile, tile, 3]} float32 on the CPU and the {@code (1, rows, cols)} grid. */
+    /**
+     * Preprocessed image tiles and their spatial grid.
+     *
+     * @param pixels tiles {@code [N, tile, tile, 3]} (float32, CPU).
+     * @param grid   the {@code (1, rows, cols)} grid in tiles.
+     */
     public record Patches(Tensor pixels, int[] grid) { }
 
     private static final float RESCALE = 0.00392156862745098f;
     private final InklingVisionArgs args;
 
     /**
+     * Constructor.
+     *
      * @param args vision arguments.
      */
     public InklingImageProcessor(InklingVisionArgs args) {
