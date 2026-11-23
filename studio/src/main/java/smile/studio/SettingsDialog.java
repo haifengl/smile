@@ -141,6 +141,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     // Email Accounts tab state & fields
     private EmailConfig emailConfig;
     private final Map<String, String> pendingEmailSecrets = new LinkedHashMap<>();
+    private final Map<String, String> initialEmailSecrets = new LinkedHashMap<>();
     private boolean suppressEmailComboEvents = false;
     private String currentEmailAccountId = "";
     private final JComboBox<String> emailAccountCombo = new JComboBox<>();
@@ -167,6 +168,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     // Calendar Accounts tab state & fields
     private CalendarConfig calendarConfig;
     private final Map<String, String> pendingCalendarSecrets = new LinkedHashMap<>();
+    private final Map<String, String> initialCalendarSecrets = new LinkedHashMap<>();
     private boolean suppressCalendarComboEvents = false;
     private String currentCalendarAccountId = "";
     private final JComboBox<String> calendarAccountCombo = new JComboBox<>();
@@ -230,7 +232,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         this.emailConfig = EmailConfig.load();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
             SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress())
-                    .ifPresent(sec -> pendingEmailSecrets.put(acc.emailAddress(), sec));
+                    .ifPresent(sec -> {
+                        String key = secretKey(acc.emailAddress());
+                        pendingEmailSecrets.put(key, sec);
+                        initialEmailSecrets.put(key, sec);
+                    });
         }
         this.calendarConfig = CalendarConfig.load();
         if (this.calendarConfig.accounts().isEmpty() && !this.emailConfig.accounts().isEmpty()) {
@@ -242,7 +248,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
         for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
             SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false)
-                    .ifPresent(sec -> pendingCalendarSecrets.put(acc.accountId(), sec));
+                    .ifPresent(sec -> {
+                        String key = secretKey(acc.accountId());
+                        pendingCalendarSecrets.put(key, sec);
+                        initialCalendarSecrets.put(key, sec);
+                    });
         }
 
         JTabbedPane tabs = new JTabbedPane();
@@ -1261,7 +1271,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailEnabledCheck.setSelected(acc.enabled());
 
         String secret = pendingEmailSecrets.getOrDefault(
-                acc.emailAddress(),
+                secretKey(acc.emailAddress()),
                 SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress()).orElse("")
         );
         emailSecretField.setText(secret);
@@ -1330,14 +1340,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
         if (!currentEmailAccountId.isEmpty() && !currentEmailAccountId.equalsIgnoreCase(spec.emailAddress())) {
             emailConfig = emailConfig.withoutAccount(currentEmailAccountId);
-            pendingEmailSecrets.remove(currentEmailAccountId);
+            pendingEmailSecrets.remove(secretKey(currentEmailAccountId));
         }
         emailConfig = emailConfig.withUpsertedAccount(spec);
         if (emailDefaultCheck.isSelected()) {
             emailConfig = new EmailConfig(spec.emailAddress(), emailConfig.accounts());
         }
         String secretVal = new String(emailSecretField.getPassword()).strip();
-        pendingEmailSecrets.put(spec.emailAddress(), secretVal);
+        pendingEmailSecrets.put(secretKey(spec.emailAddress()), secretVal);
         currentEmailAccountId = spec.emailAddress();
     }
 
@@ -1361,7 +1371,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
             return;
         }
         emailConfig = emailConfig.withoutAccount(id);
-        pendingEmailSecrets.remove(id);
+        pendingEmailSecrets.remove(secretKey(id));
+        initialEmailSecrets.remove(secretKey(id));
         SharedSecrets.deleteEmailSecret(secrets, id);
         refreshEmailAccountCombo(emailConfig.defaultAccount());
     }
@@ -1419,7 +1430,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             String typedCalId = calendarAccountIdField.getText().trim();
             String calSecret = new String(calendarSecretField.getPassword()).strip();
             if (calSecret.isEmpty() && !currentCalendarAccountId.isEmpty() && calendarUseEmailCheck.isSelected()) {
-                calSecret = pendingEmailSecrets.getOrDefault(currentCalendarAccountId, "").strip();
+                calSecret = pendingEmailSecrets.getOrDefault(secretKey(currentCalendarAccountId), "").strip();
             }
             loginHint = resolveOAuthLoginHint(
                     currentCalendarAccountId,
@@ -1466,8 +1477,22 @@ public class SettingsDialog extends JDialog implements ActionListener {
                     }
                     emailConfig = nextEmailConfig;
                     calendarConfig = provisioned.calendarConfig();
-                    pendingEmailSecrets.keySet().removeIf(k -> k.equalsIgnoreCase(login.emailAddress()));
-                    pendingEmailSecrets.put(login.emailAddress(), login.refreshToken());
+                    String normalizedKey = secretKey(login.emailAddress());
+                    pendingEmailSecrets.put(normalizedKey, login.refreshToken());
+                    Optional<String> persisted = SharedSecrets.resolveEmailSecret(secrets, login.emailAddress());
+                    if (persisted.map(login.refreshToken()::equals).orElse(false)) {
+                        initialEmailSecrets.put(normalizedKey, login.refreshToken());
+                    } else {
+                        logger.error("OAuth refresh token for '{}' was not persisted to SecretStore", login.emailAddress());
+                        JOptionPane.showMessageDialog(
+                                this,
+                                MessageFormat.format(
+                                        bundle.getString("SecretSaveError"),
+                                        login.emailAddress(),
+                                        "Could not save OAuth refresh token to credential store"),
+                                bundle.getString("Title"),
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                     refreshEmailAccountCombo(login.emailAddress());
                     refreshCalendarAccountCombo(login.emailAddress());
                     setOAuthLoginButtonsEnabled(true);
@@ -1523,12 +1548,70 @@ public class SettingsDialog extends JDialog implements ActionListener {
         });
     }
 
+    private static String secretKey(String accountId) {
+        return accountId == null ? "" : accountId.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Reconciles a pending account secret against the value loaded when the dialog
+     * opened so saving Settings never deletes unloaded secrets or overwrites
+     * refresh tokens rotated in the background.
+     *
+     * @param secrets the target secret store.
+     * @param accountId the email or calendar account identifier.
+     * @param pendingSecret the value currently in the form/pending map.
+     * @param initialSecret the value originally loaded when the dialog opened.
+     * @param email {@code true} for an email account secret; {@code false} for a standalone calendar secret.
+     * @return {@code true} if no write was needed or the write succeeded; {@code false} if saving failed.
+     */
+    static boolean syncAccountSecret(
+            SecretStore secrets,
+            String accountId,
+            String pendingSecret,
+            String initialSecret,
+            boolean email
+    ) {
+        String pending = pendingSecret == null ? "" : pendingSecret.strip();
+        String initial = initialSecret == null ? "" : initialSecret.strip();
+        if (pending.isEmpty()) {
+            if (!initial.isEmpty()) {
+                if (email) {
+                    SharedSecrets.deleteEmailSecret(secrets, accountId);
+                } else {
+                    SharedSecrets.deleteCalendarSecret(secrets, accountId);
+                }
+            }
+            return true;
+        }
+        Optional<String> currentlyStored = email
+                ? SharedSecrets.resolveEmailSecret(secrets, accountId)
+                : SharedSecrets.resolveCalendarSecret(secrets, accountId, false);
+        if (pending.equals(initial) && currentlyStored.isPresent()) {
+            return true;
+        }
+        return email
+                ? SharedSecrets.saveEmailSecret(secrets, accountId, pending)
+                : SharedSecrets.saveCalendarSecret(secrets, accountId, pending);
+    }
+
     private void saveEmailConfiguration() {
         commitCurrentEmailAccountForm();
         emailConfig.save();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
-            String sec = pendingEmailSecrets.getOrDefault(acc.emailAddress(), "");
-            SharedSecrets.saveEmailSecret(secrets, acc.emailAddress(), sec);
+            String key = secretKey(acc.emailAddress());
+            String sec = pendingEmailSecrets.getOrDefault(key, "");
+            String initial = initialEmailSecrets.getOrDefault(key, "");
+            if (!syncAccountSecret(secrets, acc.emailAddress(), sec, initial, true)) {
+                logger.error("Failed to save email secret for '{}'", acc.emailAddress());
+                JOptionPane.showMessageDialog(
+                        this,
+                        MessageFormat.format(
+                                bundle.getString("SecretSaveError"),
+                                acc.emailAddress(),
+                                "Could not save credential to SecretStore"),
+                        bundle.getString("Title"),
+                        JOptionPane.ERROR_MESSAGE);
+            }
         }
         EmailServices.getInstance().reload(emailConfig, secrets);
         if (HubManager.getInstance().isRunning()) {
@@ -1696,7 +1779,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarEnabledCheck.setSelected(acc.enabled());
 
         String secret = pendingCalendarSecrets.getOrDefault(
-                acc.accountId(),
+                secretKey(acc.accountId()),
                 SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false).orElse("")
         );
         calendarSecretField.setText(secret);
@@ -1752,14 +1835,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
         if (!currentCalendarAccountId.isEmpty() && !currentCalendarAccountId.equalsIgnoreCase(spec.accountId())) {
             calendarConfig = calendarConfig.withoutAccount(currentCalendarAccountId);
-            pendingCalendarSecrets.remove(currentCalendarAccountId);
+            pendingCalendarSecrets.remove(secretKey(currentCalendarAccountId));
         }
         calendarConfig = calendarConfig.withUpsertedAccount(spec);
         if (calendarDefaultCheck.isSelected()) {
             calendarConfig = new CalendarConfig(spec.accountId(), calendarConfig.accounts());
         }
         String secretVal = new String(calendarSecretField.getPassword()).strip();
-        pendingCalendarSecrets.put(spec.accountId(), secretVal);
+        pendingCalendarSecrets.put(secretKey(spec.accountId()), secretVal);
         currentCalendarAccountId = spec.accountId();
     }
 
@@ -1783,7 +1866,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
             return;
         }
         calendarConfig = calendarConfig.withoutAccount(id);
-        pendingCalendarSecrets.remove(id);
+        pendingCalendarSecrets.remove(secretKey(id));
+        initialCalendarSecrets.remove(secretKey(id));
         SharedSecrets.deleteCalendarSecret(secrets, id);
         refreshCalendarAccountCombo(calendarConfig.defaultAccount());
     }
@@ -1833,9 +1917,19 @@ public class SettingsDialog extends JDialog implements ActionListener {
         commitCurrentCalendarAccountForm();
         calendarConfig.save();
         for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
-            String sec = pendingCalendarSecrets.getOrDefault(acc.accountId(), "");
-            if (!sec.isEmpty()) {
-                SharedSecrets.saveCalendarSecret(secrets, acc.accountId(), sec);
+            String key = secretKey(acc.accountId());
+            String sec = pendingCalendarSecrets.getOrDefault(key, "");
+            String initial = initialCalendarSecrets.getOrDefault(key, "");
+            if (!syncAccountSecret(secrets, acc.accountId(), sec, initial, false)) {
+                logger.error("Failed to save calendar secret for '{}'", acc.accountId());
+                JOptionPane.showMessageDialog(
+                        this,
+                        MessageFormat.format(
+                                bundle.getString("SecretSaveError"),
+                                acc.accountId(),
+                                "Could not save credential to SecretStore"),
+                        bundle.getString("Title"),
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
         CalendarServices.getInstance().reload(calendarConfig, secrets);

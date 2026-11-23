@@ -207,12 +207,16 @@ class EmailOAuthAndSettingsTest {
         SharedSecrets.deleteEmailSecret(secrets, "alice@hotmail.com");
         assertTrue(SharedSecrets.resolveEmailSecret(secrets, "alice@hotmail.com").isEmpty());
 
-        // Regression test: account IDs with dots/@ (e.g. haifeng.li@aihalo.dev) save without IllegalArgumentException
-        assertTrue(SharedSecrets.saveEmailSecret(secrets, "haifeng.li@aihalo.dev", "dot-secret-token"));
-        assertEquals(
-                Optional.of("dot-secret-token"),
-                SharedSecrets.resolveEmailSecret(secrets, "haifeng.li@aihalo.dev")
-        );
+        // Regression test: account IDs with dots/@ save without IllegalArgumentException
+        try {
+            assertTrue(SharedSecrets.saveEmailSecret(secrets, "user.name@example.com", "dot-secret-token"));
+            assertEquals(
+                    Optional.of("dot-secret-token"),
+                    SharedSecrets.resolveEmailSecret(secrets, "user.name@example.com")
+            );
+        } finally {
+            SharedSecrets.deleteEmailSecret(secrets, "user.name@example.com");
+        }
     }
 
     @Test
@@ -245,21 +249,25 @@ class EmailOAuthAndSettingsTest {
         );
         OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
                 oneClickLogin, EmailConfig.empty(), CalendarConfig.empty(), secrets);
-        EmailConfig emailCfg = provisioned.emailConfig();
-        CalendarConfig calCfg = provisioned.calendarConfig();
-        emailCfg.save(emailPath);
-        calCfg.save(calPath);
+        try {
+            EmailConfig emailCfg = provisioned.emailConfig();
+            CalendarConfig calCfg = provisioned.calendarConfig();
+            emailCfg.save(emailPath);
+            calCfg.save(calPath);
 
-        assertEquals(
-                Optional.of("shared-google-refresh-token"),
-                SharedSecrets.resolveCalendarSecret(secrets, "alice@gmail.com", true)
-        );
+            assertEquals(
+                    Optional.of("shared-google-refresh-token"),
+                    SharedSecrets.resolveCalendarSecret(secrets, "alice@gmail.com", true)
+            );
 
-        CalendarServices calServices = new CalendarServices();
-        calServices.setEmailConfigSupplier(() -> emailCfg);
-        calServices.reload(CalendarConfig.load(calPath), secrets);
-        assertTrue(calServices.client("alice@gmail.com").isPresent());
-        assertNull(calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg));
+            CalendarServices calServices = new CalendarServices();
+            calServices.setEmailConfigSupplier(() -> emailCfg);
+            calServices.reload(CalendarConfig.load(calPath), secrets);
+            assertTrue(calServices.client("alice@gmail.com").isPresent());
+            assertNull(calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg));
+        } finally {
+            SharedSecrets.deleteEmailSecret(secrets, "alice@gmail.com");
+        }
 
         // Verify all 5 locale resource bundles have the new Calendar & 1-click Login keys
         Locale[] locales = {
@@ -301,20 +309,49 @@ class EmailOAuthAndSettingsTest {
     void givenEmailFormState_whenResolveOAuthLoginHint_thenHintsOnlyNewOrUnauthenticatedAccount() {
         // Given/When/Then: new "+ Add" draft with typed email hints that new email
         assertEquals(
-                "smile.sales@outlook.com",
-                SettingsDialog.resolveOAuthLoginHint("", "smile.sales@outlook.com", "", false));
+                "sales.demo@example.com",
+                SettingsDialog.resolveOAuthLoginHint("", "sales.demo@example.com", "", false));
 
         // New "+ Add" draft with blank email or already-configured email sends no hint (forces clean picker)
         assertNull(SettingsDialog.resolveOAuthLoginHint("", "", "", false));
-        assertNull(SettingsDialog.resolveOAuthLoginHint("", "haifengl@outlook.com", "", true));
+        assertNull(SettingsDialog.resolveOAuthLoginHint("", "primary.demo@example.com", "", true));
 
         // Already-authenticated account sends no hint so clicking Login adds a second account cleanly
-        assertNull(SettingsDialog.resolveOAuthLoginHint("haifengl@outlook.com", "haifengl@outlook.com", "M.refresh-1", true));
+        assertNull(SettingsDialog.resolveOAuthLoginHint("primary.demo@example.com", "primary.demo@example.com", "M.refresh-1", true));
 
         // Existing tokenless account hints that account so the user can finish authorizing it
         assertEquals(
-                "smile.sales@outlook.com",
-                SettingsDialog.resolveOAuthLoginHint("smile.sales@outlook.com", "smile.sales@outlook.com", "", true));
+                "sales.demo@example.com",
+                SettingsDialog.resolveOAuthLoginHint("sales.demo@example.com", "sales.demo@example.com", "", true));
+    }
+
+    @Test
+    void givenSecondaryAccountSecrets_whenSyncAccountSecret_thenPreservesRotatedAndLongTokensWithoutWiping() {
+        SecretStore secrets = newTestSecretStore();
+        String account = "sales.secondary@example.com";
+        String rotatedLongToken = "0.AXEA_" + "X".repeat(1300) + "_ROTATED";
+        try {
+            // 1. Background rotation wrote a newer >1024-char token while Settings was open:
+            // unchanged pending==initial must NOT overwrite it with the stale token.
+            assertTrue(SharedSecrets.saveEmailSecret(secrets, account, rotatedLongToken));
+            assertTrue(SettingsDialog.syncAccountSecret(secrets, account, "M.stale-token", "M.stale-token", true));
+            assertEquals(Optional.of(rotatedLongToken), SharedSecrets.resolveEmailSecret(secrets, account));
+
+            // 2. Unloaded secret (pending="", initial="") must NOT wipe an existing stored secret.
+            assertTrue(SettingsDialog.syncAccountSecret(secrets, account, "", "", true));
+            assertEquals(Optional.of(rotatedLongToken), SharedSecrets.resolveEmailSecret(secrets, account));
+
+            // 3. Explicit user edit saves the new value (even >1024 chars).
+            String newLongToken = "0.AXEA_" + "Y".repeat(1400) + "_NEW";
+            assertTrue(SettingsDialog.syncAccountSecret(secrets, account, newLongToken, "M.stale-token", true));
+            assertEquals(Optional.of(newLongToken), SharedSecrets.resolveEmailSecret(secrets, account));
+
+            // 4. Explicit user clear (pending="", initial!="") deletes the secret.
+            assertTrue(SettingsDialog.syncAccountSecret(secrets, account, "", newLongToken, true));
+            assertTrue(SharedSecrets.resolveEmailSecret(secrets, account).isEmpty());
+        } finally {
+            SharedSecrets.deleteEmailSecret(secrets, account);
+        }
     }
 
     private static Map<String, String> parseQuery(String rawQuery) {
