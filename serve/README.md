@@ -102,7 +102,7 @@ and e.g. `latest-micro` or `7.0.0-native` for the others.
 | Tag | Image | Chat | User accounts, conversations (database) | Size |
 |---|---|---|---|---|
 | `latest` | JVM (OpenJDK 25), CPU | CPU: ONNX Runtime GenAI packages | yes | 0.6 GB |
-| `latest-gpu` | JVM, NVIDIA CUDA | GPU: LibTorch (Llama, Qwen, MiniMax, DeepSeek) and ONNX Runtime GenAI | yes | 16 GB |
+| `latest-gpu` | JVM, NVIDIA CUDA | GPU: LibTorch (DeepSeek, GLM, MiniMax, Inkling, Qwen, Llama) and ONNX Runtime GenAI | yes | 9 GB |
 | `latest-native` | GraalVM native executable, CPU | CPU: ONNX Runtime GenAI packages | yes | 0.4 GB |
 | `latest-micro` | GraalVM native executable, CPU, inference only | none | none | 0.2 GB |
 
@@ -140,7 +140,7 @@ CPU, for example embeddings, when the CPU does not support the native executable
 **`latest-gpu`: LLM serving on NVIDIA GPUs.** Runs the LibTorch/CUDA engine for Llama and Qwen checkpoints with CUDA
 graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does. It needs an NVIDIA GPU, a driver
 that supports CUDA 13.4 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
-example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
+example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 9 GB) and startup is dominated by loading the
 model. See [§1.2](#12-gpu-build--run).
 
 Notes for the CPU images: `latest`, `latest-native` and `latest-micro` are published for both
@@ -562,10 +562,12 @@ graphs, no tensor parallelism). Greedy, batch 1, 11 different prompts x 256 new 
 | Setup | Throughput | Draft accept rate |
 |---|---|---|
 | Plain decode | 36.3 tok/s | n/a |
-| MTP, 3 draft tokens (default) | **77.8 tok/s (2.1x)** | 66 % |
-| MTP, 4 draft tokens | **80.1 tok/s (2.2x)** | 58 % |
+| MTP, 3 draft tokens (default) | **80.7 tok/s (2.2x)** | 66 % |
+| MTP, 4 draft tokens | **82.8 tok/s (2.3x)** | 57 % |
 
-An MTP round takes about 37 ms: 8.2 ms to draft, 28.1 ms to verify, 0.6 ms of state replay. Marlin plus the lm_head
+An MTP round takes about 34 ms: 5.7 ms to draft, 28.0 ms to verify, 0.6 ms of state replay. The draft reads the vocabulary projection once per
+draft step, so its head runs in MXFP8 (a one-time copy of `lm_head`, 1.3 GB, built before the KV pool is sized; the accept rate is unchanged,
+the draft head was 2.5 GB of bf16 reads per step before; `SMILE_QWEN_MTP_FP8_HEAD=0` keeps the bf16 head and gives the earlier 77.8 tok/s). Marlin plus the lm_head
 GEMM read the weights in about 22 ms, so a plain step cannot go much below that (about 44 tok/s). With 2 / 4 concurrent
 requests (200 tokens each) the aggregate is 70 / 129 tok/s with MTP and 35 / 74 tok/s without; those cohorts sit at
 different positions, so they run eagerly (the decode graph needs equal positions) with no loss against `=0`.

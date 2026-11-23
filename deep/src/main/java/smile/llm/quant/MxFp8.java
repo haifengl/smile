@@ -53,6 +53,51 @@ public final class MxFp8 {
     }
 
     /**
+     * Quantizes a dense weight to MXFP8: E4M3 values with one power-of-two (E8M0) scale per 32 inputs, so that
+     * {@code dequantize} reproduces it to E4M3 rounding. Rows are padded with zeros to a multiple of 64 (the Marlin
+     * tile); the caller slices the product's columns back to {@code N}.
+     *
+     * @param weight bf16 or float32 weight {@code [N, K]} on the device; {@code K} a multiple of 128.
+     * @return {@code {fp8 [Npad, K], e8m0 UInt8 [Npad, K / 32]}}; the caller owns both.
+     */
+    public static Tensor[] quantize(Tensor weight) {
+        long n = weight.shape()[0], k = weight.shape()[1];
+        long npad = (n + 63) / 64 * 64;
+        Tensor q8 = Tensor.empty(new Tensor.Options().dtype(ScalarType.Float8e4m3fn).device(weight.device()), npad, k);
+        Tensor code = Tensor.empty(new Tensor.Options().dtype(ScalarType.UInt8).device(weight.device()), npad, k / BLOCK);
+        final long chunk = 8192;                    // rows per pass: bounds the float32 temporaries to ~0.3 GB
+        for (long r0 = 0; r0 < npad; r0 += chunk) {
+            long rows = Math.min(chunk, npad - r0);
+            AutoScope scope = new AutoScope();
+            Tensor.push(scope);
+            try {
+                long real = Math.max(0, Math.min(rows, n - r0));
+                Tensor wf = smile.torch.Aten.one("aten::_to_copy", smile.torch.Aten.one("aten::narrow", weight, 0L, r0, real), ScalarType.Float);
+                if (real < rows) {
+                    Tensor zeros = Tensor.zeros(new Tensor.Options().dtype(ScalarType.Float).device(weight.device()), rows - real, k);
+                    wf = smile.torch.Aten.one("aten::cat", new Tensor[]{wf, zeros}, 0L);
+                }
+                Tensor g = smile.torch.Aten.one("aten::reshape", wf, new long[]{rows, k / BLOCK, BLOCK});
+                Tensor amax = smile.torch.Aten.one("aten::amax", smile.torch.Aten.one("aten::abs", g), new long[]{-1}, false);
+                Tensor ratio = smile.torch.Aten.one("aten::clamp_min",
+                        smile.torch.Aten.one("aten::mul.Scalar", amax, 1.0 / 448.0), Math.pow(2, -126));
+                Tensor e = smile.torch.Aten.one("aten::clamp",
+                        smile.torch.Aten.one("aten::ceil", smile.torch.Aten.one("aten::log2", ratio)), -127.0, 127.0);
+                Tensor scale = smile.torch.Aten.one("aten::exp2", e);
+                Tensor q = smile.torch.Aten.one("aten::clamp", smile.torch.Aten.one("aten::div.Tensor", g,
+                        smile.torch.Aten.one("aten::unsqueeze", scale, -1L)), -448.0, 448.0);
+                Tensor qc = smile.torch.Aten.one("aten::reshape", q, new long[]{rows, k}).to(ScalarType.Float8e4m3fn);
+                Tensor cc = smile.torch.Aten.one("aten::add.Scalar", e, 127.0).to(ScalarType.UInt8);
+                smile.torch.Aten.one("aten::copy_", smile.torch.Aten.one("aten::narrow", q8, 0L, r0, rows), qc);
+                smile.torch.Aten.one("aten::copy_", smile.torch.Aten.one("aten::narrow", code, 0L, r0, rows), cc);
+            } finally {
+                Tensor.pop();
+            }
+        }
+        return new Tensor[]{q8, code};
+    }
+
+    /**
      * Expands an MXFP8 weight to a dense tensor.
      *
      * @param weight FP8 E4M3 weight {@code [N, K]} with {@code K} a multiple of {@link #BLOCK}.

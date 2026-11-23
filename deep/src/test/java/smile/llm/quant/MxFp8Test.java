@@ -80,4 +80,37 @@ public class MxFp8Test {
             assertThrows(IllegalArgumentException.class, () -> MxFp8.dequantize(fp, sc, ScalarType.Float));
         }
     }
+
+    @Test
+    public void testGivenDenseWeightWhenQuantizedThenDequantizeRoundTripsWithinE4m3Rounding() {
+        int n = 70;                    // not a multiple of 64: the rows are padded with zeros
+        int k = 128;
+        float[] values = new float[n * k];
+        java.util.Random r = new java.util.Random(3);
+        for (int i = 0; i < values.length; i++) {
+            values[i] = (float) (r.nextGaussian() * (1 + (i / k) % 5));
+        }
+        try (var noGrad = Tensor.noGradGuard();
+             Tensor w = Tensor.of(values, n, k).to(ScalarType.BFloat16)) {
+            Tensor[] q = MxFp8.quantize(w);
+            try (Tensor back = MxFp8.dequantize(q[0], q[1], ScalarType.Float)) {
+                assertArrayEquals(new long[]{64 * 2, k}, back.shape());
+                assertArrayEquals(new long[]{64 * 2, k / MxFp8.BLOCK}, q[1].shape());
+                float[] got = back.copy().floatArray();
+                float[] ref = w.to(ScalarType.Float).copy().floatArray();
+                double num = 0, den = 0;
+                for (int i = 0; i < n * k; i++) {
+                    num += (got[i] - ref[i]) * (got[i] - ref[i]);
+                    den += ref[i] * ref[i];
+                }
+                assertTrue(Math.sqrt(num / den) < 0.04, "relative error " + Math.sqrt(num / den));
+                for (int i = n * k; i < got.length; i++) {
+                    assertEquals(0.0f, got[i], "padding row element " + i);
+                }
+            } finally {
+                q[0].close();
+                q[1].close();
+            }
+        }
+    }
 }

@@ -61,6 +61,12 @@ public class QwenMtp extends LayerBlock {
     EmbeddingLayer tokEmbeddings;
     /** Shared with the backbone (not owned). */
     LinearLayer lmHead;
+    /** MXFP8 copy of the vocabulary projection for the draft steps (half the bytes of the bf16 head); null when off. */
+    private smile.llm.quant.MxFp8MarlinLinear draftHead;
+    private int draftHeadVocab;
+    private boolean draftHeadTried;
+    private static final boolean FP8_HEAD = !"0".equals(System.getenv("SMILE_QWEN_MTP_FP8_HEAD"))
+            && !"false".equals(System.getProperty("smile.qwen.mtp.fp8.head"));
     /** Shared RoPE tables from the backbone (not owned). */
     PartialRotaryEncoding.CosSin rope;
     KvCachePool kvCachePool;
@@ -114,6 +120,47 @@ public class QwenMtp extends LayerBlock {
         add("pre_fc_norm_embedding", preFcNormEmbedding);
         add("fc", fc);
         add("norm", norm);
+    }
+
+    /**
+     * The draft's vocabulary projection: the MXFP8 copy (built on first use, single device, bf16 head) or the shared head.
+     * The draft head is read once per draft step, so with 3 drafts it is the largest weight stream of a round.
+     */
+    /**
+     * Builds the MXFP8 draft head now (after the weights are loaded and before the KV pool is sized, so the static budget
+     * accounts for its ~1.3 GB). Called lazily by the first draft step if nobody did.
+     */
+    public void prepareDraftHead() {
+        if (draftHeadTried) {
+            return;
+        }
+        draftHeadTried = true;
+        if (FP8_HEAD && (tpGroup == null || tpGroup.tpSize() == 1) && smile.torch.Native.marlinFp8Available()
+                && lmHead != null && lmHead.weight() != null && lmHead.weight().dtype() == ScalarType.BFloat16
+                && lmHead.weight().device().isCUDA() && lmHead.weight().shape()[1] % 128 == 0) {
+            Tensor w = lmHead.weight();
+            draftHeadVocab = (int) w.shape()[0];
+            Tensor[] q = smile.llm.quant.MxFp8.quantize(w);
+            draftHead = new smile.llm.quant.MxFp8MarlinLinear((int) w.shape()[1], (int) q[0].shape()[0]);
+            draftHead.setWeight(q[0], q[1]);
+            draftHead.detachFromScopes();
+            q[0].close();
+            q[1].close();
+            org.slf4j.LoggerFactory.getLogger(QwenMtp.class).info("MTP draft head in MXFP8 ({} rows)", draftHeadVocab);
+        }
+    }
+
+    private Tensor draftLogits(Tensor hidden) {
+        prepareDraftHead();
+        if (draftHead == null) {
+            return lmHead.forward(hidden);
+        }
+        Tensor full = draftHead.forward(hidden);
+        if (full.shape()[full.shape().length - 1] == draftHeadVocab) {
+            return full;
+        }
+        Tensor cut = smile.torch.Aten.one("aten::narrow", full, (long) full.shape().length - 1, 0L, (long) draftHeadVocab);
+        return cut;
     }
 
     /**
@@ -263,7 +310,7 @@ public class QwenMtp extends LayerBlock {
 
             Tensor normalized = norm.forward(h);
             h.close();
-            Tensor logitsF = lmHead.forward(normalized);
+            Tensor logitsF = draftLogits(normalized);
             Tensor logits = logitsF.to(ScalarType.Float);
             if (logits != logitsF) {
                 logitsF.close();
@@ -364,7 +411,7 @@ public class QwenMtp extends LayerBlock {
 
             Tensor logits = null;
             if (wantLogits) {
-                Tensor logitsF = lmHead.forward(lastRow);
+                Tensor logitsF = draftLogits(lastRow);
                 logits = logitsF.to(ScalarType.Float);
                 if (logits != logitsF) {
                     logitsF.close();

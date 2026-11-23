@@ -928,6 +928,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                         rank, gpuState.speculativeCheckpointBytes(depth, rows) >> 20, rows, depth);
             }
         }
+        if (model.mtp() != null && memFractionStatic > 0) {
+            model.mtp().prepareDraftHead();         // before the KV pool is sized: the static budget excludes its ~1.3 GB
+        }
         if (modelArgs.numFullAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
             device.emptyCache();
