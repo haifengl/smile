@@ -216,7 +216,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         LlmServices.migratePreferencesSecrets(prefs, secrets);
         this.llmConfig = LlmServices.loadOrMigrateConfig(prefs);
         if (this.llmConfig.services().isEmpty()) {
-            this.llmConfig = LlmConfig.empty();
+            this.llmConfig = LlmServices.defaultConfig();
         }
         LlmServices.syncToPreferences(this.llmConfig, prefs);
         for (LlmConfig.ServiceEntry svc : this.llmConfig.services()) {
@@ -614,7 +614,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
             currentLlmServiceName = svc.name();
             llmServiceNameField.setText(svc.name());
             selectLlmProviderKey(svc.provider());
-            llmDefaultCheck.setSelected(svc.name().equalsIgnoreCase(llmConfig.defaultService()));
+            String resolvedDefault = llmConfig.findService(llmConfig.defaultService())
+                    .map(LlmConfig.ServiceEntry::name)
+                    .orElse(llmConfig.defaultService());
+            llmDefaultCheck.setSelected(svc.name().equalsIgnoreCase(resolvedDefault));
 
             boolean isVertex = "googleEnterprise".equals(svc.provider());
             if (isVertex) {
@@ -707,7 +710,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         llmConfig = llmConfig.withoutService(name);
         pendingLlmSecrets.remove(name);
         initialSecrets.remove(name);
-        SharedSecrets.deleteLlmSecret(secrets, name, provider);
+        LlmServices.deleteSecret(secrets, name, provider);
         refreshLlmServiceCombo(llmConfig.defaultService());
     }
 

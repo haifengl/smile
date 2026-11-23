@@ -6,10 +6,13 @@ package smile.studio;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.prefs.Preferences;
 import javax.swing.JOptionPane;
 import ioa.agent.email.SharedSecrets;
@@ -86,11 +89,27 @@ public final class LlmServices {
      * or {@link Optional#empty()} when the service does not store a secret API key
      * (e.g., {@code googleEnterprise} stores a GCP Project ID in {@code llm.json}).
      *
-     * @param serviceName service connection name such as {@code openai} or {@code azure-eastus}.
+     * <p>When {@code serviceName} is a canonical provider key or its standard
+     * display label (such as {@code "Google Gemini"} for {@code "googleGemini"}),
+     * returns the canonical provider {@link SecretId} so stored keys and standard
+     * environment variables ({@code OPENAI_API_KEY}, {@code GOOGLE_API_KEY}, etc.)
+     * remain shared between Studio and Agent Hub.
+     *
+     * @param serviceName service connection name such as {@code Google Gemini} or {@code azure-eastus}.
      * @param provider canonical provider key such as {@code openai} or {@code azureOpenAI}.
      * @return the corresponding {@link SecretId}, if any.
      */
     public static Optional<SecretId> secretId(String serviceName, String provider) {
+        if (serviceName == null || serviceName.isBlank()) {
+            return Optional.empty();
+        }
+        String effProvider = (provider == null || provider.isBlank()) ? serviceName.trim() : provider.trim();
+        String canonicalName = LlmConfig.serviceKeyForLabel(serviceName);
+        String canonicalProvider = LlmConfig.serviceKeyForLabel(effProvider);
+        String resolvedProvider = canonicalProvider.isEmpty() ? effProvider : canonicalProvider;
+        if (!canonicalName.isEmpty() && canonicalName.equalsIgnoreCase(resolvedProvider)) {
+            return SharedSecrets.llmSecretId(canonicalName, canonicalName);
+        }
         return SharedSecrets.llmSecretId(serviceName, provider);
     }
 
@@ -102,7 +121,27 @@ public final class LlmServices {
      * @return the corresponding {@link SecretId}, if any.
      */
     public static Optional<SecretId> secretId(String serviceKey) {
-        return SharedSecrets.llmSecretId(serviceKey);
+        return secretId(serviceKey, serviceKey);
+    }
+
+    /**
+     * Deletes any stored API key for the given service connection.
+     *
+     * @param secrets credential store (may be null).
+     * @param serviceName service connection name.
+     * @param provider canonical provider key.
+     */
+    static void deleteSecret(SecretStore secrets, String serviceName, String provider) {
+        if (secrets == null) {
+            return;
+        }
+        secretId(serviceName, provider).ifPresent(id -> {
+            try {
+                secrets.remove(id);
+            } catch (RuntimeException ex) {
+                logger.debug("Could not delete LLM secret for '{}': {}", serviceName, ex.getMessage());
+            }
+        });
     }
 
     /**
@@ -164,9 +203,45 @@ public final class LlmServices {
     }
 
     /**
+     * Returns the default Studio {@link LlmConfig} with human-readable service
+     * names matching {@code conf/llm.json}.
+     *
+     * @return the default configuration with empty model lists.
+     */
+    static LlmConfig defaultConfig() {
+        return new LlmConfig(
+                "OpenAI",
+                "",
+                List.of(
+                        new LlmConfig.ServiceEntry("OpenAI", "openai", "https://api.openai.com/v1", null, null, List.of()),
+                        new LlmConfig.ServiceEntry("Azure OpenAI", "azureOpenAI", "", null, null, List.of()),
+                        new LlmConfig.ServiceEntry("Anthropic", "anthropic", "https://api.anthropic.com", null, null, List.of()),
+                        new LlmConfig.ServiceEntry("Google Gemini", "googleGemini", "https://generativelanguage.googleapis.com", null, null, List.of()),
+                        new LlmConfig.ServiceEntry("Google Enterprise", "googleEnterprise", "", "", "", List.of()),
+                        new LlmConfig.ServiceEntry("SMILE", "chatCompletions", "http://localhost:8888/v1", null, null, List.of())
+                )
+        );
+    }
+
+    private static String displayNameForProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return "";
+        }
+        return switch (provider.trim()) {
+            case "openai" -> "OpenAI";
+            case "azureOpenAI" -> "Azure OpenAI";
+            case "anthropic" -> "Anthropic";
+            case "googleGemini" -> "Google Gemini";
+            case "googleEnterprise" -> "Google Enterprise";
+            case "chatCompletions" -> "SMILE";
+            default -> LlmConfig.labelForServiceKey(provider);
+        };
+    }
+
+    /**
      * Loads the shared {@link LlmConfig} from {@code ${smile.home}/conf/llm.json}
-     * (or migrates from {@link Preferences} if the file does not exist or {@code prefs}
-     * holds non-empty settings).
+     * (or migrates from {@link Preferences} if the file does not exist or has no
+     * configured models yet, preserving service names from {@code llm.json}).
      *
      * @param prefs application preferences (may be null).
      * @return the effective {@link LlmConfig}.
@@ -174,38 +249,150 @@ public final class LlmServices {
     public static LlmConfig loadOrMigrateConfig(Preferences prefs) {
         Path configPath = LlmConfig.resolvePath();
         Optional<LlmConfig> fromPrefs = LlmConfig.fromPreferences(prefs);
+        boolean isCustomPrefs = prefs != null && SmileStudio.preferences() != prefs;
         if (Files.isRegularFile(configPath)) {
             LlmConfig fileConfig = LlmConfig.load(configPath);
-            // If preferences has explicit settings (e.g. in unit tests or right after a SettingsDialog save),
-            // honor preferences when fileConfig has no models or preferences was updated.
-            if (fromPrefs.isPresent() && !hasAnyModels(fileConfig) && hasAnyModels(fromPrefs.get())) {
-                fromPrefs.get().save(configPath);
-                return fromPrefs.get();
+            if (isCustomPrefs) {
+                return fromPrefs.orElse(fileConfig);
             }
-            if (fromPrefs.isPresent()) {
-                // Keep Preferences and llm.json synchronized when Preferences is explicitly passed
-                return mergePrefsIfExplicit(fileConfig, fromPrefs.get(), prefs);
+            if (fromPrefs.isPresent() && !hasAnyModels(fileConfig) && hasAnyModels(fromPrefs.get())) {
+                LlmConfig merged = mergePreferencesIntoConfig(fileConfig, fromPrefs.get(), prefs);
+                merged.save(configPath);
+                return merged;
             }
             return fileConfig;
         }
         if (fromPrefs.isPresent()) {
-            LlmConfig migrated = fromPrefs.get();
+            LlmConfig migrated = isCustomPrefs
+                    ? fromPrefs.get()
+                    : mergePreferencesIntoConfig(defaultConfig(), fromPrefs.get(), prefs);
             migrated.save(configPath);
             return migrated;
         }
-        return LlmConfig.empty();
+        return defaultConfig();
+    }
+
+    /**
+     * Merges {@link Preferences}-backed settings into {@code baseConfig} while
+     * preserving the human-readable service connection names and ordering from
+     * {@code baseConfig} (e.g., {@code "Google Gemini"}, {@code "SMILE"}) rather
+     * than replacing them with internal provider keys ({@code "googleGemini"},
+     * {@code "chatCompletions"}).
+     */
+    static LlmConfig mergePreferencesIntoConfig(
+            LlmConfig baseConfig,
+            LlmConfig prefsConfig,
+            Preferences prefs
+    ) {
+        LlmConfig template = (baseConfig == null || baseConfig.services().isEmpty())
+                ? defaultConfig()
+                : baseConfig;
+        if (prefsConfig == null) {
+            return template;
+        }
+
+        List<LlmConfig.ServiceEntry> mergedServices = new ArrayList<>(template.services().size());
+        Set<String> consumedProviders = new HashSet<>();
+
+        for (LlmConfig.ServiceEntry baseSvc : template.services()) {
+            String provider = baseSvc.provider().isEmpty() ? baseSvc.name() : baseSvc.provider();
+            String providerKey = provider.toLowerCase(Locale.ROOT);
+            Optional<LlmConfig.ServiceEntry> prefOpt = consumedProviders.add(providerKey)
+                    ? prefsConfig.findService(provider)
+                    : Optional.empty();
+            if (prefOpt.isEmpty()) {
+                mergedServices.add(baseSvc);
+                continue;
+            }
+            LlmConfig.ServiceEntry prefSvc = prefOpt.get();
+            List<String> models = !prefSvc.models().isEmpty() ? prefSvc.models() : baseSvc.models();
+            if ("googleEnterprise".equals(provider)) {
+                String project = !prefSvc.project().isEmpty() ? prefSvc.project() : baseSvc.project();
+                String location = !prefSvc.location().isEmpty() ? prefSvc.location() : baseSvc.location();
+                mergedServices.add(new LlmConfig.ServiceEntry(
+                        baseSvc.name(), provider, "", project, location, models));
+            } else {
+                String explicitBaseUrl = prefs != null ? prefs.get(provider + "BaseUrl", "").trim() : "";
+                String baseUrl = !explicitBaseUrl.isEmpty()
+                        ? explicitBaseUrl
+                        : (!baseSvc.baseUrl().isEmpty() ? baseSvc.baseUrl() : prefSvc.baseUrl());
+                mergedServices.add(new LlmConfig.ServiceEntry(
+                        baseSvc.name(), provider, baseUrl, null, null, models));
+            }
+        }
+
+        for (LlmConfig.ServiceEntry prefSvc : prefsConfig.services()) {
+            String provider = prefSvc.provider().isEmpty() ? prefSvc.name() : prefSvc.provider();
+            String providerKey = provider.toLowerCase(Locale.ROOT);
+            if (!consumedProviders.contains(providerKey)
+                    && (!prefSvc.models().isEmpty()
+                            || !prefSvc.project().isEmpty()
+                            || !prefSvc.location().isEmpty())) {
+                String name = displayNameForProvider(provider);
+                mergedServices.add(new LlmConfig.ServiceEntry(
+                        name.isEmpty() ? prefSvc.name() : name,
+                        provider,
+                        prefSvc.baseUrl(),
+                        prefSvc.project(),
+                        prefSvc.location(),
+                        prefSvc.models()));
+                consumedProviders.add(providerKey);
+            }
+        }
+
+        String defaultService = resolveMergedServiceName(mergedServices, prefsConfig.defaultService())
+                .or(() -> resolveMergedServiceName(mergedServices, template.defaultService()))
+                .orElseGet(() -> mergedServices.isEmpty() ? "OpenAI" : mergedServices.getFirst().name());
+        String defaultModel = resolveMergedDefaultModel(
+                mergedServices, prefsConfig.defaultModel(), template.defaultModel());
+
+        return new LlmConfig(defaultService, defaultModel, mergedServices);
+    }
+
+    private static Optional<String> resolveMergedServiceName(
+            List<LlmConfig.ServiceEntry> services,
+            String candidate
+    ) {
+        if (candidate == null || candidate.isBlank() || services.isEmpty()) {
+            return Optional.empty();
+        }
+        String trimmed = candidate.trim();
+        for (LlmConfig.ServiceEntry svc : services) {
+            if (svc.name().equalsIgnoreCase(trimmed)) {
+                return Optional.of(svc.name());
+            }
+        }
+        String canonical = LlmConfig.serviceKeyForLabel(trimmed);
+        String providerKey = canonical.isEmpty() ? trimmed : canonical;
+        for (LlmConfig.ServiceEntry svc : services) {
+            if (svc.provider().equalsIgnoreCase(providerKey)) {
+                return Optional.of(svc.name());
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static String resolveMergedDefaultModel(
+            List<LlmConfig.ServiceEntry> services,
+            String prefDefaultModel,
+            String baseDefaultModel
+    ) {
+        String model = (prefDefaultModel != null && !prefDefaultModel.isBlank())
+                ? prefDefaultModel.trim()
+                : (baseDefaultModel == null ? "" : baseDefaultModel.trim());
+        int sep = model.indexOf(':');
+        if (sep > 0) {
+            String prefix = model.substring(0, sep).trim();
+            Optional<String> resolved = resolveMergedServiceName(services, prefix);
+            if (resolved.isPresent()) {
+                return resolved.get() + ":" + model.substring(sep + 1).trim();
+            }
+        }
+        return model;
     }
 
     private static boolean hasAnyModels(LlmConfig cfg) {
         return cfg.services().stream().anyMatch(s -> !s.models().isEmpty());
-    }
-
-    private static LlmConfig mergePrefsIfExplicit(LlmConfig fileCfg, LlmConfig prefsCfg, Preferences prefs) {
-        if (prefs != null && SmileStudio.preferences() != prefs) {
-            // Custom test Preferences node: use prefsCfg directly
-            return prefsCfg;
-        }
-        return hasAnyModels(fileCfg) ? fileCfg : prefsCfg;
     }
 
     /**
