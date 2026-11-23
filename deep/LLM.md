@@ -2,7 +2,7 @@
 
 The `smile.llm` package provides the building blocks and complete inference
 stacks for decoder-only LLMs on top of the same FFM-backed LibTorch bridge used
-by `smile.deep`. It ships DeepSeek-V4.1, GLM-5.3-Flash, MiniMax-M3,
+by `smile.deep`. It ships DeepSeek-V4.1, GLM-5.3-Flash, MiniMax-M3.1,
 Inkling-2-Mini, Qwen3.8 (Gated DeltaNet + gated full attention) and LLaMA-3
 implementations, a tiktoken BPE tokenizer, a continuous-batching inference engine, KV-cache / radix prefix
 reuse, weight quantization, and tensor parallelism.
@@ -22,7 +22,7 @@ For ONNX-based generative models, see [ONNX_GENAI.md](ONNX_GENAI.md).
 6. [Transformer Primitives](#transformer-primitives)
 7. [DeepSeek-V4.1 (`smile.llm.model.deepseek`)](#deepseek-v41-smilellmmodeldeepseek)
 8. [GLM-5.3-Flash (`smile.llm.model.glm`)](#glm-53-flash-smilellmmodelglm)
-9. [MiniMax-M3 (`smile.llm.model.minimax`)](#minimax-m3-smilellmmodelminimax)
+9. [MiniMax-M3.1-Flash (`smile.llm.model.minimax`)](#minimax-m31-flash-smilellmmodelminimax)
 10. [Inkling-2-Mini (`smile.llm.model.inkling`)](#inkling-2-mini-smilellmmodelinkling)
 11. [Qwen3.8 (`smile.llm.model.qwen`)](#qwen38-smilellmmodelqwen)
 12. [LLaMA (`smile.llm.model.llama`)](#llama-smilellmmodelllama)
@@ -64,7 +64,7 @@ smile.llm
 │                  PositionalEncoding, RotaryPositionalEncoding
 ├── model/deepseek/ DeepSeek-V4.1: MoE, Engram memory, Marlin FP8 experts
 ├── model/glm/     GLM-5.3-Flash: KDA + sparse MLA, hyper-connections, MoE, MTP
-├── model/minimax/ MiniMax-M3 / M3.1-Flash: MoE, MSA, DSpark, vision tower
+├── model/minimax/ MiniMax-M3.1-Flash (and M3): MoE, MSA, DSpark, vision tower
 ├── model/inkling/ Inkling-2-Mini: looped MoE, relative-bias attention, DSpark, vision
 ├── model/qwen/    Qwen3.8 hybrid text stack + vision tower
 ├── model/llama/   LLaMA-3: Llama, LlamaModel, LlamaBlock,
@@ -325,18 +325,19 @@ CUDA-graph window and keeps the longest matching prefix.
 12/12 up to 115k tokens; a 524k-token prompt completes. Fidelity against an fp32 Hugging Face run is 98-99.8 % on short prompts and 99.5-99.7 % on long ones.
 `serve/README.md` section 2.2 has the tables and switches (`SMILE_GLM_GRAPH`, `SMILE_GLM_MTP`, `GLM_ATTEND_TC`, `GLM_X3_GEMM`, `-Dsmile.glm.prefix.cache.mb`).
 
-## MiniMax-M3 (`smile.llm.model.minimax`)
+## MiniMax-M3.1-Flash (`smile.llm.model.minimax`)
 
-MiniMax-M3 is a 428B-parameter (23B active) multimodal MoE language model. The text tower has GQA
-attention (64 query / 4 KV heads, Gemma-style RMSNorm, per-head QK norm, partial RoPE), 3 dense and
-57 sparse-MoE layers (128 routed experts, top-4, sigmoid routing with a selection bias, one shared
-expert, `swigluoai` activation), and **MiniMax Sparse Attention (MSA)** on the MoE layers: an index branch
-scores 128-token KV blocks (max of the raw `index_q . index_k` dot product, one index-key head shared by
-the 4 index-query heads) and attention runs only over each query's top-16 blocks plus its local block.
+`MiniMax` serves **MiniMax-M3.1-Flash** (`MiniMaxAI/MiniMax-M3.1-Flash`, 236 GB on disk), a multimodal MoE language model, on 8 x A100 40 GB; the same stack also
+runs the larger MiniMax-M3 checkpoints (BF16 and MXFP8, see Checkpoints). The text tower has 60 layers of GQA attention (hidden 6144, 64 query / 4 KV heads of 128,
+Gemma-style RMSNorm, per-head QK norm, partial RoPE, output gate), a sigmoid-routed MoE (128 routed experts, top-4, a selection bias, one shared expert,
+`swigluoai` activation) and **MiniMax Sparse Attention (MSA)**: an index branch scores 128-token KV blocks (max of the raw `index_q . index_k` dot product, one
+index-key head shared by the 4 index-query heads) and attention runs only over each query's top-16 blocks plus its local block. Flash applies MSA in every layer
+(MiniMax-M3 skips the three dense-FFN layers). The routed experts are NVFP4 and everything else is MXFP8; a 2.3 GB DSpark draft ships with the checkpoint, and a
+~1.7 GB vision tower handles images and video.
 
 ```java
-MiniMax model = MiniMax.build("/models/MiniMax-M3-MXFP8", /*maxBatch*/ 8, /*maxSeqLen*/ 32768,
-        new byte[]{0, 1, 2, 3, 4, 5, 6, 7}, /*memFractionStatic*/ 0.85, /*pageSize*/ 16);
+MiniMax model = MiniMax.build("/models/MiniMax-M3.1-Flash", /*maxBatch*/ 8, /*maxSeqLen*/ 32768,
+        new byte[]{0, 1, 2, 3, 4, 5, 6, 7}, /*memFractionStatic*/ 0.88, /*pageSize*/ 16);
 ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 ```
 
@@ -350,17 +351,12 @@ ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 | `MiniMaxShard` | Expert-parallel slice: rank, size, device |
 | `MiniMaxTokenizer`, `MiniMaxWeightNames` | Byte-level BPE (all added tokens atomic, as in the reference); HF tensor name mapping |
 
-**Checkpoints.** BF16 (`MiniMaxAI/MiniMax-M3`) and MXFP8 (`MiniMaxAI/MiniMax-M3-MXFP8`, FP8 E4M3 weights with an
-E8M0 scale per 32 elements). The text loader skips the vision tensors (loaded separately, see below) and the published
-checkpoint has no MTP weights; audio input is rejected (images and video are supported, see below).
-
-**MiniMax-M3.1-Flash** (`MiniMaxAI/MiniMax-M3.1-Flash`, ~250 GB) keeps MXFP8 for attention and the dense/shared FFNs but stores the
+**Checkpoints.** MiniMax-M3.1-Flash keeps MXFP8 for attention and the dense/shared FFNs but stores the
 routed experts as NVFP4 (`moe_quant_algo: NVFP4`, compressed-tensors `weight_packed` / `weight_scale` (E4M3 per 16) /
 `weight_global_scale`). The experts stay FP4-resident and run through the vendored vLLM Marlin MoE kernel (`kFE2M1f` with
 E4M3 group-16 scales and a per-expert float32 global scale, `smile_marlin_moe_nvfp4_gemm`; scales repacked like vLLM's
 `prepare_nvfp4_moe_layer_for_marlin`). `SMILE_MINIMAX_MXFP8=dequant` expands them to bfloat16 instead (reference path). Checked on a
-4-layer slice against that dense path: mean |logprob delta| 0.003 on 71/3000/6600-token prompts. Flash enables sparse
-attention in every layer (also the three dense-FFN ones). Not run on Hopper/Blackwell natively.
+4-layer slice against that dense path: mean |logprob delta| 0.003 on 71/3000/6600-token prompts. Not run on Hopper/Blackwell natively.
 Expert parallelism replicates everything that is not an expert (16 GB per GPU for Flash), which does not fit 8x40 GB next to
 29 GB of experts, so NVFP4 checkpoints default to **tensor-parallel non-expert weights** (`SMILE_MINIMAX_TP=on|off|auto`,
 single process only): query heads split across ranks (one KV head serves two ranks when there are 4 KV heads on 8 ranks, as in
@@ -371,7 +367,11 @@ rank 0 to carry the 1.7 GB vision tower). Checked against vLLM (image `vllm/vllm
 mean |logprob delta| 0.004, growing smoothly with depth to 0.65-0.85 at 60 layers on random-word prompts, which equals the gap between two
 of our own runs that differ only by a few ULPs (fused vs unfused QKV: 0.59-0.86), i.e. the model's noise floor; chat prompts answer correctly.
 
-**DSpark speculative decoding (Flash).** The checkpoint ships a 2.3 GB `dspark/` draft (5 dense decoder layers, hidden 6144, sliding
+**Other checkpoints.** MiniMax-M3 in BF16 (`MiniMaxAI/MiniMax-M3`, a 428B-parameter model with 23B active, 3 dense and 57 MoE layers, MSA only on the MoE layers) and MXFP8 (`MiniMaxAI/MiniMax-M3-MXFP8`, FP8 E4M3 weights with an
+E8M0 scale per 32 elements). The text loader skips the vision tensors (loaded separately, see below) and the published
+checkpoint has no MTP weights; audio input is rejected (images and video are supported, see below).
+
+**DSpark speculative decoding.** The checkpoint ships a 2.3 GB `dspark/` draft (5 dense decoder layers, hidden 6144, sliding
 window 4096, block of 7 tokens) that replaces the EAGLE-style MTP head. `MiniMax.build` loads it on rank 0's device next to the
 target (`MiniMax.build(..., loadDraft)` / `smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` skip it; it needs bf16 CUDA and costs ~3 GB on GPU 0, so with the vision tower use
 `SMILE_MINIMAX_VISION=0` or `mem-fraction-static` around 0.92). How it works (`MiniMaxDspark`, `MiniMaxDsparkArgs`):
@@ -431,10 +431,11 @@ Not done: audio, log-probabilities, tools together with media in one request.
 **Expert parallelism.** Each rank holds a contiguous slice of every layer's routed experts (allocated directly on its
 device); attention, dense FFNs, the router and the shared expert are replicated. Every rank routes all tokens, computes
 the tokens assigned to its own experts, and the partial outputs are summed with an all-reduce. In `smile-serve` the
-device list comes from `smile.chat.devices` (the number of ranks is its length). The full MXFP8 model is ~440 GB, so it
-does not fit one 8 x 40 GB node; the GPU test checkpoints are truncated to the first 4 / 16 layers.
+device list comes from `smile.chat.devices` (the number of ranks is its length). Flash fits 8 x 40 GB only with the tensor-parallel
+non-expert weights described above; the full MiniMax-M3 MXFP8 model (~440 GB) does not fit one 8 x 40 GB node. The GPU test checkpoints are truncated to the
+first 4 / 16 layers.
 
-**MXFP8 weight modes** (`MiniMaxWeightMode`; `smile.chat.quantization` or `SMILE_MINIMAX_MXFP8` =
+**MXFP8 weight modes** (attention and dense FFNs of Flash, all weights of MiniMax-M3 MXFP8; `MiniMaxWeightMode`; `smile.chat.quantization` or `SMILE_MINIMAX_MXFP8` =
 `auto|marlin|fp8|fp8emu|dequant`):
 
 | Mode | Weights on device | GEMM | Hardware |
@@ -480,8 +481,8 @@ that path. Measured (4 layers, 1 GPU, A100): decode at context 6000 / batch 8 6.
 
 **Limits.** The three dense layers still use masked SDPA for prefill; the block scorer uses CUDA cores (no tensor
 cores) and every query token re-reads its selected K/V blocks, so very long prefills are compute-bound; non-Marlin
-weight modes route on the host (no CUDA graphs); no speculative decoding, log-probabilities, tensor-parallel attention
-or multi-node execution.
+weight modes route on the host (no CUDA graphs); no log-probabilities or multi-node execution (DSpark and the tensor-parallel
+non-expert weights of the Flash path are covered above).
 Opt-in tests that need a checkpoint or GPUs read `MINIMAX_*` environment variables (see the test javadoc).
 
 ---
@@ -894,7 +895,7 @@ int[] prompt = model.encodeChat(dialog, options);
 |---|---|
 | `ChatTemplate` | Interface for model-specific prompt formatting |
 | `Qwen3ChatTemplate` | Qwen3.8 / Qwen3.5 chat template, byte-exact port of `chat_template.jinja` (thinking, reasoning effort, tools, tool results, history) |
-| `MiniMaxChatTemplate` | MiniMax-M3 chat template (thinking modes, tools, tool results) |
+| `MiniMaxChatTemplate` | MiniMax-M3.1 / M3 chat template (thinking modes, tools, tool results) |
 | `DeepSeekChatTemplate` | DeepSeek-V4.1 chat template |
 | `ToolCallParser` | Interface for parsing tool calls from generated text |
 | `JsonToolCallParser` / `Qwen3XmlToolCallParser` / `MiniMaxToolCallParser` | Concrete parsers |

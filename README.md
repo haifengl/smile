@@ -83,7 +83,7 @@ See [studio/README.md](studio/README.md) and [studio/BOT.md](studio/BOT.md) to g
 
 | Area | Highlights |
 |---|---|
-| **LLM** | DeepSeek-V4.1, MiniMax-M3 / M3.1-Flash, Qwen3.5 / 3.8, and LLaMA-3 inference (multimodal vision/video, FP8/NVFP4/MXFP4/Marlin quantization, Engram memory, Radix KV cache, MTP & DSpark speculative decoding, tensor/expert parallelism), tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
+| **LLM** | DeepSeek-V4.1, MiniMax-M3.1-Flash / M3, Qwen3.8 / 3.5, and LLaMA-3 inference (multimodal vision/video, FP8/NVFP4/MXFP4/Marlin quantization, Engram memory, Radix KV cache, MTP & DSpark speculative decoding, tensor/expert parallelism), tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
 | **Deep Learning** | LibTorch/GPU backend, ONNX Runtime & GenAI, EfficientNet-V2 image classification, custom layer API |
 | **Classification** | SVM, Decision Trees, Random Forest, AdaBoost, Gradient Boosting, Logistic Regression, Neural Networks, RBF Networks, MaxEnt, KNN, Naïve Bayes, LDA/QDA/RDA |
 | **Regression** | SVR, Gaussian Process, Regression Trees, GBDT, Random Forest, RBF, OLS, LASSO, ElasticNet, Ridge |
@@ -156,12 +156,12 @@ the module overview, or drill into individual topic guides.
 | [VECTOR_QUANTIZATION.md](core/VECTOR_QUANTIZATION.md) | LVQ, Neural Gas, SOM as vector quantizers |
 
 ### `deep/` — Deep Learning & LLMs
-> LibTorch-backed GPU/CPU tensor operations, neural network layers, MiniMax-M3, Qwen3.x, and LLaMA-3 inference, EfficientNet, ONNX Runtime & GenAI
+> LibTorch-backed GPU/CPU tensor operations, neural network layers, MiniMax-M3.1, Qwen3.x, and LLaMA-3 inference, EfficientNet, ONNX Runtime & GenAI
 
 | Document | Topics |
 |---|---|
 | [README](deep/README.md) | Core deep-learning guide (tensors, layers, loss, optimizer, model, metrics, data loading) |
-| [LLM.md](deep/LLM.md) | `smile.llm` — tokenizer, MiniMax-M3, Qwen3.x, LLaMA-3, inference engine, KV cache, quantization, tensor/expert parallelism |
+| [LLM.md](deep/LLM.md) | `smile.llm` — tokenizer, MiniMax-M3.1, Qwen3.x, LLaMA-3, inference engine, KV cache, quantization, tensor/expert parallelism |
 | [VISION.md](deep/VISION.md) | `smile.vision` — transforms, `ImageDataset`, EfficientNet-V2, ImageNet labels |
 | [ONNX.md](deep/ONNX.md) | ONNX Runtime inference (`smile.onnx`) — sessions, tensors, execution providers |
 | [ONNX_GENAI.md](deep/ONNX_GENAI.md) | ONNX Runtime GenAI (`smile.onnx.genai`) — generate loop, chat model, multimodal |
@@ -181,7 +181,7 @@ The `deep/LLM.md` covers:
 - **`smile.llm.tokenizer`** — `Tokenizer` interface, `Tiktoken` BPE implementation (LLaMA-3 compatible)
 - **`smile.llm.model.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming
 - **`smile.llm.model.qwen`** — Qwen3.x hybrid stack (Gated DeltaNet + gated attention), block-FP8 on Marlin, MTP, vision tower
-- **`smile.llm.model.minimax`** — MiniMax-M3 / M3.1-Flash stack (Multi-head Sparse Attention, MoE expert parallelism, DSpark speculative decoding, vision/video encoder)
+- **`smile.llm.model.minimax`** — MiniMax-M3.1-Flash / M3 stack (Multi-head Sparse Attention, MoE expert parallelism, DSpark speculative decoding, vision/video encoder)
 - **`smile.llm.engine`** — Continuous-batching `InferenceEngine`, `GenerationRequest`/`GenerationHandle`, speculative decoding
 - **`smile.llm.cache`** — Paged `KvCachePool`, `RadixCache` prefix reuse
 - **`smile.llm.quant`** / **`smile.llm.parallel`** — FP8/NVFP4/MXFP8/Marlin quantization, tensor & expert parallelism, multi-node NCCL
