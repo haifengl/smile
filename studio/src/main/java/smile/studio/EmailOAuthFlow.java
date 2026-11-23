@@ -66,6 +66,19 @@ public final class EmailOAuthFlow {
     }
 
     /**
+     * Runs the one-click {@code "Login with Google"} flow with an optional
+     * {@code login_hint} email address and returns the discovered user profile and tokens.
+     *
+     * @param loginHintEmail optional email address hint (may be null or empty).
+     * @param timeout max wait duration for the user to complete sign-in in the browser.
+     * @return the acquired {@link OAuthFlow.OAuthLoginResult}.
+     * @throws Exception if authorization is denied, times out, or token exchange fails.
+     */
+    public static OAuthFlow.OAuthLoginResult loginWithGoogle(String loginHintEmail, Duration timeout) throws Exception {
+        return OAuthFlow.loginWithGoogle(loginHintEmail, timeout);
+    }
+
+    /**
      * Runs the one-click {@code "Login with Microsoft"} flow and returns the discovered
      * user profile and tokens.
      *
@@ -75,6 +88,19 @@ public final class EmailOAuthFlow {
      */
     public static OAuthFlow.OAuthLoginResult loginWithMicrosoft(Duration timeout) throws Exception {
         return OAuthFlow.loginWithMicrosoft(timeout);
+    }
+
+    /**
+     * Runs the one-click {@code "Login with Microsoft"} flow with an optional
+     * {@code login_hint} email address and returns the discovered user profile and tokens.
+     *
+     * @param loginHintEmail optional email address hint (may be null or empty).
+     * @param timeout max wait duration for the user to complete sign-in in the browser.
+     * @return the acquired {@link OAuthFlow.OAuthLoginResult}.
+     * @throws Exception if authorization is denied, times out, or token exchange fails.
+     */
+    public static OAuthFlow.OAuthLoginResult loginWithMicrosoft(String loginHintEmail, Duration timeout) throws Exception {
+        return OAuthFlow.loginWithMicrosoft(loginHintEmail, timeout);
     }
 
     /**

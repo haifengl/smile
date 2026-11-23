@@ -1118,8 +1118,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        emailLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
-        emailLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
+        emailLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL, false));
+        emailLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH, false));
         emailTestButton.addActionListener(e -> testCurrentEmailConnection());
         actionRow.add(emailLoginGoogleButton);
         actionRow.add(emailLoginMicrosoftButton);
@@ -1205,8 +1205,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 String target = (selectId != null && !selectId.isBlank())
                         ? selectId
                         : emailConfig.accounts().getFirst().emailAddress();
-                emailAccountCombo.setSelectedItem(target);
-                loadEmailAccountForm(target);
+                String resolved = emailConfig.findAccount(target)
+                        .map(EmailConfig.AccountSpec::emailAddress)
+                        .orElseGet(() -> emailConfig.accounts().getFirst().emailAddress());
+                emailAccountCombo.setSelectedItem(resolved);
+                loadEmailAccountForm(resolved);
             } else {
                 currentEmailAccountId = "";
                 clearEmailAccountForm();
@@ -1228,7 +1231,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailSmtpHostField.setText("smtp.gmail.com");
         emailSmtpPortSpinner.setValue(465);
         emailStartTlsCheck.setSelected(false);
-        emailDefaultCheck.setSelected(true);
+        emailDefaultCheck.setSelected(emailConfig.accounts().isEmpty());
         emailEnabledCheck.setSelected(true);
         emailSecretField.setText("");
         emailSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.emailSecretId("default")));
@@ -1370,20 +1373,100 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarLoginMicrosoftButton.setEnabled(enabled);
     }
 
-    private void launchOneClickOAuthLogin(EmailConfig.Provider provider) {
-        commitCurrentEmailAccountForm();
-        commitCurrentCalendarAccountForm();
+    /**
+     * Resolves an optional {@code login_hint} email address for one-click OAuth sign-in.
+     *
+     * <p>Only hints an email address explicitly typed for a new account or an existing
+     * account that has no stored token yet. When viewing an already-authenticated account,
+     * returns {@code null} so the browser account picker lets the user add another account.
+     */
+    static String resolveOAuthLoginHint(
+            String currentAccountId,
+            String typedAccountId,
+            String currentSecret,
+            boolean alreadyConfigured
+    ) {
+        String typed = typedAccountId == null ? "" : typedAccountId.trim();
+        String current = currentAccountId == null ? "" : currentAccountId.trim();
+        String secret = currentSecret == null ? "" : currentSecret.trim();
+        if (current.isEmpty()) {
+            return (typed.contains("@") && !alreadyConfigured) ? typed : null;
+        }
+        if (secret.isEmpty() && current.contains("@")) {
+            return current;
+        }
+        return null;
+    }
+
+    private void launchOneClickOAuthLogin(EmailConfig.Provider provider, boolean fromCalendarTab) {
+        // Commit edits to existing committed accounts, but do not prematurely persist an
+        // unauthenticated "+ Add" draft into emailConfig/calendarConfig before OAuth completes.
+        if (!currentEmailAccountId.isEmpty()) {
+            commitCurrentEmailAccountForm();
+        }
+        if (!currentCalendarAccountId.isEmpty()) {
+            commitCurrentCalendarAccountForm();
+        }
+
+        boolean isNewEmailDraft = !fromCalendarTab && currentEmailAccountId.isEmpty();
+        String typedEmail = emailAddressField.getText().trim();
+        String draftSenderName = isNewEmailDraft ? emailSenderNameField.getText().trim() : "";
+        String draftDescription = isNewEmailDraft ? emailDescriptionField.getText().trim() : "";
+        boolean draftDefault = isNewEmailDraft && emailDefaultCheck.isSelected();
+
+        String loginHint;
+        if (fromCalendarTab) {
+            String typedCalId = calendarAccountIdField.getText().trim();
+            String calSecret = new String(calendarSecretField.getPassword()).strip();
+            if (calSecret.isEmpty() && !currentCalendarAccountId.isEmpty() && calendarUseEmailCheck.isSelected()) {
+                calSecret = pendingEmailSecrets.getOrDefault(currentCalendarAccountId, "").strip();
+            }
+            loginHint = resolveOAuthLoginHint(
+                    currentCalendarAccountId,
+                    typedCalId,
+                    calSecret,
+                    calendarConfig.findAccount(typedCalId).isPresent()
+            );
+        } else {
+            String emailSecret = new String(emailSecretField.getPassword()).strip();
+            loginHint = resolveOAuthLoginHint(
+                    currentEmailAccountId,
+                    typedEmail,
+                    emailSecret,
+                    emailConfig.findAccount(typedEmail).isPresent()
+            );
+        }
+
         setOAuthLoginButtonsEnabled(false);
         Thread.ofVirtual().name("studio-oneclick-oauth").start(() -> {
             try {
                 OAuthFlow.OAuthLoginResult login = provider == EmailConfig.Provider.GMAIL
-                        ? EmailOAuthFlow.loginWithGoogle(Duration.ofMinutes(3))
-                        : EmailOAuthFlow.loginWithMicrosoft(Duration.ofMinutes(3));
+                        ? EmailOAuthFlow.loginWithGoogle(loginHint, Duration.ofMinutes(3))
+                        : EmailOAuthFlow.loginWithMicrosoft(loginHint, Duration.ofMinutes(3));
                 SwingUtilities.invokeLater(() -> {
                     OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
                             login, emailConfig, calendarConfig, secrets);
-                    emailConfig = provisioned.emailConfig();
+                    EmailConfig nextEmailConfig = provisioned.emailConfig();
+                    if (isNewEmailDraft && (typedEmail.isEmpty() || typedEmail.equalsIgnoreCase(login.emailAddress()))) {
+                        EmailConfig.AccountSpec spec = provisioned.emailAccount();
+                        String senderName = !draftSenderName.isEmpty() ? draftSenderName : spec.senderName();
+                        String description = !draftDescription.isEmpty() ? draftDescription : spec.description();
+                        if (!Objects.equals(senderName, spec.senderName())
+                                || !Objects.equals(description, spec.description())) {
+                            EmailConfig.AccountSpec updatedSpec = new EmailConfig.AccountSpec(
+                                    spec.emailAddress(), senderName, description, spec.provider(),
+                                    spec.enabled(), spec.pollIntervalSeconds(), spec.folder(), spec.query(),
+                                    spec.clientId(), spec.tenantId(), spec.imapHost(), spec.imapPort(),
+                                    spec.imapSsl(), spec.smtpHost(), spec.smtpPort(), spec.smtpStartTls());
+                            nextEmailConfig = nextEmailConfig.withUpsertedAccount(updatedSpec);
+                        }
+                        if (draftDefault) {
+                            nextEmailConfig = new EmailConfig(spec.emailAddress(), nextEmailConfig.accounts());
+                        }
+                    }
+                    emailConfig = nextEmailConfig;
                     calendarConfig = provisioned.calendarConfig();
+                    pendingEmailSecrets.keySet().removeIf(k -> k.equalsIgnoreCase(login.emailAddress()));
                     pendingEmailSecrets.put(login.emailAddress(), login.refreshToken());
                     refreshEmailAccountCombo(login.emailAddress());
                     refreshCalendarAccountCombo(login.emailAddress());
@@ -1533,8 +1616,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        calendarLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
-        calendarLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
+        calendarLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL, true));
+        calendarLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH, true));
         calendarTestButton.addActionListener(e -> testCurrentCalendarConnection());
         actionRow.add(calendarLoginGoogleButton);
         actionRow.add(calendarLoginMicrosoftButton);
@@ -1567,8 +1650,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 String target = (selectId != null && !selectId.isBlank())
                         ? selectId
                         : calendarConfig.accounts().getFirst().accountId();
-                calendarAccountCombo.setSelectedItem(target);
-                loadCalendarAccountForm(target);
+                String resolved = calendarConfig.findAccount(target)
+                        .map(CalendarConfig.AccountSpec::accountId)
+                        .orElseGet(() -> calendarConfig.accounts().getFirst().accountId());
+                calendarAccountCombo.setSelectedItem(resolved);
+                loadCalendarAccountForm(resolved);
             } else {
                 currentCalendarAccountId = "";
                 clearCalendarAccountForm();
@@ -1585,7 +1671,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarDescriptionField.setText("");
         calendarPollSpinner.setValue(300);
         calendarUseEmailCheck.setSelected(true);
-        calendarDefaultCheck.setSelected(true);
+        calendarDefaultCheck.setSelected(calendarConfig.accounts().isEmpty());
         calendarEnabledCheck.setSelected(true);
         calendarSecretField.setText("");
         calendarSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.calendarSecretId("default")));

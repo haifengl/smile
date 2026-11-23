@@ -118,6 +118,8 @@ class EmailOAuthAndSettingsTest {
                     assertEquals("code", params.get("response_type"));
                     assertEquals("test-google-client-id", params.get("client_id"));
                     assertEquals("S256", params.get("code_challenge_method"));
+                    assertEquals("offline", params.get("access_type"));
+                    assertEquals("select_account consent", params.get("prompt"));
                     assertNotNull(params.get("code_challenge"));
                     String redirectUri = params.get("redirect_uri");
                     String state = params.get("state");
@@ -159,6 +161,8 @@ class EmailOAuthAndSettingsTest {
                         providerBaseUrl + "/token",
                         authUri -> {
                             Map<String, String> params = parseQuery(authUri.getRawQuery());
+                            assertEquals("login", params.get("prompt"));
+                            assertEquals("user@outlook.com", params.get("login_hint"));
                             String redirectUri = params.get("redirect_uri");
                             Thread.ofVirtual().start(() -> {
                                 try {
@@ -291,6 +295,26 @@ class EmailOAuthAndSettingsTest {
                 assertFalse(rb.getString(key).isBlank(), "Missing or blank key " + key + " for locale " + locale);
             }
         }
+    }
+
+    @Test
+    void givenEmailFormState_whenResolveOAuthLoginHint_thenHintsOnlyNewOrUnauthenticatedAccount() {
+        // Given/When/Then: new "+ Add" draft with typed email hints that new email
+        assertEquals(
+                "smile.sales@outlook.com",
+                SettingsDialog.resolveOAuthLoginHint("", "smile.sales@outlook.com", "", false));
+
+        // New "+ Add" draft with blank email or already-configured email sends no hint (forces clean picker)
+        assertNull(SettingsDialog.resolveOAuthLoginHint("", "", "", false));
+        assertNull(SettingsDialog.resolveOAuthLoginHint("", "haifengl@outlook.com", "", true));
+
+        // Already-authenticated account sends no hint so clicking Login adds a second account cleanly
+        assertNull(SettingsDialog.resolveOAuthLoginHint("haifengl@outlook.com", "haifengl@outlook.com", "M.refresh-1", true));
+
+        // Existing tokenless account hints that account so the user can finish authorizing it
+        assertEquals(
+                "smile.sales@outlook.com",
+                SettingsDialog.resolveOAuthLoginHint("smile.sales@outlook.com", "smile.sales@outlook.com", "", true));
     }
 
     private static Map<String, String> parseQuery(String rawQuery) {
