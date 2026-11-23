@@ -59,7 +59,19 @@ public class InklingOracleTest {
         }
         Device device = Device.CUDA(Byte.parseByte(System.getenv().getOrDefault("INKLING_DEVICE", "0")));
         long t0 = System.nanoTime();
-        InklingModel model = InklingModel.load(ckpt, args, device);
+        String tp = env("INKLING_TP");      // e.g. "0,1,2,3": run sharded over these devices
+        InklingRanks ranks = null;
+        InklingModel model = null;
+        if (tp != null) {
+            String[] ids = tp.split(",");
+            byte[] devs = new byte[ids.length];
+            for (int i = 0; i < devs.length; i++) {
+                devs[i] = Byte.parseByte(ids[i].trim());
+            }
+            ranks = InklingRanks.load(ckpt, args, devs);
+        } else {
+            model = InklingModel.load(ckpt, args, device);
+        }
         System.out.printf("loaded in %.1f s (%d layers, %d applications)%n", (System.nanoTime() - t0) / 1e9,
                 args.numLayers(), args.numApplications());
         JsonNode results = new ObjectMapper().readTree(new File(oracle)).get("results");
@@ -80,8 +92,10 @@ public class InklingOracleTest {
 
             // teacher-forced: one forward over prompt + generation
             List<Tensor> trace = new ArrayList<>();
-            try (InklingState st = model.newState(all.length + 16)) {
-                Tensor logits = model.forward(st, all, rows, d == 0 && env("INKLING_HIDDEN") != null ? trace::add : null);
+            InklingState[] sts = ranks != null ? ranks.newStates(all.length + 16) : new InklingState[]{model.newState(all.length + 16)};
+            try {
+                java.util.function.Consumer<Tensor> sink = d == 0 && env("INKLING_HIDDEN") != null ? trace::add : null;
+                Tensor logits = ranks != null ? ranks.forward(sts, all, rows, sink) : model.forward(sts[0], all, rows, sink);
                 Tensor lp = Ix.o("aten::log_softmax.int", logits, -1L, null).to(Device.CPU());
                 float[] flat = lp.floatArray();
                 int vocab = (int) lp.size(1);
@@ -109,6 +123,10 @@ public class InklingOracleTest {
                         r.get("name").asString(), prompt.length, gen.length, maxChosen, maxTop, top1Miss);
                 worstChosen = Math.max(worstChosen, maxChosen);
                 worstTop1Miss += top1Miss;
+            } finally {
+                for (InklingState st : sts) {
+                    st.close();
+                }
             }
 
             if (d == 0 && !trace.isEmpty()) {

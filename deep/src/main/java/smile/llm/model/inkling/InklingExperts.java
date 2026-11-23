@@ -56,10 +56,26 @@ final class InklingExperts {
     Tensor q13, s13, g13, q2, s2, g2;
     private static final boolean MARLIN = !"dequant".equals(System.getenv("INKLING_EXPERTS"));
 
+    private final InklingShard shard;
+    /** Experts held by this rank and the id of the first. */
+    private final int localExperts, expertStart;
+
     InklingExperts(InklingModelArgs args, int layer, Map<String, Tensor> t, Device device) {
+        this(args, layer, t, device, InklingShard.SINGLE);
+    }
+
+    /**
+     * @param t     the layer's tensors; with {@code shard.size() > 1} the expert-stacked ones hold only this rank's experts
+     *              (see {@link #rowSlices}).
+     * @param shard this rank's share: experts {@code [rank * n / size, (rank + 1) * n / size)}.
+     */
+    InklingExperts(InklingModelArgs args, int layer, Map<String, Tensor> t, Device device, InklingShard shard) {
         this.args = args;
         this.format = args.expertFormat(layer);
         this.device = device;
+        this.shard = shard;
+        this.localExperts = shard.part(args.numExperts());
+        this.expertStart = shard.start(args.numExperts());
         String p = "layers." + layer + ".mlp.experts.";
         this.w13 = keep(t.get(p + "w13_weight"));
         this.w13Scale = keep(t.get(p + "w13_weight_scale"));
@@ -118,6 +134,27 @@ final class InklingExperts {
         return Tensor.of(inv, inv.length).to(device);
     }
 
+    /** The expert-stacked tensors of a layer and the expert range this rank reads from each. */
+    static void rowSlices(InklingModelArgs args, int layer, InklingShard shard, Map<String, long[]> out) {
+        if (shard.size() == 1) {
+            return;
+        }
+        long[] range = {shard.start(args.numExperts()), shard.part(args.numExperts())};
+        String p = "layers." + layer + ".mlp.experts.";
+        for (String w : new String[]{"w13", "w2"}) {
+            out.put(p + w + "_weight", range);
+            out.put(p + w + "_weight_scale", range);
+            if (args.expertFormat(layer) == InklingModelArgs.ExpertFormat.NVFP4) {
+                out.put(p + w + "_weight_amax", range);
+            }
+        }
+    }
+
+    /** Experts held by this rank. */
+    int localExperts() {
+        return localExperts;
+    }
+
     static Iterable<String> names(InklingModelArgs args, int layer) {
         List<String> names = new ArrayList<>();
         String p = "layers." + layer + ".mlp.experts.";
@@ -165,7 +202,7 @@ final class InklingExperts {
         int block = 8;
         for (int candidate : new int[]{8, 16, 32, 48, 64}) {
             block = candidate;
-            if ((double) tokens * args.numExpertsPerTok() / args.numExperts() / candidate < 0.9) {
+            if ((double) tokens * args.numExpertsPerTok() / localExperts / candidate < 0.9) {
                 break;
             }
         }
@@ -195,11 +232,11 @@ final class InklingExperts {
         int tokens = (int) x.size(0);
         int block = blockSize(tokens);
         long numel = (long) tokens * topk;
-        long padded = (numel + (long) args.numExperts() * (block - 1) + block - 1) / block * block;
+        long padded = (numel + (long) localExperts * (block - 1) + block - 1) / block * block;
         long blocks = padded / block;
         Tensor align = Tensor.empty(new Tensor.Options().dtype(ScalarType.Int32).device(device), padded + blocks + 1);
         smile.torch.InklingNative.op(13, new long[]{smile.torch.InklingNative.dataPtr(idx), smile.torch.InklingNative.dataPtr(align)},
-                new long[]{numel, args.numExperts(), block, padded, blocks}, new double[0]);
+                new long[]{numel, localExperts, block, padded, blocks, expertStart}, new double[0]);
         boolean fp4 = format == InklingModelArgs.ExpertFormat.NVFP4;
         Tensor gateUp = fp4
                 ? smile.torch.Native.marlinMoeNvfp4Gemm(x, q13, s13, g13, align, w, block, topk, false)
@@ -229,7 +266,8 @@ final class InklingExperts {
         int topk = args.numExpertsPerTok();
         int tokens = (int) x.size(0);
         int block = blockSize(tokens);
-        Tensor align = smile.torch.Native.moeAlignBlockSize(indices, 0, args.numExperts(), block);
+        // only the ids of this rank's experts are kept; the others contribute nothing here (another rank adds them)
+        Tensor align = smile.torch.Native.moeAlignBlockSize(indices, expertStart, localExperts, block);
         Tensor w = contiguous(weights);
         boolean fp4 = format == InklingModelArgs.ExpertFormat.NVFP4;
         Tensor gateUp = fp4
@@ -260,7 +298,10 @@ final class InklingExperts {
         }
         Tensor y = zeros(device, ScalarType.Float, tokens, x.size(1));
         for (var e : byExpert.entrySet()) {
-            int expert = (int) (long) e.getKey();
+            int expert = (int) (long) e.getKey() - expertStart;
+            if (expert < 0 || expert >= localExperts) {
+                continue;               // another rank's expert
+            }
             List<int[]> rows = e.getValue();
             long[] sel = new long[rows.size()];
             float[] we = new float[rows.size()];

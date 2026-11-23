@@ -18,6 +18,7 @@ package smile.llm.model.inkling;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,16 +59,23 @@ final class InklingLayer {
     final Tensor router, routerBias;
     final Tensor[][] gates;        // [4][down bf16, forget f32, gain f32]; null outside the loop
 
+    private final InklingShard shard;
+
     InklingLayer(InklingModelArgs args, int index, Map<String, Tensor> t, Device device) {
+        this(args, index, t, device, InklingShard.SINGLE);
+    }
+
+    InklingLayer(InklingModelArgs args, int index, Map<String, Tensor> t, Device device, InklingShard shard) {
         this.args = args;
         this.index = index;
         this.device = device;
+        this.shard = shard;
         this.local = args.isLocal(index);
         this.looped = args.isLooped(index);
         this.blockBoundary = index % args.layersPerAttnResBlock() == 0;
         String p = "layers." + index + ".";
-        attention = new InklingAttention(args, index, t, device);
-        experts = new InklingExperts(args, index, t, device);
+        attention = new InklingAttention(args, index, t, device, shard);
+        experts = new InklingExperts(args, index, t, device, shard);
         attnQuery = index > 0 ? keep(f32(t.get("attn_res.attn_queries." + (index - 1)))) : null;
         mlpQuery = keep(f32(t.get("attn_res.mlp_queries." + index)));
         if (local) {
@@ -94,6 +102,14 @@ final class InklingLayer {
         } else {
             gates = null;
         }
+    }
+
+    /** The tensors of a layer that a rank reads only in part, with their first-dimension ranges. */
+    static Map<String, long[]> rowSlices(InklingModelArgs args, int index, InklingShard shard) {
+        Map<String, long[]> out = new HashMap<>();
+        InklingAttention.rowSlices(args, index, shard, out);
+        InklingExperts.rowSlices(args, index, shard, out);
+        return out;
     }
 
     /** Names of the checkpoint tensors a layer reads (experts included). */
@@ -265,10 +281,14 @@ final class InklingLayer {
         Tensor moe;
         if (experts.marlin()) {
             Tensor[] r = routeOnDevice(x);
-            moe = bf16(experts.forwardMarlin(x, r[0], r[1]));
+            Tensor sum = experts.forwardMarlin(x, r[0], r[1]);
+            shard.allReduce(sum);               // float32 partial sum over this rank's experts
+            moe = bf16(sum);
         } else {
             Object[] r = route(x);
-            moe = bf16(experts.forward(x, (long[]) r[0], (float[]) r[1]));
+            Tensor sum = experts.forward(x, (long[]) r[0], (float[]) r[1]);
+            shard.allReduce(sum);
+            moe = bf16(sum);
         }
         InklingDebug.tap("moe", app, moe);
         Tensor mlp = InklingConv.apply(moe, mlpConv, st.conv[app][InklingState.CONV_MLP]);

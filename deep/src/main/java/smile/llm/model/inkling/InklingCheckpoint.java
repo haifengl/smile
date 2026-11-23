@@ -72,17 +72,29 @@ final class InklingCheckpoint {
      * @return path to tensor.
      */
     Map<String, Tensor> read(Device device, Set<String> paths) throws IOException {
-        Map<String, Set<String>> byFile = new HashMap<>();
+        return read(device, paths, Map.of());
+    }
+
+    /**
+     * Reads tensors onto a device, some of them only as a range of rows.
+     *
+     * @param device the device.
+     * @param paths  SMILE paths.
+     * @param rows   SMILE path to {@code {firstRow, rowCount}} of the first dimension; paths not listed are read whole.
+     * @return path to tensor.
+     */
+    Map<String, Tensor> read(Device device, Set<String> paths, Map<String, long[]> rows) throws IOException {
+        Map<String, Map<String, long[]>> byFile = new HashMap<>();
         for (String p : paths) {
             String file = fileOf.get(hfName(p));
             if (file == null) {
                 throw new IOException("tensor not in the checkpoint: " + hfName(p));
             }
-            byFile.computeIfAbsent(file, f -> new java.util.HashSet<>()).add(hfName(p));
+            byFile.computeIfAbsent(file, f -> new HashMap<>()).put(hfName(p), rows.get(p));
         }
         Map<String, Tensor> out = new HashMap<>();
         for (var e : byFile.entrySet()) {
-            SafeTensors st = SafeTensors.read(dir.resolve(e.getKey()).toString(), device, e.getValue());
+            SafeTensors st = SafeTensors.readRows(dir.resolve(e.getKey()).toString(), device, e.getValue());
             for (var t : st.tensors().entrySet()) {
                 out.put(t.getKey().substring("model.llm.".length()), t.getValue());
             }

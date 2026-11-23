@@ -391,6 +391,15 @@ public class ChatService implements OpenAiModelContributor {
                         ? Math.min(config.speculativeTokens(), inkling.draftBlock()) : inkling.draftBlock();
                 logger.infof("DSpark speculative decoding enabled for Inkling (drafts=%d)", this.speculativeTokens);
             }
+        } else if (model instanceof smile.llm.model.inkling.InklingTp tp) {
+            // DSpark draft (replicated on every rank): requests are only flagged speculative when it and the verify graphs
+            // are loaded, because a flagged request without them would run one row at a time
+            this.speculative = config.speculative() && tp.hasDraft();
+            if (this.speculative) {
+                this.speculativeTokens = config.speculativeTokens() > 0
+                        ? Math.min(config.speculativeTokens(), tp.draftBlock()) : tp.draftBlock();
+                logger.infof("DSpark speculative decoding enabled for sharded Inkling (drafts=%d)", this.speculativeTokens);
+            }
         } else if (model instanceof smile.llm.model.glm.Glm glm) {
             // The MTP layer is loaded only with -Dsmile.glm.speculative=true (or SMILE_GLM_MTP=1): the first version verifies
             // eagerly and is slower than the plain CUDA-graph decode.
@@ -420,6 +429,7 @@ public class ChatService implements OpenAiModelContributor {
             int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
                     : model instanceof smile.llm.model.deepseek.DeepSeek ? Math.min(32, Math.max(1, config.maxBatchSize()))
                     : model instanceof smile.llm.model.inkling.Inkling ? Math.min(4, Math.max(1, config.maxBatchSize()))   // one A100: x1.5 (chat, code) / x1.14 (prose) for one request, x1.2 / x0.93 at 4; a cap below the batch size leaves a mixed cohort that is slower than either mode (141 vs 218 tok/s at 4 prose requests)
+                    : model instanceof smile.llm.model.inkling.InklingTp ? Math.min(8, Math.max(1, config.maxBatchSize()))   // verify + draft graphs are captured for up to 8 requests per round
                     : model instanceof smile.llm.model.glm.Glm ? Math.min(32, Math.max(1, config.maxBatchSize()))   // batched verify windows pay up to 32 (+1.25x at 8, 1.2x at 16, 1.07x at 32 aggregate)
                     : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
@@ -548,6 +558,7 @@ public class ChatService implements OpenAiModelContributor {
             case Llama llama -> llama.setPrefixReuseEnabled(enabled);
             case MiniMax minimax -> minimax.setPrefixReuseEnabled(enabled);
             case smile.llm.model.inkling.Inkling inkling -> inkling.setPrefixReuseEnabled(enabled);
+            case smile.llm.model.inkling.InklingTp tp -> tp.setPrefixReuseEnabled(enabled);
             case Qwen qwen -> {
                 qwen.setPrefixReplayEnabled(hybridPrefixReplay);
                 qwen.setPrefixReuseEnabled(enabled);
@@ -605,6 +616,10 @@ public class ChatService implements OpenAiModelContributor {
         }
         if (model instanceof smile.llm.model.inkling.Inkling) {
             logger.infof("Weight quant: Inkling-2 experts NVFP4 (layers 0-19) and MXFP8 (layers 20-23) on Marlin, attention bf16");
+            return;
+        }
+        if (model instanceof smile.llm.model.inkling.InklingTp) {
+            logger.infof("Weight quant: Inkling-2-Small experts NVFP4 (layers 0-39) and MXFP8 (layers 40-47) on Marlin, attention bf16");
             return;
         }
         try {
@@ -938,6 +953,21 @@ public class ChatService implements OpenAiModelContributor {
                         throw new jakarta.ws.rs.BadRequestException(e.getMessage(), e);
                     } catch (java.io.IOException e) {
                         // an unreadable, undecodable or missing image is the client's problem
+                        throw new jakarta.ws.rs.BadRequestException("cannot read media: " + e.getMessage(), e);
+                    }
+                    int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                    promptLen = mm.inputIds().length;
+                    genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                            mm, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener, chatOptions,
+                            speculative, speculativeTokens);
+                } else if (model instanceof smile.llm.model.inkling.InklingTp tp && tp.isMultimodal()) {
+                    smile.llm.model.inkling.InklingMultimodal mm;
+                    try {
+                        mm = tp.processMultimodal(messages, chatOptions);
+                    } catch (IllegalArgumentException e) {
+                        throw new jakarta.ws.rs.BadRequestException(e.getMessage(), e);
+                    } catch (java.io.IOException e) {
                         throw new jakarta.ws.rs.BadRequestException("cannot read media: " + e.getMessage(), e);
                     }
                     int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
@@ -1324,13 +1354,22 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     /**
-     * Loads Inkling-2-Mini on the first device of {@code smile.chat.devices}. The weights come in the checkpoint's own
-     * NVFP4/MXFP8 formats; {@code smile.chat.quantization} has no effect. Text only.
+     * Loads Inkling-2: Mini on the first device of {@code smile.chat.devices}, or sharded over all of them when several are
+     * given (Small needs 8 x 80 GB). The weights come in the checkpoint's own NVFP4/MXFP8 formats;
+     * {@code smile.chat.quantization} has no effect. Text only.
      */
     private LanguageModel buildInkling(String checkpointDir, ChatServiceConfig config) throws Exception {
         byte[] devices = parallelConfig(config).devices();
         if (devices.length > 1) {
-            throw new IllegalArgumentException("Inkling-2-Mini runs on one GPU; set smile.chat.devices to a single index");
+            // Inkling-2-Small (594B) does not fit one GPU: attention by head and the experts by block over the devices
+            logger.infof("Loading Inkling-2 from %s sharded over %d devices", checkpointDir, devices.length);
+            return smile.llm.model.inkling.InklingTp.build(checkpointDir, 0, config.maxSeqLen(), devices);
+        }
+        smile.llm.model.inkling.InklingModelArgs args =
+                smile.llm.model.inkling.InklingModelArgs.fromCheckpoint(checkpointDir, config.maxSeqLen());
+        if (args.dim() > 2304) {
+            throw new IllegalArgumentException("Inkling-2-Small does not fit one GPU; set smile.chat.devices to the GPUs "
+                    + "to shard it over (for example 0,1,2,3,4,5,6,7)");
         }
         logger.infof("Loading Inkling-2 from %s on device %d", checkpointDir, devices[0]);
         return smile.llm.model.inkling.Inkling.build(checkpointDir, 0, config.maxSeqLen(), devices[0]);

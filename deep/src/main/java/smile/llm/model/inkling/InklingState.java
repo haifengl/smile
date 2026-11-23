@@ -61,6 +61,13 @@ final class InklingState implements AutoCloseable {
     int length;
 
     InklingState(InklingModelArgs args, int capacity, Device device) {
+        this(args, capacity, device, 1);
+    }
+
+    /**
+     * @param tp number of ranks the attention is sharded over: this rank caches {@code kvHeads / tp} heads.
+     */
+    InklingState(InklingModelArgs args, int capacity, Device device, int tp) {
         this.capacity = capacity;
         int apps = args.numApplications();
         cacheCapacity = new int[apps];
@@ -79,7 +86,7 @@ final class InklingState implements AutoCloseable {
             int layer = args.layerOfApplication(a);
             boolean spill = SPILL_DEVICE >= 0 && !args.isLocal(layer) && seenGlobals++ >= globals - SPILL_APPS;
             Device cacheDevice = spill ? Device.CUDA((byte) SPILL_DEVICE) : device;
-            int heads = args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads();
+            int heads = (args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads()) / tp;
             int dim = args.isLocal(layer) ? args.swaHeadDim() : args.headDim();
             // a sliding-window layer only needs the last window - 1 tokens plus the chunk being processed
             cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + LOCAL_SLACK) : capacity;
@@ -139,7 +146,8 @@ final class InklingState implements AutoCloseable {
      * @param length  tokens processed.
      * @param bytes   device memory held.
      */
-    record Snapshot(Tensor[] k, Tensor[] v, Tensor[][] conv, int[] start, int length, long bytes) implements AutoCloseable {
+    record Snapshot(Tensor[] k, Tensor[] v, Tensor[][] conv, int[] start, int length, long bytes)
+            implements AutoCloseable, InklingPrefixCache.Payload {
         @Override
         public void close() {
             for (int a = 0; a < k.length; a++) {

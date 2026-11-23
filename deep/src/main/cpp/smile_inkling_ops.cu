@@ -58,7 +58,7 @@ __device__ __forceinline__ float block_sum(float v, float* smem) {
 // ------------------------------------------------------------------------------------------------ AttnRes
 
 struct States {
-    const void* p[6];
+    const void* p[10];
     int f32mask;        // bit i set: state i is float32, otherwise bfloat16
     int n;
 };
@@ -354,7 +354,19 @@ __global__ void attnres_rms_kernel(States st, const float* __restrict__ q, float
 template <int N, int NQ>
 static void launch_attnres_rms(const States& st, const float* q, float* out, const RmsOut& ro, int nb, int dim, cudaStream_t stream) {
     const size_t smem = ro.y[0] ? (size_t) NQ * dim * sizeof(float) : sizeof(float);
-    attnres_rms_kernel<N, NQ><<<nb, 1024, smem, stream>>>(st, q, out, ro, dim);
+    if (smem > 48 * 1024) {
+        // [NQ, dim] float32 rows of a wide model exceed the default dynamic shared memory limit
+        // the attribute belongs to the function of the current device: remember it per device (sharded models)
+        static bool raised[64] = {};
+        int dev = 0;
+        cudaGetDevice(&dev);
+        if (!raised[dev & 63]) {
+            cudaFuncSetAttribute(attnres_rms_kernel<N, NQ>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem);
+            raised[dev & 63] = true;
+        }
+    }
+    // many states keep many accumulators per thread: fewer threads leave room for the registers
+    attnres_rms_kernel<N, NQ><<<nb, N >= 6 ? 512 : 1024, smem, stream>>>(st, q, out, ro, dim);
 }
 
 template <int NQ>
@@ -365,6 +377,10 @@ static bool dispatch_attnres_rms(int n, const States& st, const float* q, float*
         case 3: launch_attnres_rms<3, NQ>(st, q, out, ro, nb, dim, s); return true;
         case 4: launch_attnres_rms<4, NQ>(st, q, out, ro, nb, dim, s); return true;
         case 5: launch_attnres_rms<5, NQ>(st, q, out, ro, nb, dim, s); return true;
+        case 6: launch_attnres_rms<6, NQ>(st, q, out, ro, nb, dim, s); return true;
+        case 7: launch_attnres_rms<7, NQ>(st, q, out, ro, nb, dim, s); return true;
+        case 8: launch_attnres_rms<8, NQ>(st, q, out, ro, nb, dim, s); return true;
+        case 9: launch_attnres_rms<9, NQ>(st, q, out, ro, nb, dim, s); return true;
         default: return false;
     }
 }
@@ -372,7 +388,8 @@ static bool dispatch_attnres_rms(int n, const States& st, const float* q, float*
 // ------------------------------------------------------------------------------------------------ convolutions
 
 /**
- * The short convolution of a sublayer output. mode 0 (after attention): x = bf16 input; conv = bf16((taps + x) / sqrt(5));
+ * The short convolution of a sublayer output. mode 0 (after attention): x = bf16 input (mode 2: float32 input, rounded to
+ * bf16 as the all-reduced attention output of a sharded model); conv = bf16((taps + x) / sqrt(5));
  * residual = boundary ? conv : h_in + conv (float32), and h_in is copied to blk when given. mode 1 (after the MLP):
  * x = bf16(moe float32); out = bf16(residual + bf16(conv)). State [3, dim] float32 per request from the pointer table.
  */
@@ -409,7 +426,7 @@ __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict
         state[dim + c] = s2;
         state[2 * dim + c] = x;
     }
-    if (mode == 0) {
+    if (mode != 1) {
         const float h = __bfloat162float(hin[(int64_t) b * dim + c]);
         res[(int64_t) b * dim + c] = boundary ? conv : h + conv;
         if (blk) blk[(int64_t) b * dim + c] = hin[(int64_t) b * dim + c];
@@ -423,11 +440,11 @@ __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict
  * (rows 0..2) followed by the T inputs of the chunk. Grid (apps, requests, 4), one pass per channel in ascending row order
  * (a source row is never below its destination row, so the in-place copy is safe).
  */
-__global__ void commit_kernel(const int64_t* __restrict__ tbl, const int* __restrict__ accepted, int nbRows, int T, int dim) {
+__global__ void commit_kernel(const int64_t* __restrict__ tbl, const int* __restrict__ accepted, int nbRows, int T, int dim, int kvc) {
     const int app = blockIdx.x, req = blockIdx.y, kind = blockIdx.z;
     const int a = accepted[req];
     if (a <= 0) return;
-    const int chan = kind < 2 ? 1024 : dim;
+    const int chan = kind < 2 ? kvc : dim;
     float* state = (float*) tbl[((int64_t) app * nbRows + (int64_t) req * T) * 8 + 2 + kind];
     for (int c = threadIdx.x; c < chan; c += blockDim.x) {
         const float v0 = state[(int64_t) a * chan + c];
@@ -446,11 +463,13 @@ struct PrepArgs {
     long ldq, ldk, ldv;
     int off_q, off_rel, off_sink, off_k, off_kproj, off_v, off_vproj;
     const float* qscale; const float* relscale;
-    const float* kw; const float* vw;        // local: conv [1024, 4]; global: static [4, 1024]
+    const float* kw; const float* vw;        // local: conv [kvc, 4]; global: static [4, kvc]
     const int64_t* tbl; const int* pos;
     bf16* qn; float* rel; float* sink;
     int global, nfloor, T;
     float qclip, relclip, eps, alpha;
+    int H, G;                                // query heads and KV heads of this rank (Mini: 24, 8)
+    int kvc, qd, reld;                       // G * 128, H * 128, H * 16
 };
 
 /** Short convolution of one key/value channel (static taps, or dynamic taps by lag for global layers). */
@@ -460,12 +479,12 @@ __device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long 
     if (a.T > 1) {
         const int j = b % a.T;
         const int b0 = b - j;
-        s0 = j >= 3 ? __bfloat162float(y[(int64_t) (b0 + j - 3) * ld + off_x + c]) : state[j * 1024 + c];
-        s1 = j >= 2 ? __bfloat162float(y[(int64_t) (b0 + j - 2) * ld + off_x + c]) : state[(j + 1) * 1024 + c];
-        s2 = j >= 1 ? __bfloat162float(y[(int64_t) (b0 + j - 1) * ld + off_x + c]) : state[(j + 2) * 1024 + c];
-        state[(3 + j) * 1024 + c] = x;
+        s0 = j >= 3 ? __bfloat162float(y[(int64_t) (b0 + j - 3) * ld + off_x + c]) : state[j * a.kvc + c];
+        s1 = j >= 2 ? __bfloat162float(y[(int64_t) (b0 + j - 2) * ld + off_x + c]) : state[(j + 1) * a.kvc + c];
+        s2 = j >= 1 ? __bfloat162float(y[(int64_t) (b0 + j - 1) * ld + off_x + c]) : state[(j + 2) * a.kvc + c];
+        state[(3 + j) * a.kvc + c] = x;
     } else {
-        s0 = state[c]; s1 = state[1024 + c]; s2 = state[2048 + c];
+        s0 = state[c]; s1 = state[a.kvc + c]; s2 = state[2 * a.kvc + c];
     }
     float acc, scale;
     if (!global) {
@@ -476,20 +495,20 @@ __device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long 
         float d[4];
 #pragma unroll
         for (int j = 0; j < 4; j++) d[j] = __bfloat162float(y[(int64_t) b * ld + off_proj + h * 4 + j]);
-        acc = (w[c] + d[0]) * x + (w[1024 + c] + d[1]) * s2 + (w[2048 + c] + d[2]) * s1 + (w[3072 + c] + d[3]) * s0;
+        acc = (w[c] + d[0]) * x + (w[a.kvc + c] + d[1]) * s2 + (w[2 * a.kvc + c] + d[2]) * s1 + (w[3 * a.kvc + c] + d[3]) * s0;
         scale = 0.3333333333333333f;         // 1 / sqrt(9)
     }
     if (a.T == 1) {
         state[c] = s1;
-        state[1024 + c] = s2;
-        state[2048 + c] = x;
+        state[a.kvc + c] = s2;
+        state[2 * a.kvc + c] = x;
     }
     return rnd((acc + x) * scale);
 }
 
 /**
  * q (scale, L2 clip, log-length scale), the relative-bias state and the sink logit of every head, and the new key/value
- * rows of every KV head (short convolution, L2 clip / RMS, cache write). Grid (nb, 24), block 128.
+ * rows of every KV head (short convolution, L2 clip / RMS, cache write). Grid (nb, H), block 128.
  */
 __global__ void prep_kernel(PrepArgs a) {
     const int b = blockIdx.x, h = blockIdx.y, t = threadIdx.x;
@@ -506,7 +525,7 @@ __global__ void prep_kernel(PrepArgs a) {
         const float n = sqrtf(block_sum(x * x, red));
         float q = rnd(x * fminf(1.f, a.qclip / (n + 1e-6f)));
         if (a.global) q = rnd(q * tau);
-        a.qn[(int64_t) b * 3072 + h * 128 + t] = __float2bfloat16(q);
+        a.qn[(int64_t) b * a.qd + h * 128 + t] = __float2bfloat16(q);
     }
     // relative-bias state and sink
     if (t < 32) {
@@ -516,11 +535,11 @@ __global__ void prep_kernel(PrepArgs a) {
         if (t < 16) {
             float v = rnd(r * fminf(1.f, a.relclip / (n + 1e-6f)));
             if (a.global) v = rnd(v * tau);
-            a.rel[(int64_t) b * 384 + h * 16 + t] = v;
+            a.rel[(int64_t) b * a.reld + h * 16 + t] = v;
         }
-        if (t == 0) a.sink[(int64_t) b * 24 + h] = __bfloat162float(a.yq[(int64_t) b * a.ldq + a.off_sink + h]);
+        if (t == 0) a.sink[(int64_t) b * a.H + h] = __bfloat162float(a.yq[(int64_t) b * a.ldq + a.off_sink + h]);
     }
-    if (h >= 8) return;
+    if (h >= a.G) return;
     // key and value of KV head h
     const int64_t* e = a.tbl + (int64_t) b * 8;
     bf16* kc = (bf16*) e[0];
@@ -556,6 +575,7 @@ struct AttnArgs {
     float* pm; float* pl; float* pacc;       // partials [nb, 24, nsplit] and [.., 128]
     int window;                              // 0 = global
     int nsplit;
+    int H, G, qd, reld;                      // query heads, KV heads, H * 128, H * 16 of this rank
 };
 
 __device__ __forceinline__ void load4(const bf16* p, float* f) {
@@ -601,6 +621,7 @@ __device__ __forceinline__ void load4v(const bf16* base, int64_t elem, bool fp8,
  * Grid (nb, 8, nsplit), block 128 (4 warps; a lane owns 4 of the 128 head dims). With nsplit 1 the sink, the output gate
  * and the bf16 output are written directly; otherwise partial results go to the merge kernel.
  */
+template <int Q>
 __global__ void attn_kernel(AttnArgs a) {
     const int b = blockIdx.x, g = blockIdx.y, z = blockIdx.z;
     const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31;
@@ -614,19 +635,21 @@ __global__ void attn_kernel(AttnArgs a) {
     const int chunk = (n + a.nsplit - 1) / a.nsplit;
     const int j0 = lo + z * chunk, j1 = min(pos + 1, j0 + chunk);
     const bool fp8 = e[7] != 0;
-    float m[3] = {-1e30f, -1e30f, -1e30f}, l[3] = {0.f, 0.f, 0.f}, acc[3][4] = {};
+    float m[Q], l[Q], acc[Q][4] = {};
+#pragma unroll
+    for (int i = 0; i < Q; i++) { m[i] = -1e30f; l[i] = 0.f; }
     if (j1 - j0 <= 96) {
         // short range: one key per warp step, the 32 lanes share its dimensions (little latency chain per key)
-        float q[3][4], rel[3][16];
+        float q[Q][4], rel[Q][16];
 #pragma unroll
-        for (int hh = 0; hh < 3; hh++) {
-            load4(a.qn + (int64_t) b * 3072 + (3 * g + hh) * 128 + lane * 4, q[hh]);
+        for (int hh = 0; hh < Q; hh++) {
+            load4(a.qn + (int64_t) b * a.qd + (Q * g + hh) * 128 + lane * 4, q[hh]);
 #pragma unroll
-            for (int d = 0; d < 16; d++) rel[hh][d] = a.rel[(int64_t) b * 384 + (3 * g + hh) * 16 + d];
+            for (int d = 0; d < 16; d++) rel[hh][d] = a.rel[(int64_t) b * a.reld + (Q * g + hh) * 16 + d];
         }
         constexpr int U = 4;
         for (int jb = j0 + warp; jb < j1; jb += 4 * U) {
-            float kf[U][4], vf[U][4], pw[U][16], dot[U][3];
+            float kf[U][4], vf[U][4], pw[U][16], dot[U][Q];
             bool live[U];
 #pragma unroll
             for (int u = 0; u < U; u++) {
@@ -652,7 +675,7 @@ __global__ void attn_kernel(AttnArgs a) {
                         for (int d = 0; d < 16; d++) pw[u][d] = 0.f;
                     }
 #pragma unroll
-                    for (int hh = 0; hh < 3; hh++) {
+                    for (int hh = 0; hh < Q; hh++) {
                         dot[u][hh] = q[hh][0] * kf[u][0] + q[hh][1] * kf[u][1] + q[hh][2] * kf[u][2] + q[hh][3] * kf[u][3];
                     }
                 }
@@ -662,13 +685,13 @@ __global__ void attn_kernel(AttnArgs a) {
 #pragma unroll
                 for (int u = 0; u < U; u++)
 #pragma unroll
-                    for (int hh = 0; hh < 3; hh++) dot[u][hh] += __shfl_xor_sync(0xffffffffu, dot[u][hh], o);
+                    for (int hh = 0; hh < Q; hh++) dot[u][hh] += __shfl_xor_sync(0xffffffffu, dot[u][hh], o);
             }
 #pragma unroll
             for (int u = 0; u < U; u++) {
                 if (!live[u]) continue;
 #pragma unroll
-                for (int hh = 0; hh < 3; hh++) {
+                for (int hh = 0; hh < Q; hh++) {
                     float bias = 0.f;
 #pragma unroll
                     for (int d = 0; d < 16; d++) bias += rel[hh][d] * pw[u][d];
@@ -683,24 +706,29 @@ __global__ void attn_kernel(AttnArgs a) {
             }
         }
     } else {
-        __shared__ float4 q_s[3][32];
-        __shared__ float rel_s[3][16];
-        if (threadIdx.x < 96) {
-            const int hh = threadIdx.x >> 5, c = threadIdx.x & 31;
-            const uint2 u = *reinterpret_cast<const uint2*>(a.qn + (int64_t) b * 3072 + (3 * g + hh) * 128 + c * 4);
+        __shared__ float4 q_s[Q][32];
+        __shared__ float rel_s[Q][16];
+        // Q * 32 float4 loads by a block of 128 threads (Q = 6 needs more than one per thread)
+        for (int i = threadIdx.x; i < Q * 32; i += 128) {
+            const int hh = i >> 5, c = i & 31;
+            const uint2 u = *reinterpret_cast<const uint2*>(a.qn + (int64_t) b * a.qd + (Q * g + hh) * 128 + c * 4);
             const __nv_bfloat162 x0 = *reinterpret_cast<const __nv_bfloat162*>(&u.x), x1 = *reinterpret_cast<const __nv_bfloat162*>(&u.y);
             q_s[hh][c] = make_float4(__low2float(x0), __high2float(x0), __low2float(x1), __high2float(x1));
         }
-        if (threadIdx.x < 48) rel_s[threadIdx.x >> 4][threadIdx.x & 15] = a.rel[(int64_t) b * 384 + (3 * g) * 16 + threadIdx.x];
+        if (threadIdx.x < Q * 16) rel_s[threadIdx.x >> 4][threadIdx.x & 15] = a.rel[(int64_t) b * a.reld + (Q * g) * 16 + threadIdx.x];
         __syncthreads();
         // a warp scores 32 consecutive keys at a time, one key per lane, then accumulates the values lane-per-dimension
         for (int tb = j0 + warp * 32; tb < j1; tb += 128) {
             const int j = tb + lane;
-            float s[3] = {-1e30f, -1e30f, -1e30f};
+            float s[Q];
+#pragma unroll
+            for (int i = 0; i < Q; i++) s[i] = -1e30f;
             if (j < j1) {
                 const int slot = a.window ? j % cap : j;
                 const int64_t row = ((int64_t) g * cap + slot) * 128;
-                float d[3] = {0.f, 0.f, 0.f};
+                float d[Q];
+#pragma unroll
+                for (int i = 0; i < Q; i++) d[i] = 0.f;
                 uint4 raw[16];                      // all loads first: 16 requests in flight per lane
     #pragma unroll
                 for (int c = 0; c < 16; c++) {
@@ -724,7 +752,7 @@ __global__ void attn_kernel(AttnArgs a) {
                         for (int i = 0; i < 4; i++) { f[2 * i] = __low2float(bb[i]); f[2 * i + 1] = __high2float(bb[i]); }
                     }
     #pragma unroll
-                    for (int hh = 0; hh < 3; hh++) {
+                    for (int hh = 0; hh < Q; hh++) {
                         const float4 qa = q_s[hh][2 * c], qb = q_s[hh][2 * c + 1];
                         d[hh] += qa.x * f[0] + qa.y * f[1] + qa.z * f[2] + qa.w * f[3] + qb.x * f[4] + qb.y * f[5] + qb.z * f[6] + qb.w * f[7];
                     }
@@ -744,7 +772,7 @@ __global__ void attn_kernel(AttnArgs a) {
                     }
                 }
     #pragma unroll
-                for (int hh = 0; hh < 3; hh++) {
+                for (int hh = 0; hh < Q; hh++) {
                     float bias = 0.f;
                     if (near) {
     #pragma unroll
@@ -753,9 +781,9 @@ __global__ void attn_kernel(AttnArgs a) {
                     s[hh] = d[hh] * 0.08838834764831845f + bias;
                 }
             }
-            float p[3];
+            float p[Q];
     #pragma unroll
-            for (int hh = 0; hh < 3; hh++) {
+            for (int hh = 0; hh < Q; hh++) {
                 const float mn = fmaxf(m[hh], warp_max(s[hh]));
                 const float al = __expf(m[hh] - mn);
                 p[hh] = __expf(s[hh] - mn);
@@ -779,7 +807,7 @@ __global__ void attn_kernel(AttnArgs a) {
     #pragma unroll
                 for (int u = 0; u < 8; u++) {
     #pragma unroll
-                    for (int hh = 0; hh < 3; hh++) {
+                    for (int hh = 0; hh < Q; hh++) {
                         const float pk = __shfl_sync(0xffffffffu, p[hh], kb + u);
     #pragma unroll
                         for (int i = 0; i < 4; i++) acc[hh][i] += pk * vf[u][i];
@@ -789,20 +817,20 @@ __global__ void attn_kernel(AttnArgs a) {
         }
     }
     // merge the 4 warps
-    __shared__ float sm_m[4][3], sm_l[4][3];
-    __shared__ float sm_a[4][3][128];
+    __shared__ float sm_m[4][Q], sm_l[4][Q];
+    __shared__ float sm_a[4][Q][128];
     if (lane == 0) {
 #pragma unroll
-        for (int hh = 0; hh < 3; hh++) { sm_m[warp][hh] = m[hh]; sm_l[warp][hh] = l[hh]; }
+        for (int hh = 0; hh < Q; hh++) { sm_m[warp][hh] = m[hh]; sm_l[warp][hh] = l[hh]; }
     }
 #pragma unroll
-    for (int hh = 0; hh < 3; hh++)
+    for (int hh = 0; hh < Q; hh++)
 #pragma unroll
         for (int i = 0; i < 4; i++) sm_a[warp][hh][lane * 4 + i] = acc[hh][i];
     __syncthreads();
     const int t = threadIdx.x;
 #pragma unroll
-    for (int hh = 0; hh < 3; hh++) {
+    for (int hh = 0; hh < Q; hh++) {
         float M = fmaxf(fmaxf(sm_m[0][hh], sm_m[1][hh]), fmaxf(sm_m[2][hh], sm_m[3][hh]));
         float L = 0.f, A = 0.f;
 #pragma unroll
@@ -811,27 +839,27 @@ __global__ void attn_kernel(AttnArgs a) {
             L += sm_l[w][hh] * f;
             A += sm_a[w][hh][t] * f;
         }
-        const int hq = 3 * g + hh;
+        const int hq = Q * g + hh;
         if (a.nsplit == 1) {
-            const float sink = a.sink[(int64_t) b * 24 + hq];
+            const float sink = a.sink[(int64_t) b * a.H + hq];
             const float Ms = fmaxf(M, sink);
             const float f = __expf(M - Ms);
             const float L2 = L * f + __expf(sink - Ms);
             const float o = rnd(A * f / L2);
             const float gate = 1.f / (1.f + __expf(-__bfloat162float(a.yq[(int64_t) b * a.ldq + a.off_gate + hq * 128 + t])));
-            a.out[(int64_t) b * 3072 + hq * 128 + t] = __float2bfloat16(o * gate);
+            a.out[(int64_t) b * a.qd + hq * 128 + t] = __float2bfloat16(o * gate);
         } else {
-            const int64_t idx = ((int64_t) b * 24 + hq) * a.nsplit + z;
+            const int64_t idx = ((int64_t) b * a.H + hq) * a.nsplit + z;
             if (t == 0) { a.pm[idx] = M; a.pl[idx] = L; }
             a.pacc[idx * 128 + t] = A;
         }
     }
 }
 
-/** Combines the split partials, adds the sink, applies the output gate. Grid (nb, 24), block 128. */
+/** Combines the split partials, adds the sink, applies the output gate. Grid (nb, H), block 128. */
 __global__ void merge_kernel(AttnArgs a) {
     const int b = blockIdx.x, hq = blockIdx.y, t = threadIdx.x;
-    const int64_t base = ((int64_t) b * 24 + hq) * a.nsplit;
+    const int64_t base = ((int64_t) b * a.H + hq) * a.nsplit;
     float M = -1e30f;
     for (int z = 0; z < a.nsplit; z++) M = fmaxf(M, a.pm[base + z]);
     float L = 0.f, A = 0.f;
@@ -840,13 +868,13 @@ __global__ void merge_kernel(AttnArgs a) {
         L += a.pl[base + z] * f;
         A += a.pacc[(base + z) * 128 + t] * f;
     }
-    const float sink = a.sink[(int64_t) b * 24 + hq];
+    const float sink = a.sink[(int64_t) b * a.H + hq];
     const float Ms = fmaxf(M, sink);
     const float f = __expf(M - Ms);
     const float L2 = L * f + __expf(sink - Ms);
     const float o = rnd(A * f / L2);
     const float gate = 1.f / (1.f + __expf(-__bfloat162float(a.yq[(int64_t) b * a.ldq + a.off_gate + hq * 128 + t])));
-    a.out[(int64_t) b * 3072 + hq * 128 + t] = __float2bfloat16(o * gate);
+    a.out[(int64_t) b * a.qd + hq * 128 + t] = __float2bfloat16(o * gate);
 }
 
 // ------------------------------------------------------------------------------------------------ router, MoE activation, embedding, head
@@ -855,11 +883,10 @@ __global__ void merge_kernel(AttnArgs a) {
  * Sigmoid scores, top-k of score + bias, renormalized weights times scale. One warp per row (each lane holds
  * experts/32 of them); the k selections are k warp-wide arg-max reductions, no block synchronization.
  */
-template <int TOPK>
+template <int TOPK, int PER>
 __global__ void route_kernel(const float* __restrict__ logits, const float* __restrict__ bias, int* __restrict__ idx,
                              float* __restrict__ wts, int experts, float scale) {
     const int b = blockIdx.x, lane = threadIdx.x;
-    constexpr int PER = 4;                       // experts per lane (<= 128 experts)
     float sc[PER], sel[PER];
 #pragma unroll
     for (int k = 0; k < PER; k++) {
@@ -927,7 +954,7 @@ __global__ void moe_act_kernel(const bf16* __restrict__ gu, bf16* __restrict__ o
  * per expert; the order within an expert is the order of the ids (deterministic). Same output layout as the generic
  * kernel: sorted ids (padding = numel), the expert of every block (-1 padding), the padded length.
  */
-__global__ void align_decode_kernel(const int32_t* __restrict__ ids, int numel, int experts, int block, int padded,
+__global__ void align_decode_kernel(const int32_t* __restrict__ ids, int numel, int experts, int estart, int block, int padded,
                                     int blocks, int32_t* __restrict__ sorted, int32_t* __restrict__ expert_ids,
                                     int32_t* __restrict__ post) {
     __shared__ int cnt[1024], start[1024];
@@ -936,7 +963,7 @@ __global__ void align_decode_kernel(const int32_t* __restrict__ ids, int numel, 
     for (int i = e; i < blocks; i += blockDim.x) expert_ids[i] = -1;
     int c = 0;
     if (e < experts) {
-        for (int i = 0; i < numel; i++) c += ids[i] == e;
+        for (int i = 0; i < numel; i++) c += ids[i] - estart == e;
     }
     const int pc = (c + block - 1) / block * block;
     cnt[e] = pc;
@@ -965,7 +992,7 @@ __global__ void align_decode_kernel(const int32_t* __restrict__ ids, int numel, 
         for (int b = 0; b < pc / block; b++) expert_ids[off / block + b] = e;
         int k = 0;
         for (int i = 0; i < numel; i++) {
-            if (ids[i] == e) sorted[off + k++] = i;
+            if (ids[i] - estart == e) sorted[off + k++] = i;
         }
     }
 }
@@ -1024,6 +1051,7 @@ struct DraftAttnArgs {
     bf16* out;                  // [B * 8, 3072]
     float* pm; float* pl; float* pacc;     // partials [B, 8, S, 24] and [.., 128], S = 4 * nsplit
     int stride, layer, window, nsplit;
+    int H, hpg;                 // query heads (24, or 48) and query heads per KV head (3, or 6)
 };
 
 /**
@@ -1032,7 +1060,9 @@ struct DraftAttnArgs {
  * the keys for all 24 (head, row) queries and writes a partial result for the merge kernel.
  */
 __global__ void draft_attn_kernel(DraftAttnArgs a) {
-    const int b = blockIdx.x, g = blockIdx.y, z = blockIdx.z;
+    const int b = blockIdx.x, z = blockIdx.z;
+    // a slot is 3 query heads of one KV head (hpg = 3: one slot per KV head; hpg = 6: two); its 24 (head, row) queries
+    const int slot = blockIdx.y, g = slot / (a.hpg / 3);
     const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31;
     __shared__ float q[24][128];
     const int64_t* e = a.ptrs + (int64_t) b * a.stride;
@@ -1041,7 +1071,7 @@ __global__ void draft_attn_kernel(DraftAttnArgs a) {
     const int64_t cap = e[a.stride - 1];
     for (int i = threadIdx.x; i < 24 * 128; i += 128) {
         const int qi = i >> 7, d = i & 127, c = qi >> 3, r = qi & 7;
-        q[qi][d] = __bfloat162float(a.q[(int64_t) (b * 8 + r) * 3072 + (g * 3 + c) * 128 + d]);
+        q[qi][d] = __bfloat162float(a.q[(int64_t) (b * 8 + r) * (a.H * 128) + (slot * 3 + c) * 128 + d]);
     }
     __syncthreads();
     const int end = a.endpos[b];
@@ -1084,7 +1114,7 @@ __global__ void draft_attn_kernel(DraftAttnArgs a) {
     const int S = 4 * a.nsplit, s = z * 4 + warp;
 #pragma unroll
     for (int i = 0; i < 24; i++) {
-        const int64_t base = (((int64_t) b * 8 + g) * S + s) * 24 + i;
+        const int64_t base = (((int64_t) b * (a.H / 3) + slot) * S + s) * 24 + i;
         if (lane == 0) { a.pm[base] = m[i]; a.pl[base] = l[i]; }
         float* pa = a.pacc + base * 128 + lane * 4;
         pa[0] = acc[i][0]; pa[1] = acc[i][1]; pa[2] = acc[i][2]; pa[3] = acc[i][3];
@@ -1094,17 +1124,17 @@ __global__ void draft_attn_kernel(DraftAttnArgs a) {
 /** Merges the partial softmaxes: grid (B * 8 rows, 24 heads), block 128 (one thread per head dim). */
 __global__ void draft_merge_kernel(DraftAttnArgs a) {
     const int b = blockIdx.x >> 3, r = blockIdx.x & 7, h = blockIdx.y, d = threadIdx.x;
-    const int g = h / 3, c = h % 3, qi = c * 8 + r, S = 4 * a.nsplit;
+    const int slot = h / 3, c = h % 3, qi = c * 8 + r, S = 4 * a.nsplit;
     float mx = -INFINITY;
-    for (int s = 0; s < S; s++) mx = fmaxf(mx, a.pm[(((int64_t) b * 8 + g) * S + s) * 24 + qi]);
+    for (int s = 0; s < S; s++) mx = fmaxf(mx, a.pm[(((int64_t) b * (a.H / 3) + slot) * S + s) * 24 + qi]);
     float den = 0.f, num = 0.f;
     for (int s = 0; s < S; s++) {
-        const int64_t base = (((int64_t) b * 8 + g) * S + s) * 24 + qi;
+        const int64_t base = (((int64_t) b * (a.H / 3) + slot) * S + s) * 24 + qi;
         const float w = __expf(a.pm[base] - mx);
         den += w * a.pl[base];
         num += w * a.pacc[base * 128 + d];
     }
-    a.out[(int64_t) blockIdx.x * 3072 + h * 128 + d] = __float2bfloat16(num / den);
+    a.out[(int64_t) blockIdx.x * (a.H * 128) + h * 128 + d] = __float2bfloat16(num / den);
 }
 
 // ------------------------------------------------------------------------------------------------ dispatcher
@@ -1130,6 +1160,11 @@ enum Op {
     OP_DRAFT_MERGE = 18,
     OP_PEER = 20,
 };
+
+extern "C" __attribute__((visibility("default"))) int smile_inkling_set_device(int device) {
+    c10::cuda::set_device((c10::DeviceIndex) device);
+    return 0;
+}
 
 extern "C" __attribute__((visibility("default"))) const char* smile_inkling_error(void) { return g_error.c_str(); }
 
@@ -1211,7 +1246,9 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.off_q = iv[4]; a.off_rel = iv[5]; a.off_sink = iv[6]; a.off_k = iv[7]; a.off_kproj = iv[8];
             a.off_v = iv[9]; a.off_vproj = iv[10]; a.global = iv[11]; a.nfloor = iv[12]; a.T = ni > 13 && iv[13] > 1 ? (int) iv[13] : 1;
             a.qclip = (float) dv[0]; a.relclip = (float) dv[1]; a.eps = (float) dv[2]; a.alpha = (float) dv[3];
-            prep_kernel<<<dim3(iv[0], 24), 128, 0, stream>>>(a);
+            a.H = ni > 14 ? (int) iv[14] : 24; a.G = ni > 15 ? (int) iv[15] : 8;
+            a.kvc = a.G * 128; a.qd = a.H * 128; a.reld = a.H * 16;
+            prep_kernel<<<dim3(iv[0], a.H), 128, 0, stream>>>(a);
             CHECK_LAUNCH("prep");
             return 0;
         }
@@ -1224,10 +1261,20 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.projT = (const bf16*) p[4]; a.tbl = (const int64_t*) p[5]; a.pos = (const int*) p[6]; a.out = (bf16*) p[7];
             a.pm = (float*) p[8]; a.pl = (float*) p[9]; a.pacc = (float*) p[10];
             a.ldq = iv[1]; a.off_gate = (int) iv[2]; a.window = (int) iv[3]; a.nsplit = (int) iv[4];
+            a.H = ni > 5 ? (int) iv[5] : 24; a.G = ni > 6 ? (int) iv[6] : 8;
+            a.qd = a.H * 128; a.reld = a.H * 16;
+            const int per = a.H / a.G;
             if (op == OP_ATTN) {
-                attn_kernel<<<dim3(iv[0], 8, a.nsplit), 128, 0, stream>>>(a);
+                if (per == 3) {
+                    attn_kernel<3><<<dim3(iv[0], a.G, a.nsplit), 128, 0, stream>>>(a);
+                } else if (per == 6) {
+                    attn_kernel<6><<<dim3(iv[0], a.G, a.nsplit), 128, 0, stream>>>(a);
+                } else {
+                    g_error = "attn: query heads per KV head must be 3 or 6";
+                    return -3;
+                }
             } else {
-                merge_kernel<<<dim3(iv[0], 24), 128, 0, stream>>>(a);
+                merge_kernel<<<dim3(iv[0], a.H), 128, 0, stream>>>(a);
             }
             CHECK_LAUNCH("attn");
             return 0;
@@ -1238,8 +1285,18 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
                 g_error = "route: top-k must be 8";
                 return -3;
             }
-            route_kernel<8><<<(int) iv[0], 32, 0, stream>>>((const float*) p[0], (const float*) p[1], (int*) p[2], (float*) p[3],
-                    (int) iv[1], (float) dv[0]);
+            const int experts = (int) iv[1];
+            if (experts > 384) {
+                g_error = "route: at most 384 experts";
+                return -3;
+            }
+            if (experts <= 128) {
+                route_kernel<8, 4><<<(int) iv[0], 32, 0, stream>>>((const float*) p[0], (const float*) p[1], (int*) p[2], (float*) p[3],
+                        experts, (float) dv[0]);
+            } else {
+                route_kernel<8, 12><<<(int) iv[0], 32, 0, stream>>>((const float*) p[0], (const float*) p[1], (int*) p[2], (float*) p[3],
+                        experts, (float) dv[0]);
+            }
             CHECK_LAUNCH("route");
             return 0;
         }
@@ -1268,7 +1325,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
         case OP_ALIGN: {
             // p: ids (int32), out; iv: numel, experts, block, padded, blocks
             const int experts = (int) iv[1];
-            align_decode_kernel<<<1, 128 * ((experts + 127) / 128), 0, stream>>>((const int32_t*) p[0], (int) iv[0], experts, (int) iv[2],
+            align_decode_kernel<<<1, 128 * ((experts + 127) / 128), 0, stream>>>((const int32_t*) p[0], (int) iv[0], experts, ni > 5 ? (int) iv[5] : 0, (int) iv[2],
                     (int) iv[3], (int) iv[4], (int32_t*) p[1], (int32_t*) p[1] + iv[3], (int32_t*) p[1] + iv[3] + iv[4]);
             CHECK_LAUNCH("align");
             return 0;
@@ -1303,7 +1360,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
         }
         case OP_COMMIT: {
             // p: tbl, accepted (int32 [requests]); iv: apps, requests, T, rows per app in tbl, dim
-            commit_kernel<<<dim3(iv[0], iv[1], 4), 256, 0, stream>>>((const int64_t*) p[0], (const int*) p[1], (int) iv[3], (int) iv[2], (int) iv[4]);
+            commit_kernel<<<dim3(iv[0], iv[1], 4), 256, 0, stream>>>((const int64_t*) p[0], (const int*) p[1], (int) iv[3], (int) iv[2], (int) iv[4], ni > 5 ? (int) iv[5] : 1024);
             CHECK_LAUNCH("commit");
             return 0;
         }
@@ -1322,10 +1379,15 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.q = (const bf16*) p[0]; a.ptrs = (const int64_t*) p[1]; a.endpos = (const int*) p[2]; a.out = (bf16*) p[3];
             a.pm = (float*) p[4]; a.pl = (float*) p[5]; a.pacc = (float*) p[6];
             a.stride = (int) iv[1]; a.layer = (int) iv[2]; a.window = (int) iv[3]; a.nsplit = (int) iv[4];
+            a.H = ni > 5 ? (int) iv[5] : 24; a.hpg = ni > 6 ? (int) iv[6] : 3;
+            if (a.hpg != 3 && a.hpg != 6) {
+                g_error = "draft attn: query heads per KV head must be 3 or 6";
+                return -3;
+            }
             if (op == OP_DRAFT_ATTN) {
-                draft_attn_kernel<<<dim3(iv[0], 8, a.nsplit), 128, 0, stream>>>(a);
+                draft_attn_kernel<<<dim3(iv[0], a.H / 3, a.nsplit), 128, 0, stream>>>(a);
             } else {
-                draft_merge_kernel<<<dim3(iv[0] * 8, 24), 128, 0, stream>>>(a);
+                draft_merge_kernel<<<dim3(iv[0] * 8, a.H), 128, 0, stream>>>(a);
             }
             CHECK_LAUNCH("draft_attn");
             return 0;

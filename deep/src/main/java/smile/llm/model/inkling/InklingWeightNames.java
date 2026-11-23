@@ -89,8 +89,10 @@ final class InklingWeightNames {
             names.add("attn_res.mlp_queries." + i);
         }
         names.add("attn_res.output_query");
-        names.add("middle_cycle_cross_pass_queries");
-        names.add("middle_cycle_cross_pass_kv_queries");
+        if (args.numPasses() > 1 && args.coreEnd() > args.coreStart()) {
+            names.add("middle_cycle_cross_pass_queries");
+            names.add("middle_cycle_cross_pass_kv_queries");
+        }
         for (int i = 0; i < args.numLayers(); i++) {
             layer(args, i, names);
         }

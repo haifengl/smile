@@ -102,6 +102,51 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
     }
 
     /**
+     * Reads selected tensors, each either whole or only a range of its first dimension. A range of rows is one
+     * contiguous byte range of the file, so a tensor stacked over experts or heads can be sliced without reading
+     * (or allocating) the rest. Only dtypes that stream straight into storage (all but decoded floats) are supported
+     * for ranges.
+     *
+     * @param path the file path to read.
+     * @param device the device on which to store the loaded tensors.
+     * @param include tensor name to {@code {firstRow, rowCount}}, or {@code null} for the whole tensor.
+     * @return the tensors; a ranged tensor has {@code rowCount} rows.
+     * @throws IOException if an I/O error occurs or a range lies outside the tensor.
+     */
+    public static SafeTensors readRows(String path, Device device, Map<String, long[]> include) throws IOException {
+        try (RandomAccessFile file = new RandomAccessFile(path, "r");
+             FileChannel channel = file.getChannel()) {
+            Header header = readHeader(channel);
+            Map<String, Tensor> tensors = new HashMap<>();
+            for (var want : include.entrySet()) {
+                TensorInfo info = header.tensors.get(want.getKey());
+                if (info == null) {
+                    throw new IOException("tensor " + want.getKey() + " is not in " + path);
+                }
+                long[] range = want.getValue();
+                long begin = header.dataStartOffset + info.begin;
+                long length = info.end - info.begin;
+                if (range == null) {
+                    tensors.put(want.getKey(), loadTensor(channel, begin, length, info.dtype, info.shape, device));
+                    continue;
+                }
+                ScalarType raw = rawScalarType(info.dtype);
+                long rows = info.shape.length == 0 ? 0 : info.shape[0];
+                if (raw == null || range[0] < 0 || range[1] < 0 || range[0] + range[1] > rows) {
+                    throw new IOException("invalid row range [" + range[0] + ", +" + range[1] + ") of "
+                            + want.getKey() + " " + java.util.Arrays.toString(info.shape) + " " + info.dtype);
+                }
+                long rowBytes = rows == 0 ? 0 : length / rows;
+                long[] shape = info.shape.clone();
+                shape[0] = range[1];
+                tensors.put(want.getKey(), readRawTensor(channel, begin + range[0] * rowBytes, range[1] * rowBytes,
+                        shape, raw, device));
+            }
+            return new SafeTensors(tensors, header.metadata);
+        }
+    }
+
+    /**
      * Returns the tensor names declared in a safetensors header without loading
      * any tensor data. Suitable for building a weight map from a single large
      * checkpoint file.

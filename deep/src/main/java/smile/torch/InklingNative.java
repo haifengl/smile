@@ -42,6 +42,7 @@ public final class InklingNative {
     private static final MethodHandle OP;
     private static final MethodHandle ERROR;
     private static final MethodHandle DATA_PTR;
+    private static final MethodHandle SET_DEVICE;
 
     static {
         SymbolLookup lookup = smile_torch_h.SYMBOL_LOOKUP;
@@ -54,6 +55,8 @@ public final class InklingNative {
         OP = op.map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                 ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
                 ValueLayout.ADDRESS, ValueLayout.JAVA_INT))).orElse(null);
+        SET_DEVICE = lookup.find("smile_inkling_set_device").map(s -> LINKER.downcallHandle(s,
+                FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT))).orElse(null);
         ERROR = lookup.find("smile_inkling_error").map(s -> LINKER.downcallHandle(s,
                 FunctionDescriptor.of(ValueLayout.ADDRESS))).orElse(null);
         DATA_PTR = smile_torch_h.SYMBOL_LOOKUP.find("smile_tensor_data_ptr").map(s -> LINKER.downcallHandle(s,
@@ -65,6 +68,31 @@ public final class InklingNative {
     /** @return {@code true} when the kernels are available. */
     public static boolean isAvailable() {
         return OP != null && DATA_PTR != null;
+    }
+
+    /**
+     * Makes {@code device} the calling thread's current CUDA device: the kernels run on the current device's stream, so
+     * a thread that drives GPU {@code r} (one thread per rank of a sharded model) must call this once before launching.
+     *
+     * @param device CUDA device index.
+     */
+    public static void setDevice(int device) {
+        if (SET_DEVICE == null) {
+            if (device != 0) {
+                throw new IllegalStateException("the native library has no smile_inkling_set_device");
+            }
+            return;
+        }
+        try {
+            int rc = (int) SET_DEVICE.invokeExact(device);
+            if (rc != 0) {
+                throw new IllegalStateException("cannot select CUDA device " + device);
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -111,8 +139,12 @@ public final class InklingNative {
             if (rc != 0) {
                 String msg = "";
                 if (ERROR != null) {
-                    MemorySegment s = (MemorySegment) ERROR.invokeExact();
-                    msg = s.reinterpret(1024).getString(0);
+                    try {
+                        MemorySegment s = (MemorySegment) ERROR.invokeExact();
+                        msg = s.reinterpret(1024).getString(0);
+                    } catch (RuntimeException unreadable) {
+                        msg = "(error text unreadable)";
+                    }
                 }
                 throw new IllegalStateException("smile_inkling_op " + op + " failed (" + rc + "): " + msg);
             }
