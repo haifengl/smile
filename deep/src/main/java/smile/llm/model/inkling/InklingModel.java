@@ -57,10 +57,18 @@ public final class InklingModel implements AutoCloseable {
     final Tensor outputQuery;
     final Tensor messageQueries;    // [loop layers, 4, D]
     final InklingLayer[] layers;
+    final InklingShard shard;
+    /**
+     * The target positions the DSpark draft reads ({@code target_layer_ids}): id {@code i < numApplications} is the output
+     * of application {@code i - 1}, the last id (the number of applications) the final-norm output. Mini: 5, 23, 41, 48.
+     */
+    int[] tapIds = {5, 23, 41, 48};
 
     private InklingModel(InklingModelArgs args, Device device, Tensor embed, Tensor embedNorm, Tensor unembed,
-                         Tensor finalNorm, Tensor outputQuery, Tensor messageQueries, InklingLayer[] layers) {
+                         Tensor finalNorm, Tensor outputQuery, Tensor messageQueries, InklingLayer[] layers,
+                         InklingShard shard) {
         this.args = args;
+        this.shard = shard;
         this.device = device;
         this.embed = embed;
         this.embedNorm = embedNorm;
@@ -82,6 +90,15 @@ public final class InklingModel implements AutoCloseable {
      * @throws IOException if the checkpoint cannot be read.
      */
     public static InklingModel load(String dir, InklingModelArgs args, Device device) throws IOException {
+        return load(dir, args, device, InklingShard.SINGLE);
+    }
+
+    /**
+     * Loads one rank's share of the model (attention heads and experts split over {@code shard.size()} ranks).
+     *
+     * @param shard this rank's share.
+     */
+    static InklingModel load(String dir, InklingModelArgs args, Device device, InklingShard shard) throws IOException {
         InklingCheckpoint ck = new InklingCheckpoint(dir);
         Set<String> top = new HashSet<>(Set.of("embed.weight", "embed_norm.weight", "norm.weight", "unembed.weight",
                 "attn_res.output_query"));
@@ -105,8 +122,8 @@ public final class InklingModel implements AutoCloseable {
         }
         InklingLayer[] layers = new InklingLayer[args.numLayers()];
         for (int i = 0; i < layers.length; i++) {
-            var lt = ck.read(device, InklingLayer.names(args, i));
-            layers[i] = new InklingLayer(args, i, lt, device);
+            var lt = ck.read(device, InklingLayer.names(args, i), InklingLayer.rowSlices(args, i, shard));
+            layers[i] = new InklingLayer(args, i, lt, device, shard);
             for (Tensor x : lt.values()) {
                 if (!isKept(x)) {
                     x.close();
@@ -116,7 +133,16 @@ public final class InklingModel implements AutoCloseable {
                 logger.info("loaded {} of {} layers", i + 1, layers.length);
             }
         }
-        return new InklingModel(args, device, embed, embedNorm, unembed, finalNorm, outputQuery, messages, layers);
+        return new InklingModel(args, device, embed, embedNorm, unembed, finalNorm, outputQuery, messages, layers, shard);
+    }
+
+    private boolean isTap(int app) {
+        for (int i = 0; i < tapIds.length - 1; i++) {
+            if (tapIds[i] - 1 == app) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isKept(Tensor t) {
@@ -139,7 +165,7 @@ public final class InklingModel implements AutoCloseable {
      * @return the state.
      */
     InklingState newState(int capacity) {
-        return new InklingState(args, capacity, device);
+        return new InklingState(args, capacity, device, shard.size());
     }
 
     /**
@@ -234,7 +260,7 @@ public final class InklingModel implements AutoCloseable {
                     host.promoteToParent();         // survives the forward's scope
                     trace.accept(host);
                 }
-                if (tapSink != null && (app == 4 || app == 22 || app == 40)) {
+                if (tapSink != null && isTap(app)) {
                     taps.add(out);
                 }
                 if (layer.blockBoundary) {

@@ -27,7 +27,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Inkling-2-Mini (model type {@code inkling2_loop}) text-tower hyperparameters.
+ * Inkling-2 text-tower hyperparameters: Mini (model type {@code inkling2_loop}) and Small (model type
+ * {@code inkling2}, no loop: {@code coreStart == coreEnd == 0}, one pass).
  *
  * <p>The network has {@code numLayers} distinct decoder layers, but layers {@code [coreStart, coreEnd)} are applied
  * {@code numPasses} times, so one token goes through {@link #numApplications()} layer applications. Every application
@@ -335,16 +336,23 @@ public record InklingModelArgs(
         for (JsonNode id : t.get("local_layer_ids")) {
             local[id.asInt()] = true;
         }
-        JsonNode loop = t.get("loop_config");
-        boolean varLoop = loop.path("is_varloop").asBoolean(false);
-        if (varLoop) {
-            throw new IllegalArgumentException("variable-depth loops (is_varloop) are not supported");
-        }
-        int coreStart = loop.get("core_start").asInt();
-        int coreEnd = loop.get("core_end").asInt();
-        int passes = loop.get("num_passes").asInt();
-        if (coreStart < 0 || coreEnd <= coreStart || coreEnd > numLayers || passes < 1) {
-            throw new IllegalArgumentException("invalid loop_config " + loop);
+        // Inkling-2-Small (model type inkling2) has no loop_config: every layer is applied once.
+        JsonNode loop = t.path("loop_config");
+        int coreStart = 0;
+        int coreEnd = 0;
+        int passes = 1;
+        int gateRank = 0;
+        if (!loop.isMissingNode() && !loop.isNull()) {
+            if (loop.path("is_varloop").asBoolean(false)) {
+                throw new IllegalArgumentException("variable-depth loops (is_varloop) are not supported");
+            }
+            coreStart = loop.get("core_start").asInt();
+            coreEnd = loop.get("core_end").asInt();
+            passes = loop.get("num_passes").asInt();
+            gateRank = loop.get("gate_rank").asInt();
+            if (coreStart < 0 || coreEnd <= coreStart || coreEnd > numLayers || passes < 1) {
+                throw new IllegalArgumentException("invalid loop_config " + loop);
+            }
         }
         int len = maxSeqLen > 0 ? maxSeqLen : t.get("model_max_length").asInt();
         ExpertFormat[] experts = new ExpertFormat[numLayers];
@@ -366,7 +374,7 @@ public record InklingModelArgs(
                 t.path("n_shared_experts").asInt(0), t.get("intermediate_size").asInt(),
                 t.get("mlp_gate_softcap").asDouble(), t.get("mlp_up_softcap").asDouble(),
                 t.get("route_scale").asDouble(), t.path("use_gate_bias").asBoolean(false),
-                coreStart, coreEnd, passes, loop.get("gate_rank").asInt(), false,
+                coreStart, coreEnd, passes, gateRank, false,
                 eos, len, experts);
     }
 }

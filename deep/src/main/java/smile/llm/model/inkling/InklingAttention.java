@@ -51,12 +51,23 @@ final class InklingAttention {
     final Tensor kConv, vConv;
     private final int kProjRows;
 
+    private final InklingShard shard;
+
     InklingAttention(InklingModelArgs args, int layer, Map<String, Tensor> t, Device device) {
+        this(args, layer, t, device, InklingShard.SINGLE);
+    }
+
+    /**
+     * @param t     the layer's tensors; the ones listed by {@link #rowSlices} hold only this rank's rows.
+     * @param shard this rank's share: it owns {@code heads / size} query heads and {@code kvHeads / size} KV heads.
+     */
+    InklingAttention(InklingModelArgs args, int layer, Map<String, Tensor> t, Device device, InklingShard shard) {
         this.args = args;
         this.device = device;
+        this.shard = shard;
         this.local = args.isLocal(layer);
-        this.heads = local ? args.swaHeads() : args.numHeads();
-        this.kvHeads = local ? args.swaKvHeads() : args.numKvHeads();
+        this.heads = shard.part(local ? args.swaHeads() : args.numHeads());
+        this.kvHeads = shard.part(local ? args.swaKvHeads() : args.numKvHeads());
         this.headDim = local ? args.swaHeadDim() : args.headDim();
         String p = "layers." + layer + ".attn.";
         qRows = heads * headDim;
@@ -80,7 +91,9 @@ final class InklingAttention {
         for (Tensor x : new Tensor[]{q, k, v, g, r, sk}) {
             x.close();
         }
-        wo = keep(t.get(p + "wo_ud.weight"));
+        // output projection: this rank's heads are a block of input columns
+        Tensor woFull = t.get(p + "wo_ud.weight");
+        wo = keep(shard.size() == 1 ? woFull : contiguous(narrow(woFull, 1, (long) heads * headDim * shard.rank(), (long) heads * headDim)));
         proj = keep(t.get(p + "rel_logits_proj.proj"));
         projT = keep(contiguous(transpose(proj, 0, 1)));
         qScale = keep(f32(t.get(p + "q_l2_clip.scale")));
@@ -104,8 +117,13 @@ final class InklingAttention {
             kConv = keep(f32(reshape(t.get(p + "k_sconv.weight"), -1, args.sconvKernel())));
             vConv = keep(f32(reshape(t.get(p + "v_sconv.weight"), -1, args.sconvKernel())));
         } else {
-            kConv = keep(f32(t.get(p + "k_sconv.static_w")));
-            vConv = keep(f32(t.get(p + "v_sconv.static_w")));
+            // [taps, kv channels]: this rank's KV heads are a block of columns
+            long c0 = (long) kvHeads * headDim * shard.rank();
+            long cn = (long) kvHeads * headDim;
+            Tensor ks = t.get(p + "k_sconv.static_w");
+            Tensor vs = t.get(p + "v_sconv.static_w");
+            kConv = keep(f32(shard.size() == 1 ? ks : contiguous(narrow(ks, 1, c0, cn))));
+            vConv = keep(f32(shard.size() == 1 ? vs : contiguous(narrow(vs, 1, c0, cn))));
         }
     }
 
@@ -118,6 +136,9 @@ final class InklingAttention {
     int offV() { return local ? offK() + kRows : 0; }
     int offKProj() { return kRows; }
     boolean isLocal() { return local; }
+    /** Query heads and KV heads of this rank. */
+    int heads() { return heads; }
+    int kvHeads() { return kvHeads; }
 
     private Tensor wq() { return narrow(local ? wAll : wQ, 0, 0, qRows); }
     private Tensor wGate() { return narrow(local ? wAll : wQ, 0, offGate(), gateRows); }
@@ -127,6 +148,42 @@ final class InklingAttention {
     private Tensor wv() { return local ? narrow(wAll, 0, offV(), vRows) : narrow(wV, 0, 0, vRows); }
     private Tensor kProj() { return narrow(wK, 0, kRows, kProjRows); }
     private Tensor vProj() { return narrow(wV, 0, vRows, kProjRows); }
+
+    /**
+     * The tensors of a layer's attention that are stored by head or KV head along the first dimension, with the rows
+     * this rank needs ({@code {firstRow, rowCount}}). {@code wo_ud} (input columns) and the global layers' {@code static_w}
+     * (output columns) are sliced after reading.
+     */
+    static void rowSlices(InklingModelArgs args, int layer, InklingShard shard, Map<String, long[]> out) {
+        if (shard.size() == 1) {
+            return;
+        }
+        boolean local = args.isLocal(layer);
+        int heads = local ? args.swaHeads() : args.numHeads();
+        int kv = local ? args.swaKvHeads() : args.numKvHeads();
+        int hd = local ? args.swaHeadDim() : args.headDim();
+        String p = "layers." + layer + ".attn.";
+        long h0 = shard.start(heads);
+        long hn = shard.part(heads);
+        long k0 = shard.start(kv);
+        long kn = shard.part(kv);
+        out.put(p + "wq_du.weight", new long[]{h0 * hd, hn * hd});
+        out.put(p + "gate_attn.weight", new long[]{h0 * hd, hn * hd});
+        out.put(p + "wr_du.weight", new long[]{h0 * args.relDim(), hn * args.relDim()});
+        out.put(p + "attn_sink_proj.weight", new long[]{h0, hn});
+        out.put(p + "q_l2_clip.scale", new long[]{h0, hn});
+        out.put(p + "rel_l2_clip.scale", new long[]{h0, hn});
+        out.put(p + "wk_dv.weight", new long[]{k0 * hd, kn * hd});
+        out.put(p + "wv_dv.weight", new long[]{k0 * hd, kn * hd});
+        if (local) {
+            out.put(p + "k_sconv.weight", new long[]{k0 * hd, kn * hd});
+            out.put(p + "v_sconv.weight", new long[]{k0 * hd, kn * hd});
+        } else {
+            int taps = args.sconvKernel();
+            out.put(p + "k_sconv.weight_proj", new long[]{k0 * taps, kn * taps});
+            out.put(p + "v_sconv.weight_proj", new long[]{k0 * taps, kn * taps});
+        }
+    }
 
     static Iterable<String> names(InklingModelArgs args, int layer) {
         String p = "layers." + layer + ".attn.";
@@ -271,7 +328,12 @@ final class InklingAttention {
         }
 
         Tensor gate = sigmoid(f32(linear(qIn, wGate())));
-        return linear(bf16(mul(f32(out), gate)), wo);
+        Tensor y = linear(bf16(mul(f32(out), gate)), wo);
+        if (shard.size() > 1) {
+            y = contiguous(y);
+            shard.allReduce(y);         // each rank holds the partial sum of its heads
+        }
+        return y;
     }
     /** bf16 view of a cache slice (the global caches may be E4M3). */
     private Tensor wide(Tensor t) {

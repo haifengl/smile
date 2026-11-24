@@ -35,13 +35,21 @@ import java.util.TreeSet;
  * @author Haifeng Li
  */
 final class InklingPrefixCache {
+    /** What an entry stores: a snapshot of one state, or one per rank of a sharded model. */
+    interface Payload {
+        /** Device bytes held (per rank for a sharded model). */
+        long bytes();
+
+        void close();
+    }
+
     /** A stored snapshot and the tokens it covers. */
     static final class Entry {
         final int[] tokens;
-        final InklingState.Snapshot snapshot;
+        final Payload snapshot;
         int pins;
 
-        Entry(int[] tokens, InklingState.Snapshot snapshot) {
+        Entry(int[] tokens, Payload snapshot) {
             this.tokens = tokens;
             this.snapshot = snapshot;
         }
@@ -130,7 +138,7 @@ final class InklingPrefixCache {
      * Stores a snapshot, evicting least-recently-used unpinned entries until it fits. The cache owns it afterwards;
      * a snapshot that does not fit is closed.
      */
-    void put(int[] tokens, InklingState.Snapshot snapshot) {
+    void put(int[] tokens, Payload snapshot) {
         Key key = new Key(tokens.length, hash(tokens, tokens.length));
         Entry old = entries.get(key);
         if (old != null && equal(old.tokens, tokens, tokens.length)) {

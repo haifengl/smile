@@ -441,12 +441,13 @@ public final class InklingDraft {
             boolean local = isLocal(i);
             int nsplit = local ? 1 : 8;
             int S = 4 * nsplit;
-            Tensor pm = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24);
-            Tensor pl = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24);
-            Tensor pacc = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, 8, S, 24, 128);
+            int slots = heads / 3;                     // 3 query heads x 8 rows = 24 queries per slot
+            Tensor pm = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, slots, S, 24);
+            Tensor pl = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, slots, S, 24);
+            Tensor pacc = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.Float).device(device), B, slots, S, 24, 128);
             Tensor attn = Tensor.empty(new Tensor.Options().dtype(smile.deep.tensor.ScalarType.BFloat16).device(device), R, heads * hd);
             long[] ap = {ptr(q), ptr(ptrs), ptr(end), ptr(attn), ptr(pm), ptr(pl), ptr(pacc)};
-            long[] aiv = {B, stride, i, local ? c.window() : 0, nsplit};
+            long[] aiv = {B, stride, i, local ? c.window() : 0, nsplit, heads, heads / kvh};
             smile.torch.InklingNative.op(17, ap, aiv, new double[0]);
             smile.torch.InklingNative.op(18, ap, aiv, new double[0]);
             Tensor out = linear(attn, w[O]);

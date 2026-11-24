@@ -45,7 +45,25 @@ public class InklingLongPromptTest {
         int target = Integer.parseInt(System.getenv().getOrDefault("INKLING_PROMPT", "32000"));
         int gen = Integer.parseInt(System.getenv().getOrDefault("INKLING_TOKENS", "200"));
         byte device = Byte.parseByte(System.getenv().getOrDefault("INKLING_DEVICE", "0"));
-        try (Inkling model = Inkling.build(ckpt, 0, (int) (target * 1.15) + gen + 4096, device)) {
+        String tp = System.getenv("INKLING_TP");           // e.g. "0,1,2,3,4,5,6,7": the sharded model
+        int maxLen = (int) (target * 1.15) + gen + 4096;
+        AutoCloseable closer;
+        smile.llm.engine.ModelExecutor model;
+        if (tp != null) {
+            String[] ids = tp.split(",");
+            byte[] devices = new byte[ids.length];
+            for (int i = 0; i < devices.length; i++) {
+                devices[i] = Byte.parseByte(ids[i].trim());
+            }
+            InklingTp m = InklingTp.build(ckpt, 0, maxLen, devices);
+            closer = m;
+            model = m;
+        } else {
+            Inkling m = Inkling.build(ckpt, 0, maxLen, device);
+            closer = m;
+            model = m;
+        }
+        try (closer) {
             java.util.Random r = new java.util.Random(7);
             String[] subjects = {"The harbor authority", "A local baker", "The village council", "An old fisherman", "The museum curator", "A travelling merchant"};
             String[] verbs = {"recorded", "announced", "postponed", "repaired", "counted", "inspected"};
@@ -64,7 +82,7 @@ public class InklingLongPromptTest {
             }
             sb.append("\n\nQuestion: what is the secret vault code word mentioned in the text above? Answer with the code word only.");
             ChatOptions options = new ChatOptions(null, smile.llm.ToolChoice.AUTO, true).withReasoningEffort("none");
-            int[] prompt = model.encodeChat(new Message[]{new Message(Role.user, sb.toString())}, options);
+            int[] prompt = ((smile.llm.LanguageModel) model).encodeChat(new Message[]{new Message(Role.user, sb.toString())}, options);
             System.out.printf("prompt: %d tokens%n", prompt.length);
             int id = model.bind(prompt, prompt.length + gen + 16);
             long t0 = System.nanoTime();

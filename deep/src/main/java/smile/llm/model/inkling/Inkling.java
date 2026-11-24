@@ -585,7 +585,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             }
             InklingState st = session(requestId);
             onWorker(() -> {
-                st.restore(hit.snapshot);
+                st.restore((InklingState.Snapshot) hit.snapshot);
                 return null;
             });
         } finally {
@@ -712,7 +712,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             this.nb = nb;
             this.rowsPer = rowsPer;
             if (rowsPer > 1) {
-                this.taps = Ix.keep(Ix.zeros(device, smile.deep.tensor.ScalarType.BFloat16, nb, 4, args.dim()));
+                this.taps = Ix.keep(Ix.zeros(device, smile.deep.tensor.ScalarType.BFloat16, nb, model.tapIds.length, args.dim()));
                 this.accepted = Ix.keep(Tensor.of(new int[nb / rowsPer], nb / rowsPer).to(device));
             }
             this.ids = Ix.keep(Tensor.of(new long[nb], nb).to(device));
