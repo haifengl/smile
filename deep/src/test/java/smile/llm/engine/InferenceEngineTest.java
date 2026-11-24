@@ -134,14 +134,22 @@ public class InferenceEngineTest {
 
     @Test
     public void testGivenStepApiWhenTwoRequestsThenBothComplete() throws Exception {
+        // Given – hold the first decode step (and keep it non-stop) so scheduling jitter
+        // between the two submits cannot let the first request finish before the second binds.
         StepStub stub = new StepStub();
+        stub.blockDecode = true;
+        stub.nonStopDecodeCalls = 1;
         try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000)) {
+            // When
             var a = engine.submit(GenerationRequest.ofTokens(
                     new int[]{1, 2}, 3, 0.0, 0.9, false, 0, null));
             var b = engine.submit(GenerationRequest.ofTokens(
                     new int[]{3, 4}, 3, 0.0, 0.9, false, 0, null));
+            stub.awaitDecode(5, TimeUnit.SECONDS);
+            stub.releaseDecode();
             ChatCompletion ca = a.future().get(10, TimeUnit.SECONDS);
             ChatCompletion cb = b.future().get(10, TimeUnit.SECONDS);
+            // Then
             assertEquals(FinishReason.stop, ca.reason());
             assertEquals(FinishReason.stop, cb.reason());
             assertTrue(stub.maxConcurrentBound.get() >= 2,
@@ -183,6 +191,7 @@ public class InferenceEngineTest {
         final AtomicInteger evicted = new AtomicInteger();
         final AtomicLong firstBindNs = new AtomicLong();
         volatile boolean blockDecode;
+        volatile int nonStopDecodeCalls;
         private final Object decodeLock = new Object();
         private boolean decodeStarted;
         private boolean decodeReleased;
@@ -272,7 +281,7 @@ public class InferenceEngineTest {
             return peakedLogits(1, 9);
         }
         @Override public smile.deep.tensor.Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
-            decodeCalls.incrementAndGet();
+            int call = decodeCalls.incrementAndGet();
             synchronized (decodeLock) {
                 decodeStarted = true;
                 decodeLock.notifyAll();
@@ -285,7 +294,7 @@ public class InferenceEngineTest {
                     }
                 }
             }
-            return peakedLogits(requestIds.length, 2);
+            return peakedLogits(requestIds.length, call <= nonStopDecodeCalls ? 9 : 2);
         }
         @Override public void finish(int requestId, int[] sequenceTokens) {
             bound.decrementAndGet();
