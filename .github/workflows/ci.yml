@@ -88,10 +88,11 @@ jobs:
       # No SMILE_ONNX_GENAI_MODEL on runners: GenAINativeTest skips model cases and
       # only exercises natives when ONNXRUNTIME_* paths are set (above).
       - name: Run unit tests (skip integration tests)
-        # Add global JVM arguments to the daemon to keep it small in CI environments
+        # Size Gradle and test JVMs for 16 GB ubuntu-latest runners (leaving room for OS + LibTorch/ONNX native memory)
         run: |
           xvfb-run --auto-servernum ./gradlew test \
-            -Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=384m" \
+            -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m" \
+            -PtestMaxHeapSize=8g \
             -DexcludeTags=integration \
             -Pserve.plugins=false \
             -x :plot:test \

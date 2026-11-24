@@ -30,7 +30,8 @@ tasks.withType<Test>().all {
     // GitHub runners (typically 2-core) generally have fewer worker threads than dev machines,
     // Set this pool to use two threads for consistenty across machines.
     systemProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "2")
-    jvmArgs("-Xmx6G", "-XX:MaxMetaspaceSize=1024M", "-Xss4M", "-XX:+UseZGC")
+    maxHeapSize = providers.gradleProperty("testMaxHeapSize").getOrElse("8g")
+    jvmArgs("-XX:MaxMetaspaceSize=1024M", "-Xss4M", "-XX:+UseZGC")
     jvmArgs("-XX:+UseCompactObjectHeaders")
     jvmArgs("-XX:+UseCompressedOops")
     jvmArgs("-XX:ObjectAlignmentInBytes=16")

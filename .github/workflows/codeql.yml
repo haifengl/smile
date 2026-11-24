@@ -94,7 +94,20 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-        ./gradlew clean :core:assemble -Pkotlin.incremental=false -Dorg.gradle.parallel=false --no-daemon --no-build-cache
+        ./gradlew clean \
+          :base:compileJava \
+          :core:compileJava \
+          :deep:compileJava \
+          :nlp:compileJava \
+          :plot:compileJava \
+          :spark:compileJava \
+          :serve:compileJava \
+          -Pserve.plugins=false \
+          -Pkotlin.incremental=false \
+          -Dorg.gradle.parallel=false \
+          -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g" \
+          --no-daemon \
+          --no-build-cache
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
