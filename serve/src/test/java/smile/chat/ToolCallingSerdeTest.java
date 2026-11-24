@@ -133,8 +133,18 @@ public class ToolCallingSerdeTest {
                 CompletionRequest.class).toChatOptions().reasoningEffort());
         assertEquals("medium", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"reasoning_effort\":\"Medium\"}}",
                 CompletionRequest.class).toChatOptions().reasoningEffort());
-        // the OpenAI spelling "high" is Qwen's xhigh
-        assertEquals("xhigh", mapper.readValue("{" + base + ",\"reasoning_effort\":\"high\"}",
+        // effort names pass through verbatim (each chat template maps aliases such as high -> xhigh)
+        assertEquals("high", mapper.readValue("{" + base + ",\"reasoning_effort\":\"high\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("xhigh", mapper.readValue("{" + base + ",\"reasoning_effort\":\"xhigh\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("max", mapper.readValue("{" + base + ",\"reasoning_effort\":\"max\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("none", mapper.readValue("{" + base + ",\"reasoning_effort\":\"none\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("minimal", mapper.readValue("{" + base + ",\"reasoning_effort\":\"minimal\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("0.5", mapper.readValue("{" + base + ",\"reasoning_effort\":\"0.5\"}",
                 CompletionRequest.class).toChatOptions().reasoningEffort());
         // the top-level field wins over the kwargs
         assertEquals("low", mapper.readValue("{" + base + ",\"reasoning_effort\":\"low\","
@@ -144,7 +154,9 @@ public class ToolCallingSerdeTest {
                 CompletionRequest.class).toChatOptions().preserveThinking());
         assertEquals(Boolean.TRUE, mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"preserve_thinking\":true}}",
                 CompletionRequest.class).toChatOptions().preserveThinking());
-        CompletionRequest bad = mapper.readValue("{" + base + ",\"reasoning_effort\":\"max\"}", CompletionRequest.class);
-        assertThrows(IllegalArgumentException.class, bad::toChatOptions);
+        CompletionRequest badName = mapper.readValue("{" + base + ",\"reasoning_effort\":\"extreme\"}", CompletionRequest.class);
+        assertThrows(IllegalArgumentException.class, badName::toChatOptions);
+        CompletionRequest outOfRange = mapper.readValue("{" + base + ",\"reasoning_effort\":\"1.5\"}", CompletionRequest.class);
+        assertThrows(IllegalArgumentException.class, outOfRange::toChatOptions);
     }
 }
