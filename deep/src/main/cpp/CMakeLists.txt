@@ -187,6 +187,11 @@ if(SMILE_TORCH_CUDA_ENABLED)
             /usr/local/include
             /usr/include/x86_64-linux-gnu
         PATH_SUFFIXES nccl)
+    # LibTorch ships its own libnccl.so.2 and its lib directory comes first on the runtime library path, so that
+    # is the NCCL the process loads: link the same one instead of a system copy it would hide.
+    find_library(NCCL_LIBRARY NAMES libnccl.so.2 nccl
+        PATHS "${LIBTORCH_ROOT}/lib"
+        NO_DEFAULT_PATH)
     find_library(NCCL_LIBRARY NAMES nccl libnccl.so.2
         HINTS
             ${CUDAToolkit_LIBRARY_DIR}
