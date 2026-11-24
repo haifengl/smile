@@ -189,6 +189,13 @@ public final class LocalLlmDetector {
                     "NVIDIA CUDA (Looped MoE NVFP4/MXFP8 + Vision + DSpark, 1M ctx) • 26B • Full Tool Profile"
             ),
             new CuratedModel(
+                    "thinkingmachines/Inkling-2-Small",
+                    RuntimeBackend.NVIDIA_CUDA,
+                    594.0,
+                    "~400 GB VRAM (8x A100 80GB, TP8+EP8)",
+                    "NVIDIA CUDA (MoE NVFP4/MXFP8 sharded over 8 GPUs + Vision + DSpark, 1M ctx) • 594B • Full Tool Profile"
+            ),
+            new CuratedModel(
                     "Qwen/Qwen3.8-27B",
                     RuntimeBackend.NVIDIA_CUDA,
                     27.0,

@@ -506,9 +506,13 @@ final class InklingDecoder {
         Tensor o = SKIP.contains("proj") ? empty(ScalarType.BFloat16, nb, dim) : q8 ? at.f8Wo.forward(attnOut) : linear(attnOut, at.wo);
         // sharded: each rank holds the partial sum of its heads; summed in float32 (the peer-to-peer all-reduce, graph-safe,
         // is 3-4x faster than NCCL for these small messages) and read by the convolution kernel as such
-        boolean o32 = model.shard.size() > 1;
+        // (a big prefill chunk reduces the bf16 output as the reference path does: half the bytes of a 75 MB message)
+        boolean o32 = model.shard.size() > 1 && !(prefillMode && nb > 256);
         if (o32) {
             o = f32(o);
+            model.shard.allReduce(o);
+        }
+        if (model.shard.size() > 1 && !o32) {
             model.shard.allReduce(o);
         }
         InklingProf.lap("f: wo + all-reduce", o);
@@ -542,7 +546,7 @@ final class InklingDecoder {
         // routing and experts
         Tensor idx = empty(ScalarType.Int32, nb, args.numExpertsPerTok());
         Tensor wts = empty(ScalarType.Float, nb, args.numExpertsPerTok());
-        Tensor logits = linear(x32[0], layer.router);
+        Tensor logits = layer.routerLogits(x32[0]);
         if (!SKIP.contains("route")) InklingNative.op(OP_ROUTE, new long[]{p(logits), p(layer.routerBias), p(idx), p(wts)},
                 new long[]{nb, args.numExperts(), args.numExpertsPerTok()}, new double[]{args.routeScale()});
         InklingProf.lap("f: router", wts);

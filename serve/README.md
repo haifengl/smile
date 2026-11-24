@@ -35,7 +35,7 @@ A React-based web UI is bundled and served from the same process.
    - [DeepSeek-V4.1-Flash](#21-deepseek-v41-flash)
    - [GLM-5.3-Flash](#22-glm-53-flash)
    - [MiniMax-M3.1-Flash](#23-minimax-m31-flash)
-   - [Inkling-2-Mini](#24-inkling-2-mini)
+   - [Inkling-2-Mini and Inkling-2-Small](#24-inkling-2-mini)
    - [Qwen3.8 27B](#25-qwen38-27b)
    - [Llama 3.1 8B Instruct](#26-llama-31-8b-instruct)
 3. [Building and Running](#3-building-and-running)
@@ -543,6 +543,48 @@ Long prompts: `smile.chat.max-seq-len` up to the model's 1,048,576. Global-layer
 (16 KB per token, no measurable quality change) beyond ~120k tokens; one 40 GB GPU holds about 300k tokens with it. For more, spill the caches of the last global layers to a second
 GPU with `-Dsmile.inkling.kv.spill.device=1 -Dsmile.inkling.kv.spill.apps=7`. Decode slows with the context (14 ms per token at 35k, 33 ms at 131k, 53 ms at 250k, 214 ms at 980k with the spill); a 980k-token prompt prefills at 245 tok/s (67 min) and the needle test passes.
 The implementation and the knobs are in [deep/LLM.md](../deep/LLM.md#inkling-2-mini-smilellmmodelinkling).
+
+#### Inkling-2-Small on 8 GPUs
+
+[thinkingmachines/Inkling-2-Small](https://huggingface.co/thinkingmachines/Inkling-2-Small) (594 B parameters, 17 B active; 48 layers, hidden 4608, 384 experts;
+NVFP4 experts in layers 0-39 and MXFP8 in 40-47, 394 GB; text and images, 1M-token context) runs sharded over **8 x A100-80GB** (about 60 GB per GPU after loading;
+NVLink recommended): attention by head, experts by block, everything else replicated, one thread per GPU. Set `smile.chat.devices=0,1,2,3,4,5,6,7` (env
+`SMILE_CHAT_DEVICES`) and `smile.chat.model=thinkingmachines/Inkling-2-Small` or a local directory; several devices select the sharded model, one device is
+refused for Small. The GPU image needs NCCL (it has it) and peer access between the GPUs; loading takes about 2 minutes from the page cache. Useful settings:
+`smile.chat.max-seq-len` (up to 1,048,576; global-layer KV costs 4 KiB per token per GPU), `smile.chat.max-batch-size` (8: decode, verify and draft CUDA graphs are
+captured for up to 8 requests at load). The draft model (`mtp.safetensors`, 3.4 GB per GPU: it is replicated, it needs no communication), the vision tower
+(0.6 GB per GPU) and prefix reuse are on by default.
+
+| Greedy, 8 x A100-80GB, HTTP | 1 request | 2 | 4 | 8 |
+|---|---|---|---|---|
+| Plain decode, prose (tok/s aggregate) | 62 | 95 | 135 | 252 |
+| DSpark speculation, prose | 88 | 140 | 190 | 299 |
+| DSpark speculation, code | 219 | 351 | 552 | 754 |
+
+Decode is 13 ms per step at one request (graph replay, 96 all-reduces included) and 14 / 20 / 37 ms per token at 35k / 261k / 1M tokens of context.
+Prefill (4096-token chunks through the fused kernels, flash attention for the far global keys): 3.3 k tok/s at 8k tokens, 4.4 k at 33k, 5.1 k at 261k, 4.1 k at 1.02M;
+a needle-in-a-haystack prompt of 131k tokens answers in 27 s over HTTP, a 1.02M-token one prefills in 250 s. A repeated or continued conversation reuses the
+stored state of the longest cached prefix (snapshots at 1024, 2048, 4096 tokens and then every 4096, and at the end of every request): a 50k-token second turn takes 2.6 s
+instead of 40 s. Speculation is lossless; it gains most on code and copy-like text, and after a prefix hit the draft starts without the reused part of the context.
+
+Launch (same pattern as the other GPU models; `--ipc=host` and unlimited locked memory help NCCL and the peer-to-peer all-reduce):
+
+```shell
+sudo docker run -i --rm --gpus all --ipc=host --ulimit memlock=-1 -p 8888:8080 \
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=/llm/Inkling-2-Small -Dsmile.chat.devices=0,1,2,3,4,5,6,7 -Dsmile.chat.max-batch-size=8 -Dsmile.chat.max-seq-len=262144" \
+  -u root -v "/llm/model":/model -v /llm/Inkling-2-Small:/llm/Inkling-2-Small:ro quarkus/smile-serve-gpu
+```
+
+(All measurements here were made with the same kernels and serve jar in a hand-made CUDA 13 / torch 2.14 image on 8 x A100-80GB; the stock `Dockerfile.gpu` image
+has not been built and run for Small yet.)
+
+Knobs (environment, or `-D` system properties): `SMILE_INKLING_SPECULATE=0` (no draft), `SMILE_INKLING_VISION=0`, `SMILE_INKLING_GRAPH=0` / `SMILE_INKLING_FUSED=0`
+(eager decode), `SMILE_INKLING_FUSED_PREFILL=0` (reference prefill, 3-5x slower), `smile.inkling.chunk.tp` (prefill chunk, 4096; 8192 does not fit),
+`smile.inkling.prefix.cache.mb` (prefix snapshots per GPU, 4096), `smile.inkling.prefix.every`, `smile.inkling.draft.maxctx` (longest request that gets a draft context,
+65536: the replicated draft context costs 20 KB per token per GPU), `smile.inkling.min.free.mb` (free GPU memory below which the allocator caches are emptied before a prefill
+chunk, 6144), `smile.inkling.nccl.only=true` (no peer-to-peer all-reduce), `smile.inkling.prefill.flash.min` (far keys from which flash attention is used, 2048).
+Not supported on the sharded model yet: video; image requests take no prefix snapshots and no speculation.
+Implementation and measurements: [deep/LLM.md](../deep/LLM.md#inkling-2-small-sharded-over-8-gpus).
 
 ### 2.5 Qwen3.8 27B
 
@@ -1660,7 +1702,7 @@ There are therefore two ways to run a chat model:
 ### 7.1 Supported Models
 
 The native path covers **Llama-3.1**, **Qwen3.8/3.5**, **MiniMax-M3.1-Flash / M3**,
-**DeepSeek-V4.1**, **GLM-5.3-Flash**, and **Inkling-2-Mini** checkpoints (see
+**DeepSeek-V4.1**, **GLM-5.3-Flash**, and **Inkling-2-Mini / Inkling-2-Small** checkpoints (see
 [§2](#2-llm-decode-benchmarks) for benchmarks and
 [deep/LLM.md](../deep/LLM.md) for the implementation). Every other family is
 served through ONNX Runtime GenAI and requires only a GenAI-ready package —

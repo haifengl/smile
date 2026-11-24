@@ -49,7 +49,7 @@ public class InklingTpGenDumpTest {
         Assumptions.assumeTrue(ckpt != null && tp != null && prompts != null && out != null,
                 "set INKLING_CKPT, INKLING_TP, INKLING_PROMPTS and INKLING_OUT");
         int count = Integer.parseInt(System.getenv().getOrDefault("INKLING_TOKENS", "24"));
-        InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, 4096);
+        InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, Integer.parseInt(System.getenv().getOrDefault("INKLING_MAXLEN", "4096")));
         if (System.getenv("INKLING_LAYERS") != null) {
             args = args.withLayers(Integer.parseInt(System.getenv("INKLING_LAYERS")), 1);
         }
@@ -73,7 +73,14 @@ public class InklingTpGenDumpTest {
             InklingState[] st = ranks.newStates(prompt.length + count + 8);
             long start = System.nanoTime();
             try {
-                Tensor logits = ranks.forward(st, prompt, null, null);
+                Tensor logits = null;
+                for (int from = 0; from < prompt.length; from += st[0].maxChunk(args)) {
+                    int to = Math.min(prompt.length, from + st[0].maxChunk(args));
+                    Tensor t = ranks.forward(st, java.util.Arrays.copyOfRange(prompt, from, to), to == prompt.length ? null : new int[0], null);
+                    if (t != null) {
+                        logits = t;
+                    }
+                }
                 for (int i = 0; i < count; i++) {
                     float[] row = logits.to(Device.CPU()).floatArray();
                     int best = 0;

@@ -33,6 +33,30 @@ public class SafeTensorsTest {
     @TempDir
     Path tempDir;
 
+    @Test
+    public void testGivenRowRangesWhenReadThenOnlyThoseRowsAreLoaded() throws Exception {
+        // a [6, 3] float tensor stacked over "experts", a uint8 one and a whole tensor in the same file
+        float[] data = new float[18];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = i;
+        }
+        Tensor stacked = Tensor.of(data, 6, 3);
+        Tensor small = Tensor.of(new float[]{7f, 8f}, 2);
+        String path = tempDir.resolve("rows.safetensors").toString();
+        new SafeTensors(Map.of("w", stacked, "b", small), Map.of()).write(path);
+
+        Map<String, long[]> want = new java.util.HashMap<>();
+        want.put("w", new long[]{2, 3});          // rows 2, 3, 4
+        want.put("b", null);                      // the whole tensor
+        SafeTensors st = SafeTensors.readRows(path, Device.CPU(), want);
+        Tensor w = st.tensors().get("w");
+        assertArrayEquals(new long[]{3, 3}, w.shape());
+        assertArrayEquals(new float[]{6, 7, 8, 9, 10, 11, 12, 13, 14}, w.floatArray(), 1e-6f);
+        assertArrayEquals(new float[]{7f, 8f}, st.tensors().get("b").floatArray(), 1e-6f);
+        assertThrows(java.io.IOException.class, () -> SafeTensors.readRows(path, Device.CPU(), Map.of("w", new long[]{5, 3})));
+        assertThrows(java.io.IOException.class, () -> SafeTensors.readRows(path, Device.CPU(), Map.of("missing", new long[]{0, 1})));
+    }
+
     // -----------------------------------------------------------------------
     // Scalar floating-point types
     // -----------------------------------------------------------------------

@@ -18,6 +18,7 @@ package smile.llm.model.inkling;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -351,11 +352,13 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             return;
         }
         if (free < MIN_FREE) {
+            long t0 = System.nanoTime();
             ranks.onRanks(r -> {
                 contexts[r].device.emptyCache();
                 return null;
             });
-            logger.info("Inkling: emptied the allocator caches ({} MiB free before, {} MiB after)", free >> 20,
+            logger.info("Inkling: emptied the allocator caches in {} ms ({} MiB free before, {} MiB after)",
+                    (System.nanoTime() - t0) / 1_000_000, free >> 20,
                     smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0] >> 20);
         }
     }
@@ -809,8 +812,70 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         return tokenizer.tryDecode(tokens, skipSpecial);
     }
 
+    private static void timed(String what, long t0) {
+        if (TIMING) {
+            logger.info("Inkling TP {}: {} ms", what, (System.nanoTime() - t0) / 1_000_000);
+        }
+    }
+
     @Override
     public int bind(int[] prompt, int totalCapacity) {
+        long t0 = System.nanoTime();
+        try {
+            return bindImpl(prompt, totalCapacity);
+        } finally {
+            timed("bind", t0);
+        }
+    }
+
+    /** Spare per-request states (all ranks): allocating the caches of a request on every rank takes ~0.75 s on a busy server. */
+    private final ArrayDeque<InklingState[]> spareStates = new ArrayDeque<>();
+    private static final int MAX_SPARE_STATES = Integer.getInteger("smile.inkling.spare.states", 4);
+    private static final int POOLED_CAPACITY = 65536;
+
+    /** Rounds a capacity up so that a spare state fits more requests; very long ones are allocated exactly. */
+    private static int stateCapacity(int capacity) {
+        return capacity > POOLED_CAPACITY ? capacity : Math.max(4096, (capacity + 4095) & ~4095);
+    }
+
+    /** Takes the smallest spare state that holds {@code capacity} tokens, or returns {@code null}. Called with the lock held. */
+    private InklingState[] takeSpare(int capacity) {
+        InklingState[] best = null;
+        for (InklingState[] s : spareStates) {
+            if (s[0].capacity >= capacity && (best == null || s[0].capacity < best[0].capacity)) {
+                best = s;
+            }
+        }
+        if (best != null) {
+            spareStates.remove(best);
+        }
+        return best;
+    }
+
+    /** Resets a finished request's states and keeps them for the next one (or frees them). Called with the lock held. */
+    private void giveBack(InklingState[] s) {
+        if (s[0].capacity <= POOLED_CAPACITY && MAX_SPARE_STATES > 0) {
+            ranks.onRanks(r -> {
+                s[r].reset();
+                return null;
+            });
+            spareStates.add(s);
+            while (spareStates.size() > MAX_SPARE_STATES) {
+                InklingState[] old = spareStates.poll();
+                ranks.onRanks(r -> {
+                    old[r].close();
+                    return null;
+                });
+            }
+        } else {
+            ranks.onRanks(r -> {
+                s[r].close();
+                return null;
+            });
+        }
+    }
+
+    private int bindImpl(int[] prompt, int totalCapacity) {
         if (totalCapacity > args.maxSeqLen()) {
             throw new IllegalArgumentException("capacity " + totalCapacity + " exceeds max_seq_len " + args.maxSeqLen());
         }
@@ -822,10 +887,18 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 ? InklingState.VERIFY_ROWS : 0;
         int capacity = Math.max(1, totalCapacity) + margin;
         synchronized (lock) {
-            states = ranks.newStates(capacity);
+            long t0 = System.nanoTime();
+            states = takeSpare(capacity);
+            if (states == null) {
+                ensureHeadroom();
+                states = ranks.newStates(stateCapacity(capacity));
+            }
+            timed("newStates, capacity " + capacity, t0);
+            long t1 = System.nanoTime();
             if (margin > 0) {
                 ds = ranks.onRanks(r -> drafts[r].newState(capacity)).toArray(new InklingDraft.State[0]);
             }
+            timed("draft newState", t1);
         }
         int id = nextId.getAndIncrement();
         sessions.put(id, states);
@@ -849,7 +922,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
      * The snapshot positions: 1024, 2048 and 4096, then every {@link #SNAPSHOT_EVERY} tokens. A snapshot ends a prefill chunk
      * and a chunk costs ~0.4 s of overhead whatever its size, so they are sparse; the finer start serves shared system prompts.
      */
-    private static int nextSnapshot(int pos) {
+    static int nextSnapshot(int pos) {
         for (int p : new int[]{1024, 2048, 4096}) {
             if (pos < p) {
                 return p;
@@ -858,21 +931,27 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         return (pos / SNAPSHOT_EVERY + 1) * SNAPSHOT_EVERY;
     }
 
-    private static boolean isSnapshotPosition(int pos) {
+    static boolean isSnapshotPosition(int pos) {
         return pos == 1024 || pos == 2048 || pos >= 4096 && pos % SNAPSHOT_EVERY == 0;
     }
 
-    /** One snapshot per rank. */
-    private record RankSnapshots(InklingState.Snapshot[] parts) implements InklingPrefixCache.Payload {
+    /** One snapshot per rank, with the draft's context when the request had one covering the whole prefix. */
+    private record RankSnapshots(InklingState.Snapshot[] parts, InklingDraft.Snapshot[] draft)
+            implements InklingPrefixCache.Payload {
         @Override
         public long bytes() {
-            return parts[0].bytes();
+            return parts[0].bytes() + (draft == null ? 0 : draft[0].bytes());
         }
 
         @Override
         public void close() {
             for (InklingState.Snapshot p : parts) {
                 p.close();
+            }
+            if (draft != null) {
+                for (InklingDraft.Snapshot d : draft) {
+                    d.close();
+                }
             }
         }
     }
@@ -909,6 +988,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     /** Loads the matched snapshot into the request's (empty) states; the engine then prefills from its length. */
     @Override
     public void warmPrefix(int requestId, int[] prompt, int prefixLen) {
+        long t0 = System.nanoTime();
+        try {
+            warmPrefixImpl(requestId, prompt, prefixLen);
+        } finally {
+            timed("warmPrefix", t0);
+        }
+    }
+
+    private void warmPrefixImpl(int requestId, int[] prompt, int prefixLen) {
         InklingPrefixCache.Entry hit = prefixMatches.remove(requestId);
         if (hit == null) {
             return;
@@ -919,11 +1007,16 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                         + " but its stored prefix has " + hit.length() + " tokens");
             }
             InklingState[] st = session(requestId);
-            InklingState.Snapshot[] parts = ((RankSnapshots) hit.snapshot).parts();
+            RankSnapshots snap = (RankSnapshots) hit.snapshot;
+            InklingState.Snapshot[] parts = snap.parts();
+            InklingDraft.State[] ds = draftStates.get(requestId);
             synchronized (lock) {
                 ranks.onRanks(r -> {
                     try (var guard = Tensor.noGradGuard()) {
                         st[r].restore(parts[r]);
+                        if (ds != null && snap.draft() != null) {
+                            drafts[r].restore(ds[r], snap.draft()[r]);       // the draft sees the reused prompt as well
+                        }
                     }
                     return null;
                 });
@@ -936,11 +1029,13 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     }
 
     /** Stores a snapshot of {@code st}, which has processed exactly {@code tokens} (call with the lock held). */
-    private void store(InklingState[] st, int[] tokens) {
+    private void store(InklingState[] st, InklingDraft.State[] ds, int[] tokens) {
         if (tokens.length < SNAPSHOT_MIN || st[0].length != tokens.length) {
             return;
         }
-        long bytes = InklingState.snapshotBytes(args, tokens.length) / devices.length + (4L << 20);
+        boolean withDraft = ds != null && ds[0].absorbed >= tokens.length;
+        long bytes = InklingState.snapshotBytes(args, tokens.length) / devices.length + (4L << 20)
+                + (withDraft ? drafts[0].snapshotBytes(tokens.length) : 0);
         synchronized (prefixCache) {
             if (!prefixCache.fits(bytes) || prefixCache.has(tokens, tokens.length)) {
                 return;
@@ -952,8 +1047,13 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 return st[r].snapshot(args);
             }
         }).toArray(new InklingState.Snapshot[0]);
+        InklingDraft.Snapshot[] dparts = !withDraft ? null : ranks.onRanks(r -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return drafts[r].snapshot(ds[r], tokens.length);
+            }
+        }).toArray(new InklingDraft.Snapshot[0]);
         synchronized (prefixCache) {
-            prefixCache.put(tokens, new RankSnapshots(parts));
+            prefixCache.put(tokens, new RankSnapshots(parts, dparts));
         }
     }
 
@@ -972,6 +1072,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
 
     @Override
     public Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+        long t0 = System.nanoTime();
+        try {
+            return prefillChunkImpl(requestId, prompt, from, to);
+        } finally {
+            timed("prefillChunk " + from + ".." + to, t0);
+        }
+    }
+
+    private Tensor prefillChunkImpl(int requestId, int[] prompt, int from, int to) {
         InklingState[] st = session(requestId);
         if (st[0].length != from) {
             throw new IllegalStateException("request " + requestId + " is at position " + st[0].length + ", not " + from);
@@ -1005,7 +1114,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 }
                 pos = end;
                 if (prefixCache != null && prefixReuse && isSnapshotPosition(pos) && pos < prompt.length && pos <= SNAPSHOT_MAX) {
-                    store(st, Arrays.copyOf(prompt, pos));
+                    store(st, draftStates.get(requestId), Arrays.copyOf(prompt, pos));
                 }
             }
             return logits;
@@ -1311,6 +1420,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
 
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
+        long t0 = System.nanoTime();
+        try {
+            finishImpl(requestId, sequenceTokens);
+        } finally {
+            timed("finish", t0);
+        }
+    }
+
+    private void finishImpl(int requestId, int[] sequenceTokens) {
         InklingState[] st = sessions.get(requestId);
         if (st != null && prefixCache != null && prefixReuse && sequenceTokens != null && !images.containsKey(requestId)
                 && st[0].length >= SNAPSHOT_MIN && st[0].length <= sequenceTokens.length) {
@@ -1318,7 +1436,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             int[] tokens = Arrays.copyOf(sequenceTokens, st[0].length);
             synchronized (lock) {
                 try {
-                    store(st, tokens);
+                    store(st, draftStates.get(requestId), tokens);
                 } catch (RuntimeException e) {
                     // the request itself succeeded: a missing snapshot only costs a later prefill
                     logger.warn("Inkling: could not store the prefix snapshot of {} tokens: {}", tokens.length, e.toString());
@@ -1358,10 +1476,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         InklingState[] s = sessions.remove(requestId);
         if (s != null) {
             synchronized (lock) {
-                ranks.onRanks(r -> {
-                    s[r].close();
-                    return null;
-                });
+                giveBack(s);
             }
         }
     }
@@ -1382,6 +1497,13 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             evict(id);
         }
         synchronized (lock) {
+            for (InklingState[] spare : spareStates) {
+                ranks.onRanks(r -> {
+                    spare[r].close();
+                    return null;
+                });
+            }
+            spareStates.clear();
             if (prefixCache != null) {
                 synchronized (prefixCache) {
                     prefixCache.clear();

@@ -167,6 +167,10 @@ class LocalLlmDetectorTest {
         assertEquals(RuntimeBackend.NVIDIA_CUDA, inkling.backend());
         assertFalse(inkling.usesCompactToolProfile());
 
+        CuratedModel inklingSmall = LocalLlmDetector.findCuratedModel("thinkingmachines/Inkling-2-Small").orElseThrow();
+        assertEquals(RuntimeBackend.NVIDIA_CUDA, inklingSmall.backend());
+        assertFalse(inklingSmall.usesCompactToolProfile());
+
         CuratedModel minimax = LocalLlmDetector.findCuratedModel("MiniMaxAI/MiniMax-M3").orElseThrow();
         assertFalse(minimax.usesCompactToolProfile());
 

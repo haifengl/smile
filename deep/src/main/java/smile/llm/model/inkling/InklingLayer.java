@@ -104,6 +104,33 @@ final class InklingLayer {
         }
     }
 
+    private Tensor routerSplit;
+
+    /**
+     * Router logits {@code x32 . router^T} in float32. For many rows the float32 GEMM (19.5 TFLOPs, 0.9 ms per layer for a
+     * 4096-token chunk) runs on bf16 tensor cores instead, with a hi/lo split of both operands (about 1e-5 relative error).
+     *
+     * @param x32 float32 {@code [T, D]} (values already rounded to bf16).
+     */
+    Tensor routerLogits(Tensor x32) {
+        long n = router.size(0);
+        long k = router.size(1);
+        if (x32.size(0) >= 256 && device.isCUDA() && n % 8 == 0 && k % 16 == 0 && X3 && smile.torch.Native.f32GemmBf16x3Available()) {
+            if (routerSplit == null) {
+                Tensor hi = o("aten::_to_copy", router, ScalarType.BFloat16);
+                Tensor lo = o("aten::_to_copy", o("aten::sub.Tensor", router, hi.to(ScalarType.Float)), ScalarType.BFloat16);
+                Tensor both = o("aten::cat", new Tensor[]{unsqueeze(hi, 0), unsqueeze(lo, 0)}, 0L);
+                Tensor v = o("aten::reshape", both, new long[]{2, n / 8, 8, k / 16, 2, 4, 2});
+                Tensor perm = o("aten::permute", v, new long[]{1, 3, 2, 5, 0, 4, 6});
+                routerSplit = keep(o("aten::reshape", o("aten::contiguous", perm), new long[]{n / 8, k / 16, 32, 8}));
+            }
+            return smile.torch.Native.f32GemmBf16x3(contiguous(x32), routerSplit);
+        }
+        return linear(x32, router);
+    }
+
+    private static final boolean X3 = !"0".equals(System.getenv("SMILE_INKLING_ROUTER_X3"));
+
     /** The tensors of a layer that a rank reads only in part, with their first-dimension ranges. */
     static Map<String, long[]> rowSlices(InklingModelArgs args, int index, InklingShard shard) {
         Map<String, long[]> out = new HashMap<>();
@@ -309,7 +336,7 @@ final class InklingLayer {
         if (fused && experts.marlin()) {
             // router GEMM, then the router kernel (sigmoid, top-k of score + bias, renormalized weights) and the fused experts
             int rows = (int) h.size(0);
-            Tensor logits = linear(x32[0], router);
+            Tensor logits = routerLogits(x32[0]);
             Tensor idx = Tensor.empty(new Tensor.Options().dtype(ScalarType.Int32).device(device), rows, args.numExpertsPerTok());
             Tensor wts = Tensor.empty(new Tensor.Options().dtype(ScalarType.Float).device(device), rows, args.numExpertsPerTok());
             smile.torch.InklingNative.op(9, new long[]{smile.torch.InklingNative.dataPtr(logits),

@@ -192,6 +192,80 @@ public final class InklingDraft {
         return new InklingDraft(c, model, device, t);
     }
 
+    /**
+     * A copy of a request's draft context at {@code length} positions: all rows of the global layers, the last
+     * {@code window + block + 8} rows of the sliding ones (all the draft's attention reads from them).
+     *
+     * @param k      per layer, keys {@code [kvHeads, n, headDim]} (bf16, owned by the snapshot).
+     * @param v      per layer, values.
+     * @param start  per layer, the position of the first stored row.
+     * @param length positions covered.
+     * @param bytes  device memory held.
+     */
+    record Snapshot(Tensor[] k, Tensor[] v, int[] start, int length, long bytes) implements AutoCloseable {
+        @Override
+        public void close() {
+            for (int i = 0; i < k.length; i++) {
+                k[i].close();
+                v[i].close();
+            }
+        }
+    }
+
+    /** Device bytes of a snapshot of {@code length} positions. */
+    long snapshotBytes(int length) {
+        long bytes = 0;
+        for (int i = 0; i < c.layers(); i++) {
+            long rows = isLocal(i) ? Math.min(length, c.window() + c.block() + 8) : length;
+            bytes += 2L * c.kvHeads() * rows * c.headDim() * 2;
+        }
+        return bytes;
+    }
+
+    /**
+     * Copies the context of positions {@code [0, length)} out.
+     *
+     * @param st     the draft state; it must have absorbed {@code length} positions.
+     * @param length positions to keep.
+     * @return the snapshot (the caller closes it).
+     */
+    Snapshot snapshot(State st, int length) {
+        if (st.absorbed < length) {
+            throw new IllegalStateException("draft context ends at " + st.absorbed + ", the snapshot wants " + length);
+        }
+        int layers = c.layers();
+        Tensor[] ks = new Tensor[layers];
+        Tensor[] vs = new Tensor[layers];
+        int[] start = new int[layers];
+        long bytes = 0;
+        for (int i = 0; i < layers; i++) {
+            int n = isLocal(i) ? Math.min(length, c.window() + c.block() + 8) : length;
+            start[i] = length - n;
+            ks[i] = keep(contiguous(narrow(st.k[i], 1, start[i], n)).copy());
+            vs[i] = keep(contiguous(narrow(st.v[i], 1, start[i], n)).copy());
+            bytes += 2L * c.kvHeads() * n * c.headDim() * 2;
+        }
+        return new Snapshot(ks, vs, start, length, bytes);
+    }
+
+    /**
+     * Loads a snapshot into an (empty) draft state: the draft then sees the reused part of the prompt.
+     *
+     * @param st the request's draft state.
+     * @param s  the snapshot.
+     */
+    void restore(State st, Snapshot s) {
+        if (st.absorbed != 0 || s.length > st.capacity) {
+            throw new IllegalStateException("cannot restore a draft context of " + s.length + " positions into one at " + st.absorbed);
+        }
+        for (int i = 0; i < s.k.length; i++) {
+            long n = s.k[i].size(1);
+            o("aten::copy_", narrow(st.k[i], 1, s.start[i], n), s.k[i]);
+            o("aten::copy_", narrow(st.v[i], 1, s.start[i], n), s.v[i]);
+        }
+        st.absorbed = s.length;
+    }
+
     /** Draft tokens per round ({@code block - 1}). */
     int drafts() {
         return c.block() - 1;

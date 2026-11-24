@@ -89,7 +89,7 @@ public class InklingPrefillCompareTest {
         }
         InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, 4096).withLayers(layers, 1);
         InklingRanks ranks = InklingRanks.load(ckpt, args, devices);
-        JsonNode p = new ObjectMapper().readTree(new File(prompts)).get("results").get(5).get("prompt_ids");
+        JsonNode p = new ObjectMapper().readTree(new File(prompts)).get("results").get(Integer.parseInt(System.getenv().getOrDefault("INKLING_PROMPT_INDEX", "5"))).get("prompt_ids");
         long[] prompt = new long[len];
         for (int i = 0; i < len; i++) {
             prompt[i] = p.get(i % p.size()).asLong();
@@ -112,12 +112,14 @@ public class InklingPrefillCompareTest {
                 if (head > 0) {
                     ranks.forward(st, Arrays.copyOfRange(prompt, 0, head), new int[0], null);
                 }
-                InklingDebug.hook = (name, t) -> {
-                    if (Thread.currentThread().getName().endsWith("rank-0") && (name.startsWith("qin") || name.startsWith("attn")
-                            || name.startsWith("moe"))) {
-                        got.put(name, host(t));
-                    }
-                };
+                if (layers <= 12) {         // stage taps of every layer would not fit the host heap for the full model
+                    InklingDebug.hook = (name, t) -> {
+                        if (Thread.currentThread().getName().endsWith("rank-0") && (name.startsWith("qin") || name.startsWith("attn")
+                                || name.startsWith("moe"))) {
+                            got.put(name, host(t));
+                        }
+                    };
+                }
                 Tensor logits = ranks.forward(st, Arrays.copyOfRange(prompt, head, len), null, t -> tr.add(host(t)));
                 float[] first = host(logits);
                 InklingDebug.hook = null;

@@ -50,7 +50,7 @@ public class InklingOracleTest {
         String ckpt = env("INKLING_CKPT");
         String oracle = env("INKLING_ORACLE");
         Assumptions.assumeTrue(ckpt != null && oracle != null && new File(oracle).exists(), "set INKLING_CKPT and INKLING_ORACLE");
-        InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, 4096);
+        InklingModelArgs args = InklingModelArgs.fromCheckpoint(ckpt, Integer.parseInt(System.getenv().getOrDefault("INKLING_MAXLEN", "4096")));
         String layers = env("INKLING_LAYERS");
         String passes = env("INKLING_PASSES");
         if (layers != null || passes != null) {
@@ -95,7 +95,20 @@ public class InklingOracleTest {
             InklingState[] sts = ranks != null ? ranks.newStates(all.length + 16) : new InklingState[]{model.newState(all.length + 16)};
             try {
                 java.util.function.Consumer<Tensor> sink = d == 0 && env("INKLING_HIDDEN") != null ? trace::add : null;
-                Tensor logits = ranks != null ? ranks.forward(sts, all, rows, sink) : model.forward(sts[0], all, rows, sink);
+                // long dialogs go in chunks; the wanted rows (the generated tokens) are all in the last one
+                int limit = sts[0].maxChunk(args);
+                Tensor logits = null;
+                for (int from = 0; from < all.length; from += limit) {
+                    int to = Math.min(all.length, from + limit);
+                    long[] part = java.util.Arrays.copyOfRange(all, from, to);
+                    boolean lastChunk = to == all.length;
+                    int[] want = lastChunk ? java.util.Arrays.stream(rows).map(x -> x - (all.length - part.length)).toArray() : new int[0];
+                    Tensor t = ranks != null ? ranks.forward(sts, part, want, lastChunk ? sink : null)
+                            : model.forward(sts[0], part, want, lastChunk ? sink : null);
+                    if (lastChunk) {
+                        logits = t;
+                    }
+                }
                 Tensor lp = Ix.o("aten::log_softmax.int", logits, -1L, null).to(Device.CPU());
                 float[] flat = lp.floatArray();
                 int vocab = (int) lp.size(1);

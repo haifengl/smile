@@ -266,6 +266,19 @@ final class InklingState implements AutoCloseable {
         length = s.length;
     }
 
+    /**
+     * Makes this state empty again so that it can serve another request. The caches keep their old (finite) contents,
+     * which are never read before they are overwritten; only the convolution states must start at zero.
+     */
+    void reset() {
+        for (int a = 0; a < k.length; a++) {
+            for (int c = 0; c < 4; c++) {
+                o("aten::zero_", convFull[a][c]);
+            }
+        }
+        length = 0;
+    }
+
     @Override
     public void close() {
         for (int a = 0; a < k.length; a++) {

@@ -23,7 +23,7 @@ For ONNX-based generative models, see [ONNX_GENAI.md](ONNX_GENAI.md).
 7. [DeepSeek-V4.1 (`smile.llm.model.deepseek`)](#deepseek-v41-smilellmmodeldeepseek)
 8. [GLM-5.3-Flash (`smile.llm.model.glm`)](#glm-53-flash-smilellmmodelglm)
 9. [MiniMax-M3.1-Flash (`smile.llm.model.minimax`)](#minimax-m31-flash-smilellmmodelminimax)
-10. [Inkling-2-Mini (`smile.llm.model.inkling`)](#inkling-2-mini-smilellmmodelinkling)
+10. [Inkling-2-Mini (`smile.llm.model.inkling`)](#inkling-2-mini-smilellmmodelinkling) and [Inkling-2-Small](#inkling-2-small-sharded-over-8-gpus)
 11. [Qwen3.8 (`smile.llm.model.qwen`)](#qwen38-smilellmmodelqwen)
 12. [LLaMA (`smile.llm.model.llama`)](#llama-smilellmmodelllama)
 13. [Inference Engine (`smile.llm.engine`)](#inference-engine-smilellmengine)
@@ -65,7 +65,7 @@ smile.llm
 ├── model/deepseek/ DeepSeek-V4.1: MoE, Engram memory, Marlin FP8 experts
 ├── model/glm/     GLM-5.3-Flash: KDA + sparse MLA, hyper-connections, MoE, MTP
 ├── model/minimax/ MiniMax-M3.1-Flash (and M3): MoE, MSA, DSpark, vision tower
-├── model/inkling/ Inkling-2-Mini: looped MoE, relative-bias attention, DSpark, vision
+├── model/inkling/ Inkling-2-Mini (looped, 1 GPU) and Inkling-2-Small (8 GPUs): MoE, relative-bias attention, DSpark, vision
 ├── model/qwen/    Qwen3.8 hybrid text stack + vision tower
 ├── model/llama/   LLaMA-3: Llama, LlamaModel, LlamaBlock,
 │                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
@@ -533,6 +533,49 @@ Needle-in-a-haystack (`InklingLongPromptTest`): 8.7k tokens - found, prefill 190
 **Tests** (opt-in, GPU; see the class comments for the environment variables): `InklingDecoderTest` (fused vs reference), `InklingDraftTest` (accept length,
 reference speculative loop), `InklingSpeculateTest` (verify/draft graphs vs plain), `InklingKernelTest`, `InklingFp8Test`, `InklingTiledAttentionTest`,
 `InklingLongPromptTest`, `InklingVisionTest`, `InklingEngineTest`, `InklingPrefixReuseTest`, `InklingOracleTest` / `InklingGenerateTest` (against the Hugging Face model).
+
+### Inkling-2-Small (sharded over 8 GPUs)
+
+`thinkingmachines/Inkling-2-Small` (checkpoint type `inkling2`, 594 B parameters, 17 B active) has the Mini's building blocks without the loop: 48 layers applied once,
+hidden 4608, 48 query / 8 KV heads, global layers 5, 11, ..., 47, 384 experts (top 8, intermediate 2304), NVFP4 experts in layers 0-39 and MXFP8 in 40-47 (394 GB),
+AttnRes over 8 blocks of 6 layers, vision tower and DSpark draft (5 layers, hidden 4608, 8 taps at applications 4, 10, ..., 40 and the final-norm output). It needs 8 x A100-80GB.
+
+**Sharding.** Attention by head (6 query heads and 1 KV head per GPU), experts by contiguous block (48 per GPU; `moeAlignBlockSize(ids, expertStart, local, block)` keeps the
+local ones, the other rows of the Marlin output are zero), the AttnRes queries, norms, residual convolutions, router, embedding and head replicated (3.7 GB per GPU). One
+all-reduce after `wo` and one after the MoE per layer; the model object per GPU runs on its own daemon thread, the threads run in lockstep.
+
+| Class | Role |
+|---|---|
+| `InklingShard` | rank / size / communicator, `part`, `start`, `allReduce`; `InklingAttention`, `InklingExperts`, `InklingLayer`, `InklingModel.load(.., shard)`, `InklingState(.., tp)` take it |
+| `SafeTensors.readRows`, `InklingCheckpoint.read(.., rows)` | read only a rank's rows of a stacked tensor (its experts, its heads) |
+| `InklingRanks` | one `InklingModel` and one executor thread per GPU, lockstep `forward`, per-rank tap sinks and image rows |
+| `InklingTp` | `LanguageModel` + `ModelExecutor` of the sharded model: per-rank fused decoder and CUDA graphs (decode, verify, draft), speculation, prefix snapshots (one per rank), vision |
+| `InklingKernels`, `InklingProf` | the row-wise fused kernels applied to prefill rows; an opt-in section profiler (`-Dsmile.inkling.prof=true`) |
+
+**Decode.** `InklingDecoder` is shard-aware (heads, KV heads, experts and up to 9 AttnRes states are kernel arguments; the attention kernel is a template on 3 or 6 query heads per
+KV head), each GPU thread selects its device (`InklingNative.setDevice`: the kernels launch on the thread's current device) and the all-reduces are captured in the graph: float32 messages
+use the peer-to-peer all-reduce (`TensorParallelGroup.enableCustomAllReduce`, ~15 us against ~50 us for NCCL). Timing ablations: `-Dsmile.inkling.debug.skip=moe,attn,proj,head,route`
+and `-Dsmile.inkling.debug.skipallreduce=true` skip parts of the step (the output is wrong; they only serve to find the shares).
+
+**Speculation.** The draft is replicated on every GPU (its inputs are replicated, so it needs no communication; only GPU 0's tokens are read). A round has two phases over
+all GPUs: replay the verify graph and let GPU 0 sample every row and accept the longest matching prefix, then commit the accepted rows, absorb their taps into the draft context
+and replay the draft graph. Draft kernels take the head count (a slot is 3 query heads x 8 block rows).
+
+**Prefill.** A chunk of at least 16 tokens runs through the fused decode layer step as a verify chunk of one request (`InklingDecoder.prefill`): one shared state row (`tstride 0`), the
+convolution states updated afterwards (`state_last3`), cuBLAS bf16 projections, a tensor scope per layer, and for global layers flash attention (`aten::_scaled_dot_product_flash_attention`)
+over the keys more than 1024 behind the chunk, merged with the row kernel's near-key result and the sink through `merge_kernel` (`ext_o`, `ext_lse`). The reference path stays for
+chunks under 16 tokens, images and the loop of Mini.
+
+**Memory.** After loading a GPU holds about 60 GB; `InklingTp.releaseMemory` forces a garbage collection and empties the allocator cache after the weights and after graph capture, and
+`ensureHeadroom` empties it again before a prefill chunk or a snapshot when less than 6 GB are free. A snapshot that cannot be stored is logged as a warning (the engine itself logs `finish`
+failures only at debug level).
+
+**Tests** (opt-in, GPU, 8 devices: `INKLING_CKPT`, `INKLING_TP=0,1,...,7`, `INKLING_PROMPTS`; checkpoint-free: `InklingShardTest`, `InklingPrefixCacheTest`, `InklingSmallConfigTest`,
+`SafeTensorsTest`): `InklingSmallArgsTest` (config, expert formats, tensor names), `InklingOracleTest` (`INKLING_TP`: against the Hugging Face model; `oracle_dump_small.py` needs a transformers
+that dequantizes the NVFP4 experts of `inkling2`), `InklingTpDecoderTest` (fused vs reference decode, `INKLING_DEC_PROMPT_LEN` for long contexts), `InklingPrefillCompareTest` (fused vs reference
+prefill stage by stage), `InklingTpBenchTest`, `InklingTpSpeculateTest`, `InklingTpPrefixTest`, `InklingLongPromptTest` (`INKLING_TP`), `InklingTpGenDumpTest`, `InklingFlashProbeTest`.
+Results against the Hugging Face model (teacher-forced, 6 dialogs, full depth): per-layer relative RMS 0.6 % growing to 5-6 %, chosen log-probability differences 0.07-0.11 (0.4 on one
+dialog), the same band as Mini; the run-to-run noise of the router near-ties dominates, so compare distributions (total variation), not tokens.
 
 ## Qwen3.8 (`smile.llm.model.qwen`)
 
