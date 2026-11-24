@@ -235,7 +235,22 @@ final class InklingLayer {
         Tensor msgK = messages == null ? null : o("aten::select.int", messages, 1L, 1L);
         Tensor msgV = messages == null ? null : o("aten::select.int", messages, 1L, 2L);
         Tensor msgMlp = messages == null ? null : o("aten::select.int", messages, 1L, 3L);
-        if (local) {
+        List<Tensor> inStates = null;
+        if (messages == null && index > 0 && InklingKernels.ENABLED && device.isCUDA()) {
+            inStates = new ArrayList<>(blocks);
+            inStates.add(h);
+        }
+        if (inStates != null && local) {
+            // one launch: AttnRes read and the weighted RMSNorm
+            qIn = kIn = vIn = InklingKernels.attnResRms(device, (int) h.size(0), args.dim(), inStates, attnQuery,
+                    new Tensor[]{inputNorm}, false, null)[0];
+        } else if (inStates != null) {
+            Tensor[] y = InklingKernels.attnResRms(device, (int) h.size(0), args.dim(), inStates, attnQuery,
+                    new Tensor[]{qNorm, kNorm, vNorm}, false, null);
+            qIn = y[0];
+            kIn = y[1];
+            vIn = y[2];
+        } else if (local) {
             Tensor a = index == 0 ? h : o("aten::select.int", attnRes(blocks, h, attnQuery), 1L, 0L);
             if (messages != null) {
                 qIn = bf16(rms(gate(0, a, msgQ), inputNorm, eps));
@@ -259,10 +274,12 @@ final class InklingLayer {
             vIn = bf16(rms(av, vNorm, eps));
         }
 
+        InklingProf.lap("attnres+rms in", vIn);
         InklingDebug.tap("qin", app, qIn);
         Tensor attn = attention.forward(qIn, kIn, vIn, st, app, start);
         InklingDebug.tap("attn", app, attn);
         attn = InklingConv.apply(attn, attnConv, st.conv[app][InklingState.CONV_ATTN]);
+        InklingProf.lap("conv after attn", attn);
         Tensor residual;
         List<Tensor> mlpBlocks = blocks;
         if (blockBoundary) {
@@ -272,17 +289,46 @@ final class InklingLayer {
         } else {
             residual = add(f32(h), f32(attn));
         }
-        Tensor m = o("aten::select.int", attnRes(mlpBlocks, residual, mlpQuery), 1L, 0L);
-        if (messages != null) {
-            m = gate(3, m, msgMlp);
+        Tensor x;
+        Tensor[] x32 = new Tensor[1];
+        boolean fused = messages == null && InklingKernels.ENABLED && device.isCUDA();
+        if (fused) {
+            List<Tensor> mlpStates = new ArrayList<>(mlpBlocks);
+            mlpStates.add(residual);
+            x = InklingKernels.attnResRms(device, (int) h.size(0), args.dim(), mlpStates, mlpQuery, new Tensor[]{postNorm}, true, x32)[0];
+        } else {
+            Tensor m = o("aten::select.int", attnRes(mlpBlocks, residual, mlpQuery), 1L, 0L);
+            if (messages != null) {
+                m = gate(3, m, msgMlp);
+            }
+            InklingDebug.tap("mlpin", app, m);
+            x = bf16(rms(m, postNorm, eps));
         }
-        InklingDebug.tap("mlpin", app, m);
-        Tensor x = bf16(rms(m, postNorm, eps));
+        InklingProf.lap("attnres+rms mlp", x);
         Tensor moe;
-        if (experts.marlin()) {
+        if (fused && experts.marlin()) {
+            // router GEMM, then the router kernel (sigmoid, top-k of score + bias, renormalized weights) and the fused experts
+            int rows = (int) h.size(0);
+            Tensor logits = linear(x32[0], router);
+            Tensor idx = Tensor.empty(new Tensor.Options().dtype(ScalarType.Int32).device(device), rows, args.numExpertsPerTok());
+            Tensor wts = Tensor.empty(new Tensor.Options().dtype(ScalarType.Float).device(device), rows, args.numExpertsPerTok());
+            smile.torch.InklingNative.op(9, new long[]{smile.torch.InklingNative.dataPtr(logits),
+                            smile.torch.InklingNative.dataPtr(routerBias), smile.torch.InklingNative.dataPtr(idx),
+                            smile.torch.InklingNative.dataPtr(wts)},
+                    new long[]{rows, args.numExperts(), args.numExpertsPerTok()}, new double[]{args.routeScale()});
+            InklingProf.lap("router", wts);
+            Tensor sum = experts.forwardFused(x, idx, wts);
+            InklingProf.lap("experts", sum);
+            shard.allReduce(sum);
+            InklingProf.lap("allreduce moe", sum);
+            moe = bf16(sum);
+        } else if (experts.marlin()) {
             Tensor[] r = routeOnDevice(x);
+            InklingProf.lap("router", r[1]);
             Tensor sum = experts.forwardMarlin(x, r[0], r[1]);
+            InklingProf.lap("experts", sum);
             shard.allReduce(sum);               // float32 partial sum over this rank's experts
+            InklingProf.lap("allreduce moe", sum);
             moe = bf16(sum);
         } else {
             Object[] r = route(x);
@@ -292,6 +338,8 @@ final class InklingLayer {
         }
         InklingDebug.tap("moe", app, moe);
         Tensor mlp = InklingConv.apply(moe, mlpConv, st.conv[app][InklingState.CONV_MLP]);
-        return bf16(add(residual, f32(mlp)));
+        Tensor out = bf16(add(residual, f32(mlp)));
+        InklingProf.lap("conv mlp+residual", out);
+        return out;
     }
 }

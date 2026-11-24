@@ -395,11 +395,11 @@ static bool dispatch_attnres_rms(int n, const States& st, const float* q, float*
  */
 __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict__ hin, const float* __restrict__ w,
                             const int64_t* __restrict__ tbl, int entry, float* __restrict__ res, bf16* __restrict__ blk,
-                            bf16* __restrict__ out, int dim, int boundary, int mode, int T) {
+                            bf16* __restrict__ out, int dim, int boundary, int mode, int T, int tstride) {
     const int b = blockIdx.x;
     const int c = blockIdx.y * blockDim.x + threadIdx.x;
     if (c >= dim) return;
-    float* state = (float*) tbl[(int64_t) b * 8 + entry];
+    float* state = (float*) tbl[(int64_t) b * tstride + entry];       // tstride 0: every row (a prefill chunk) shares one request
     auto input = [&](int row) {
         return mode == 0 ? __bfloat162float(((const bf16*) xin)[(int64_t) row * dim + c])
                          : rnd(((const float*) xin)[(int64_t) row * dim + c]);
@@ -414,7 +414,7 @@ __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict
         s0 = j >= 3 ? input(b0 + j - 3) : state[j * dim + c];
         s1 = j >= 2 ? input(b0 + j - 2) : state[(j + 1) * dim + c];
         s2 = j >= 1 ? input(b0 + j - 1) : state[(j + 2) * dim + c];
-        state[(3 + j) * (int64_t) dim + c] = x;
+        if (tstride != 0) state[(3 + j) * (int64_t) dim + c] = x;       // a prefill chunk updates the state afterwards (state_last3)
     } else {
         s0 = state[c]; s1 = state[dim + c]; s2 = state[2 * dim + c];
     }
@@ -432,6 +432,20 @@ __global__ void conv_kernel(const void* __restrict__ xin, const bf16* __restrict
         if (blk) blk[(int64_t) b * dim + c] = hin[(int64_t) b * dim + c];
     } else {
         out[(int64_t) b * dim + c] = __float2bfloat16(res[(int64_t) b * dim + c] + conv);
+    }
+}
+
+/**
+ * After a prefill chunk of T rows: the state's three rows (oldest first) become the last three inputs of the chunk, rows T-3..T-1
+ * of src (bf16, or float32 rounded to bf16 as the convolution read them) at columns off .. off + channels.
+ */
+__global__ void state_last3_kernel(const void* __restrict__ src, long ld, int off, float* __restrict__ state, int channels, int T,
+                                   int f32in) {
+    const int c = blockIdx.x * blockDim.x + threadIdx.x;
+    if (c >= channels) return;
+    for (int i = 0; i < 3; i++) {
+        const int64_t at = (int64_t) (T - 3 + i) * ld + off + c;
+        state[(int64_t) i * channels + c] = f32in ? rnd(((const float*) src)[at]) : __bfloat162float(((const bf16*) src)[at]);
     }
 }
 
@@ -469,6 +483,7 @@ struct PrepArgs {
     int global, nfloor, T;
     float qclip, relclip, eps, alpha;
     int H, G;                                // query heads and KV heads of this rank (Mini: 24, 8)
+    int tstride;                             // int64 entries between the table rows of consecutive batch rows (8; 0 = one shared row)
     int kvc, qd, reld;                       // G * 128, H * 128, H * 16
 };
 
@@ -482,7 +497,7 @@ __device__ __forceinline__ float kv_conv(const PrepArgs& a, const bf16* y, long 
         s0 = j >= 3 ? __bfloat162float(y[(int64_t) (b0 + j - 3) * ld + off_x + c]) : state[j * a.kvc + c];
         s1 = j >= 2 ? __bfloat162float(y[(int64_t) (b0 + j - 2) * ld + off_x + c]) : state[(j + 1) * a.kvc + c];
         s2 = j >= 1 ? __bfloat162float(y[(int64_t) (b0 + j - 1) * ld + off_x + c]) : state[(j + 2) * a.kvc + c];
-        state[(3 + j) * a.kvc + c] = x;
+        if (a.tstride != 0) state[(3 + j) * a.kvc + c] = x;
     } else {
         s0 = state[c]; s1 = state[a.kvc + c]; s2 = state[2 * a.kvc + c];
     }
@@ -541,7 +556,7 @@ __global__ void prep_kernel(PrepArgs a) {
     }
     if (h >= a.G) return;
     // key and value of KV head h
-    const int64_t* e = a.tbl + (int64_t) b * 8;
+    const int64_t* e = a.tbl + (int64_t) b * a.tstride;
     bf16* kc = (bf16*) e[0];
     bf16* vc = (bf16*) e[1];
     const int cap = (int) e[6];
@@ -576,6 +591,10 @@ struct AttnArgs {
     int window;                              // 0 = global
     int nsplit;
     int H, G, qd, reld;                      // query heads, KV heads, H * 128, H * 16 of this rank
+    int tstride;                             // see PrepArgs
+    int lowkey;                              // global layers: the first key attended (keys below it are in the external segment)
+    const bf16* ext_o;                       // [nb, qd] normalized attention over the external keys, or null
+    const float* ext_lse;                    // [nb, H] natural log of its softmax denominator
 };
 
 __device__ __forceinline__ void load4(const bf16* p, float* f) {
@@ -611,11 +630,11 @@ __global__ void attn_kernel(AttnArgs a) {
     const int b = blockIdx.x, g = blockIdx.y, z = blockIdx.z;
     const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31;
     const int pos = a.pos[b];
-    const int64_t* e = a.tbl + (int64_t) b * 8;
+    const int64_t* e = a.tbl + (int64_t) b * a.tstride;
     const bf16* kc = (const bf16*) e[0];
     const bf16* vc = (const bf16*) e[1];
     const int cap = (int) e[6];
-    const int lo = a.window ? max(0, pos - a.window + 1) : 0;
+    const int lo = a.window ? max(0, pos - a.window + 1) : a.lowkey;
     const int n = pos + 1 - lo;
     const int chunk = (n + a.nsplit - 1) / a.nsplit;
     const int j0 = lo + z * chunk, j1 = min(pos + 1, j0 + chunk);
@@ -847,11 +866,19 @@ __global__ void merge_kernel(AttnArgs a) {
     const int64_t base = ((int64_t) b * a.H + hq) * a.nsplit;
     float M = -1e30f;
     for (int z = 0; z < a.nsplit; z++) M = fmaxf(M, a.pm[base + z]);
+    // the keys below lowkey were attended by a flash-attention call: its output and log-sum-exp are one more segment
+    const float lse_e = a.ext_lse ? a.ext_lse[(int64_t) b * a.H + hq] : -INFINITY;
+    M = fmaxf(M, lse_e);
     float L = 0.f, A = 0.f;
     for (int z = 0; z < a.nsplit; z++) {
         const float f = __expf(a.pm[base + z] - M);
         L += a.pl[base + z] * f;
         A += a.pacc[(base + z) * 128 + t] * f;
+    }
+    if (a.ext_lse) {
+        const float f = __expf(lse_e - M);
+        L += f;
+        A += f * __bfloat162float(a.ext_o[(int64_t) b * a.qd + hq * 128 + t]);
     }
     const float sink = a.sink[(int64_t) b * a.H + hq];
     const float Ms = fmaxf(M, sink);
@@ -1144,6 +1171,7 @@ enum Op {
     OP_DRAFT_ATTN = 17,
     OP_DRAFT_MERGE = 18,
     OP_PEER = 20,
+    OP_STATE_LAST3 = 21,
 };
 
 extern "C" __attribute__((visibility("default"))) int smile_inkling_set_device(int device) {
@@ -1212,7 +1240,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             // p: xin, hin, w, tbl, res, blk(0), out; iv: nb, dim, entry, boundary, mode
             const int nb = iv[0], dim = iv[1];
             conv_kernel<<<dim3(nb, (dim + 255) / 256), 256, 0, stream>>>((const void*) p[0], (const bf16*) p[1], (const float*) p[2],
-                    (const int64_t*) p[3], (int) iv[2], (float*) p[4], (bf16*) p[5], (bf16*) p[6], dim, (int) iv[3], (int) iv[4], ni > 5 && iv[5] > 1 ? (int) iv[5] : 1);
+                    (const int64_t*) p[3], (int) iv[2], (float*) p[4], (bf16*) p[5], (bf16*) p[6], dim, (int) iv[3], (int) iv[4], ni > 5 && iv[5] > 1 ? (int) iv[5] : 1, ni > 6 ? (int) iv[6] : 8);
             CHECK_LAUNCH("conv");
             return 0;
         }
@@ -1231,7 +1259,7 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.off_q = iv[4]; a.off_rel = iv[5]; a.off_sink = iv[6]; a.off_k = iv[7]; a.off_kproj = iv[8];
             a.off_v = iv[9]; a.off_vproj = iv[10]; a.global = iv[11]; a.nfloor = iv[12]; a.T = ni > 13 && iv[13] > 1 ? (int) iv[13] : 1;
             a.qclip = (float) dv[0]; a.relclip = (float) dv[1]; a.eps = (float) dv[2]; a.alpha = (float) dv[3];
-            a.H = ni > 14 ? (int) iv[14] : 24; a.G = ni > 15 ? (int) iv[15] : 8;
+            a.H = ni > 14 ? (int) iv[14] : 24; a.G = ni > 15 ? (int) iv[15] : 8; a.tstride = ni > 16 ? (int) iv[16] : 8;
             a.kvc = a.G * 128; a.qd = a.H * 128; a.reld = a.H * 16;
             prep_kernel<<<dim3(iv[0], a.H), 128, 0, stream>>>(a);
             CHECK_LAUNCH("prep");
@@ -1245,8 +1273,10 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
             a.qn = (const bf16*) p[0]; a.rel = (const float*) p[1]; a.sink = (const float*) p[2]; a.yq = (const bf16*) p[3];
             a.projT = (const bf16*) p[4]; a.tbl = (const int64_t*) p[5]; a.pos = (const int*) p[6]; a.out = (bf16*) p[7];
             a.pm = (float*) p[8]; a.pl = (float*) p[9]; a.pacc = (float*) p[10];
+            a.ext_o = np > 11 ? (const bf16*) p[11] : nullptr; a.ext_lse = np > 12 ? (const float*) p[12] : nullptr;
+            a.lowkey = ni > 8 ? (int) iv[8] : 0;
             a.ldq = iv[1]; a.off_gate = (int) iv[2]; a.window = (int) iv[3]; a.nsplit = (int) iv[4];
-            a.H = ni > 5 ? (int) iv[5] : 24; a.G = ni > 6 ? (int) iv[6] : 8;
+            a.H = ni > 5 ? (int) iv[5] : 24; a.G = ni > 6 ? (int) iv[6] : 8; a.tstride = ni > 7 ? (int) iv[7] : 8;
             a.qd = a.H * 128; a.reld = a.H * 16;
             const int per = a.H / a.G;
             if (op == OP_ATTN) {
@@ -1375,6 +1405,14 @@ extern "C" __attribute__((visibility("default"))) int smile_inkling_op(int op, c
                 draft_merge_kernel<<<dim3(iv[0] * 8, a.H), 128, 0, stream>>>(a);
             }
             CHECK_LAUNCH("draft_attn");
+            return 0;
+        }
+        case OP_STATE_LAST3: {
+            // p: src, state; iv: T, channels, ld, off, f32in
+            const int channels = (int) iv[1];
+            state_last3_kernel<<<(channels + 255) / 256, 256, 0, stream>>>((const void*) p[0], iv[2], (int) iv[3], (float*) p[1], channels,
+                    (int) iv[0], (int) iv[4]);
+            CHECK_LAUNCH("state_last3");
             return 0;
         }
         case OP_PEER: {

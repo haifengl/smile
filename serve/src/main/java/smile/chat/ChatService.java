@@ -415,11 +415,16 @@ public class ChatService implements OpenAiModelContributor {
             int maxInFlight = Math.max(1, config.maxBatchSize());
             int maxDecode = config.maxDecodeBatch() > 0
                     ? config.maxDecodeBatch() : maxInFlight;
+            // a sharded Inkling prefill chunk costs ~0.4 s of overhead whatever its size: a larger budget is faster
+            int prefillBudget = Math.max(1, config.prefillTokenBudget());
+            if (model instanceof smile.llm.model.inkling.InklingTp) {
+                prefillBudget = Math.max(prefillBudget, 4096);
+            }
             engine = new smile.llm.engine.InferenceEngine(
                     exec,
                     maxInFlight,
                     maxDecode,
-                    Math.max(1, config.prefillTokenBudget()),
+                    prefillBudget,
                     config.admissionTimeoutMs(),
                     Math.max(0L, config.admitCoalesceMs()));
             // 0 = no limit beyond the batch size, except for MiniMax: DSpark drafts one request at a time (about 6 ms
@@ -442,7 +447,7 @@ public class ChatService implements OpenAiModelContributor {
                             + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
                     modelId, model.family(), model.maxSeqLen(),
                     engine.maxInFlight(), engine.maxDecodeBatch(),
-                    Math.max(1, config.prefillTokenBudget()),
+                    prefillBudget,
                     config.admissionTimeoutMs(),
                     engine.admitCoalesceMs(),
                     engine.maxSpeculativeConcurrency(),

@@ -68,7 +68,7 @@ public class InklingTpPrefixTest {
             devices[i] = Byte.parseByte(ids[i].trim());
         }
         int layers = Integer.parseInt(System.getenv().getOrDefault("INKLING_LAYERS", "0"));
-        InklingTp model = InklingTp.build(ckpt, layers, 8192, devices);
+        InklingTp model = InklingTp.build(ckpt, layers, Integer.parseInt(System.getenv().getOrDefault("INKLING_MAXLEN", "8192")), devices);
         JsonNode p = new ObjectMapper().readTree(new File(prompts)).get("results").get(5).get("prompt_ids");
         int[] prompt = new int[len];
         for (int i = 0; i < len; i++) {            // a long prompt made of the dialog's own tokens, repeated

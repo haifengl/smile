@@ -254,6 +254,37 @@ final class InklingExperts {
     }
 
     /**
+     * The prefill path with the fused kernels: the routing came from the router kernel (int32 ids), the activation is one
+     * launch and the top-k rows are summed by one kernel (the reference {@link #forwardMarlin} runs a dozen float32 ATen
+     * operations on {@code [T * topk, 2 * inter]} tensors).
+     *
+     * @param x   bf16 {@code [T, D]}.
+     * @param idx int32 {@code [T, topk]} global expert ids.
+     * @param w   float32 {@code [T, topk]}.
+     * @return float32 {@code [T, D]}.
+     */
+    Tensor forwardFused(Tensor x, Tensor idx, Tensor w) {
+        int topk = args.numExpertsPerTok();
+        int tokens = (int) x.size(0);
+        int block = blockSize(tokens);
+        Tensor align = smile.torch.Native.moeAlignBlockSize(idx, expertStart, localExperts, block);
+        boolean fp4 = format == InklingModelArgs.ExpertFormat.NVFP4;
+        Tensor gateUp = fp4
+                ? smile.torch.Native.marlinMoeNvfp4Gemm(x, q13, s13, g13, align, w, block, topk, false)
+                : smile.torch.Native.marlinMoeFp8Gemm(x, q13, s13, align, w, block, topk, false);
+        long rows = (long) tokens * topk;
+        long inter = args.intermediateSize();
+        Tensor act = Tensor.empty(new Tensor.Options().dtype(ScalarType.BFloat16).device(device), rows, inter);
+        smile.torch.InklingNative.op(10, new long[]{smile.torch.InklingNative.dataPtr(gateUp), smile.torch.InklingNative.dataPtr(act)},
+                new long[]{rows, inter}, new double[]{args.gateSoftcap(), args.upSoftcap()});
+        Tensor down = fp4
+                ? smile.torch.Native.marlinMoeNvfp4Gemm(act, q2, s2, g2, align, w, block, 1, true)
+                : smile.torch.Native.marlinMoeFp8Gemm(act, q2, s2, align, w, block, 1, true);
+        Tensor sum = smile.torch.Native.moeSumTopk(down, topk, null);
+        return sum != null ? sum : o("aten::sum.dim_IntList", f32(reshape(down, tokens, topk, -1)), new long[]{1}, false);
+    }
+
+    /**
      * The Marlin path: grouped GEMMs over all selected experts; the gate-up product keeps the checkpoint's
      * interleaved rows (the activation reads even and odd columns).
      *

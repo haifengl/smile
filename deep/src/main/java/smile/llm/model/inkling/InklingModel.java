@@ -63,6 +63,9 @@ public final class InklingModel implements AutoCloseable {
      * of application {@code i - 1}, the last id (the number of applications) the final-norm output. Mini: 5, 23, 41, 48.
      */
     int[] tapIds = {5, 23, 41, 48};
+    /** Chunks of at least this many tokens (no images, no loop) are prefilled with the fused kernels. */
+    private static final int FUSED_PREFILL_MIN = Integer.getInteger("smile.inkling.prefill.min.rows", 16);
+    private InklingDecoder prefillDecoder;
 
     private InklingModel(InklingModelArgs args, Device device, Tensor embed, Tensor embedNorm, Tensor unembed,
                          Tensor finalNorm, Tensor outputQuery, Tensor messageQueries, InklingLayer[] layers,
@@ -211,6 +214,31 @@ public final class InklingModel implements AutoCloseable {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
+            boolean looped = args.numPasses() > 1 && args.coreEnd() > args.coreStart();
+            if (InklingKernels.prefill && device.isCUDA() && InklingDecoder.available() && imageRows == null && !looped
+                    && tokens.length >= FUSED_PREFILL_MIN) {
+                if (prefillDecoder == null) {
+                    prefillDecoder = new InklingDecoder(this);
+                }
+                Tensor taps = tapSink == null ? null
+                        : Tensor.empty(new Tensor.Options().dtype(ScalarType.BFloat16).device(device), tokens.length, tapIds.length, args.dim());
+                Consumer<Tensor> deviceTrace = trace == null ? null : t -> {
+                    Tensor host = t.to(Device.CPU());
+                    host.promoteToParent();         // survives the forward's scope
+                    trace.accept(host);
+                };
+                Tensor logits = prefillDecoder.prefill(st, tokens, rows, taps, deviceTrace);
+                if (taps != null) {
+                    taps.promoteToParent();
+                    tapSink.accept(taps);
+                }
+                if (logits != null) {
+                    logits.promoteToParent();
+                }
+                st.length = start + tokens.length;
+                return logits;
+            }
+            InklingProf.begin(null);
             Tensor ids = Tensor.of(tokens, tokens.length).to(device);
             Tensor h = bf16(rms(o("aten::index_select", embed, 0L, ids), embedNorm, args.normEps()));
             if (imageRows != null && imagePos != null && imagePos.length > 0) {
@@ -270,6 +298,7 @@ public final class InklingModel implements AutoCloseable {
             }
             if (rows != null && rows.length == 0 && tapSink == null) {
                 st.length = start + tokens.length;          // a prefill chunk: no logits wanted
+                InklingProf.flush(tokens.length);
                 return null;
             }
             Tensor last = InklingLayer.attnRes(blocks, h, outputQuery);
@@ -297,6 +326,7 @@ public final class InklingModel implements AutoCloseable {
             Tensor logits = mul(tanh(mul(f32(linear(x, unembed)), 1.0 / cap)), cap);
             logits.promoteToParent();
             st.length = start + tokens.length;
+            InklingProf.flush(tokens.length);
             return logits;
         } finally {
             Tensor.pop();

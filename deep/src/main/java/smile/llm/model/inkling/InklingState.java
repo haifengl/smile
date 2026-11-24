@@ -35,6 +35,11 @@ final class InklingState implements AutoCloseable {
 
     /** Extra tokens a sliding-window cache holds beyond the window, i.e. the largest chunk one forward may process. */
     static final int LOCAL_SLACK = Integer.getInteger("smile.inkling.chunk", 2048);
+    /**
+     * The chunk limit of a sharded model: a prefill chunk costs ~0.4 s of per-operation overhead whatever its size, so bigger
+     * chunks are faster (4096 tokens: 1.7k tok/s against 1.1k at 1024); 8192 runs out of memory on 8 x 80 GB.
+     */
+    static final int LOCAL_SLACK_TP = Integer.getInteger("smile.inkling.chunk.tp", 4096);
 
     /** Most rows of one request a verify chunk may carry. */
     static final int VERIFY_ROWS = Integer.getInteger("smile.inkling.verify.rows", 8);
@@ -47,6 +52,8 @@ final class InklingState implements AutoCloseable {
     static final int SPILL_APPS = Integer.getInteger("smile.inkling.kv.spill.apps", 6);
 
     final int capacity;
+    /** Tokens a sliding cache holds beyond the window (the chunk limit). */
+    final int localSlack;
     /** Cache capacity (tokens) of every application. */
     final int[] cacheCapacity;
     /** Per application and request: the pointer table row read by the decode kernels (see {@link #table()}). */
@@ -69,6 +76,7 @@ final class InklingState implements AutoCloseable {
      */
     InklingState(InklingModelArgs args, int capacity, Device device, int tp) {
         this.capacity = capacity;
+        this.localSlack = tp > 1 ? LOCAL_SLACK_TP : LOCAL_SLACK;
         int apps = args.numApplications();
         cacheCapacity = new int[apps];
         k = new Tensor[apps];
@@ -89,7 +97,7 @@ final class InklingState implements AutoCloseable {
             int heads = (args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads()) / tp;
             int dim = args.isLocal(layer) ? args.swaHeadDim() : args.headDim();
             // a sliding-window layer only needs the last window - 1 tokens plus the chunk being processed
-            cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + LOCAL_SLACK) : capacity;
+            cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + localSlack) : capacity;
             ScalarType kvType = KV_FP8 && !args.isLocal(layer) ? ScalarType.Float8e4m3fn : ScalarType.BFloat16;
             k[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
             v[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
@@ -132,7 +140,7 @@ final class InklingState implements AutoCloseable {
      * @return the chunk limit.
      */
     int maxChunk(InklingModelArgs args) {
-        return Math.max(1, Math.min(capacity, args.slidingWindow() + LOCAL_SLACK - (args.slidingWindow() - 1)));
+        return Math.max(1, Math.min(capacity, args.slidingWindow() + localSlack - (args.slidingWindow() - 1)));
     }
 
     /**

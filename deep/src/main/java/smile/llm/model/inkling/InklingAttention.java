@@ -228,6 +228,7 @@ final class InklingAttention {
         long t = qIn.size(0);
         Tensor tau = local ? null : logScale(start, t);
 
+        InklingProf.lap("attn setup", qIn);
         // queries: scale, L2 clip, (global) log-length scale
         Tensor q = reshape(linear(qIn, wq()), t, heads, headDim);
         q = bf16(args.qkL2ClipThreshold() > 0 ? l2Clip(mul(f32(q), qScale), args.qkL2ClipThreshold()) : f32(q));
@@ -249,6 +250,7 @@ final class InklingAttention {
         }
         Tensor k = bf16(l2Clip(f32(reshape(kc, t, kvHeads, headDim)), args.qkL2ClipThreshold()));
         Tensor v = bf16(unweightedRms(reshape(vc, t, kvHeads, headDim), args.normEps()));
+        InklingProf.lap("q/k/v proj+conv", v);
         int window = args.slidingWindow();
         int cap = st.cacheCapacity[app];
         int s0 = local ? Math.max(0, start - window + 1) : 0;
@@ -283,6 +285,7 @@ final class InklingAttention {
             values = o("aten::repeat_interleave.self_int", o("aten::index_select", st.v[app], 1L, readIdx), (long) groups, 0L);
         }
 
+        InklingProf.lap("kv cache write", keys == null ? vNew : keys);
         Tensor out;
         if (tiled) {
             Tensor rel = reshape(linear(qIn, wRel()), t, heads, args.relDim());
@@ -327,8 +330,10 @@ final class InklingAttention {
 
         }
 
+        InklingProf.lap(tiled ? "attention core (tiled)" : "attention core", out);
         Tensor gate = sigmoid(f32(linear(qIn, wGate())));
         Tensor y = linear(bf16(mul(f32(out), gate)), wo);
+        InklingProf.lap("gate+wo", y);
         if (shard.size() > 1) {
             y = contiguous(y);
             shard.allReduce(y);         // each rank holds the partial sum of its heads

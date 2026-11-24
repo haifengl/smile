@@ -81,7 +81,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     private final InklingPrefixCache prefixCache;
     private final Map<Integer, InklingPrefixCache.Entry> prefixMatches = new ConcurrentHashMap<>();
     private volatile boolean prefixReuse = true;
-    private static final int SNAPSHOT_EVERY = Integer.getInteger("smile.inkling.prefix.every", 1024);
+    private static final int SNAPSHOT_EVERY = Integer.getInteger("smile.inkling.prefix.every", 4096);
     private static final int SNAPSHOT_MAX = Integer.getInteger("smile.inkling.prefix.max", 32768);
     private static final int SNAPSHOT_MIN = Integer.getInteger("smile.inkling.prefix.min", 256);
     /** Longest request (tokens) that gets a draft context. */
@@ -845,6 +845,23 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         return id;
     }
 
+    /**
+     * The snapshot positions: 1024, 2048 and 4096, then every {@link #SNAPSHOT_EVERY} tokens. A snapshot ends a prefill chunk
+     * and a chunk costs ~0.4 s of overhead whatever its size, so they are sparse; the finer start serves shared system prompts.
+     */
+    private static int nextSnapshot(int pos) {
+        for (int p : new int[]{1024, 2048, 4096}) {
+            if (pos < p) {
+                return p;
+            }
+        }
+        return (pos / SNAPSHOT_EVERY + 1) * SNAPSHOT_EVERY;
+    }
+
+    private static boolean isSnapshotPosition(int pos) {
+        return pos == 1024 || pos == 2048 || pos >= 4096 && pos % SNAPSHOT_EVERY == 0;
+    }
+
     /** One snapshot per rank. */
     private record RankSnapshots(InklingState.Snapshot[] parts) implements InklingPrefixCache.Payload {
         @Override
@@ -969,7 +986,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 int end = Math.min(to, pos + limit);
                 // stop at the next position worth a snapshot: the state there is a prefix of later prompts
                 if (prefixCache != null && prefixReuse) {
-                    int cut = (pos / SNAPSHOT_EVERY + 1) * SNAPSHOT_EVERY;
+                    int cut = nextSnapshot(pos);
                     if (cut < prompt.length && cut < end && cut <= SNAPSHOT_MAX) {
                         end = cut;
                     }
@@ -987,7 +1004,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                     logits = t;
                 }
                 pos = end;
-                if (prefixCache != null && prefixReuse && pos % SNAPSHOT_EVERY == 0 && pos < prompt.length && pos <= SNAPSHOT_MAX) {
+                if (prefixCache != null && prefixReuse && isSnapshotPosition(pos) && pos < prompt.length && pos <= SNAPSHOT_MAX) {
                     store(st, Arrays.copyOf(prompt, pos));
                 }
             }
