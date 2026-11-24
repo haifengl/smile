@@ -1161,11 +1161,10 @@ __global__ void __launch_bounds__(1024) mla_topk_kernel(
     }
 }
 
-constexpr int kAttnHeads = 4;       // most heads per block
 constexpr int kAttnMaxW = 2056;
 
 /**
- * Block = kAttnHeads heads of one row (a decode request, or a prefill query: only the pointer table and the id row differ). The query
+ * Block = up to 4 heads of one row (a decode request, or a prefill query: only the pointer table and the id row differ). The query
  * of the block's heads lives in registers as packed bf16 (each lane owns 16 of the 512 latent dims of every head), the token ids
  * in shared memory; scores are computed 4 tokens per warp at a time with all loads in flight, softmax per head, then each
  * thread (2 latent dims) accumulates 8 tokens per step. Invalid tokens (id < 0) get probability 0 and read row 0.

@@ -3419,7 +3419,8 @@ int smile_aten_call(const char *name, const char *overload, ST_AtenArgs a, ST_Te
             if (iv.isTensor() && iv.toTensor().defined()) { device_guard.reset_device(iv.toTensor().device()); break; }
             if (iv.isTensorList()) {
                 bool found = false;
-                for (const at::Tensor &t : iv.toTensorList()) {
+                const auto list = iv.toTensorList();
+                for (at::Tensor t : list) {
                     if (t.defined()) { device_guard.reset_device(t.device()); found = true; break; }
                 }
                 if (found) break;
@@ -3432,7 +3433,8 @@ int smile_aten_call(const char *name, const char *overload, ST_AtenArgs a, ST_Te
                 if (n >= max_outputs) throw std::runtime_error(std::string(name) + ": more outputs than max_outputs");
                 outputs[n++] = new ST_Tensor_{ iv.toTensor() };
             } else if (iv.isTensorList()) {
-                for (const at::Tensor &t : iv.toTensorList()) {
+                const auto list = iv.toTensorList();
+                for (at::Tensor t : list) {
                     if (n >= max_outputs) throw std::runtime_error(std::string(name) + ": more outputs than max_outputs");
                     outputs[n++] = new ST_Tensor_{ t };
                 }

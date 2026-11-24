@@ -590,21 +590,6 @@ __device__ __forceinline__ float fp8_to_float(__nv_fp8_storage_t b) {
     return __half2float(*reinterpret_cast<const __half*>(&hr));
 }
 
-/** 8 consecutive cache elements (bf16 or E4M3) starting at element {@code elem}. */
-__device__ __forceinline__ void load8(const bf16* base, int64_t elem, bool fp8, float* f) {
-    if (fp8) {
-        const uint2 u = *reinterpret_cast<const uint2*>(reinterpret_cast<const uint8_t*>(base) + elem);
-        const uint8_t* by = reinterpret_cast<const uint8_t*>(&u);
-#pragma unroll
-        for (int i = 0; i < 8; i++) f[i] = fp8_to_float(by[i]);
-    } else {
-        const uint4 u = *reinterpret_cast<const uint4*>(base + elem);
-        const __nv_bfloat162* b = reinterpret_cast<const __nv_bfloat162*>(&u);
-#pragma unroll
-        for (int i = 0; i < 4; i++) { f[2 * i] = __low2float(b[i]); f[2 * i + 1] = __high2float(b[i]); }
-    }
-}
-
 __device__ __forceinline__ void load4v(const bf16* base, int64_t elem, bool fp8, float* f) {
     if (fp8) {
         const uint32_t u = *reinterpret_cast<const uint32_t*>(reinterpret_cast<const uint8_t*>(base) + elem);
