@@ -284,6 +284,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             this.imageProcessor = new InklingImageProcessor(va);
             logger.info("Inkling vision tower loaded on every rank ({} layers, up to {} tiles per image)", va.layers(), va.maxTokens());
         }
+        releaseMemory("weights");
         if (FUSED && InklingDecoder.available()) {
             ranks.onRanks(r -> {
                 contexts[r].decoder = new InklingDecoder(ranks.model(r));
@@ -325,6 +326,56 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
         } else {
             logger.info("Inkling decode: reference ops (fused kernels unavailable or disabled)");
+        }
+        releaseMemory("graphs");
+    }
+
+    /**
+     * Frees what loading left behind: tensors that are only unreachable (the loader does not close the full-size copies of
+     * what it slices or converts; the Java cleaner frees them after a garbage collection) and the allocator's cached
+     * blocks. Without it a rank holds ~25 GB it does not need, which leaves a long prompt or a verify chunk 2 GB of headroom.
+     */
+    /** Free device bytes below which the allocator caches are emptied before a prefill chunk or a speculative round. */
+    private static final long MIN_FREE = Long.getLong("smile.inkling.min.free.mb", 6144L) << 20;
+
+    /**
+     * Keeps headroom for the next step: the allocator caches blocks of every size it has seen, and after a few long prompts a
+     * rank can hold almost all of its memory without needing it (an out-of-memory failed one long request). Called with the
+     * lock held.
+     */
+    private void ensureHeadroom() {
+        long free;
+        try {
+            free = smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0];
+        } catch (RuntimeException e) {
+            return;
+        }
+        if (free < MIN_FREE) {
+            ranks.onRanks(r -> {
+                contexts[r].device.emptyCache();
+                return null;
+            });
+            logger.info("Inkling: emptied the allocator caches ({} MiB free before, {} MiB after)", free >> 20,
+                    smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0] >> 20);
+        }
+    }
+
+    private void releaseMemory(String stage) {
+        System.gc();
+        try {
+            Thread.sleep(500);                  // let the cleaner thread run
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        ranks.onRanks(r -> {
+            contexts[r].device.emptyCache();
+            return null;
+        });
+        try {
+            long free = smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0];
+            logger.info("Inkling rank 0 free GPU memory after {}: {} MiB", stage, free >> 20);
+        } catch (RuntimeException e) {
+            logger.debug("free memory not available: {}", e.toString());
         }
     }
 
@@ -701,6 +752,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             int pos = from;
             Tensor logits = null;
             while (pos < to) {
+                ensureHeadroom();
                 int end = Math.min(to, pos + limit);
                 long[] chunk = new long[end - pos];
                 List<Long> where = new ArrayList<>();
@@ -877,6 +929,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 return;
             }
         }
+        ensureHeadroom();
         InklingState.Snapshot[] parts = ranks.onRanks(r -> {
             try (var guard = Tensor.noGradGuard()) {
                 return st[r].snapshot(args);
@@ -912,6 +965,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             int pos = from;
             Tensor logits = null;
             while (pos < to) {
+                ensureHeadroom();
                 int end = Math.min(to, pos + limit);
                 // stop at the next position worth a snapshot: the state there is a prefix of later prompts
                 if (prefixCache != null && prefixReuse) {
@@ -1246,7 +1300,12 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             // the whole conversation so far is the likely prefix of the next turn
             int[] tokens = Arrays.copyOf(sequenceTokens, st[0].length);
             synchronized (lock) {
-                store(st, tokens);
+                try {
+                    store(st, tokens);
+                } catch (RuntimeException e) {
+                    // the request itself succeeded: a missing snapshot only costs a later prefill
+                    logger.warn("Inkling: could not store the prefix snapshot of {} tokens: {}", tokens.length, e.toString());
+                }
             }
         }
         evict(requestId);
