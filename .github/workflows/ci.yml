@@ -74,6 +74,7 @@ jobs:
           echo "Downloading: ${LIBTORCH_URL}"
           curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip "${LIBTORCH_URL}"
           unzip -q -o libtorch.zip -d deep
+          rm -f libtorch.zip
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
@@ -88,16 +89,21 @@ jobs:
       # No SMILE_ONNX_GENAI_MODEL on runners: GenAINativeTest skips model cases and
       # only exercises natives when ONNXRUNTIME_* paths are set (above).
       - name: Run unit tests (skip integration tests)
-        # Size Gradle and test JVMs for 16 GB ubuntu-latest runners (leaving room for OS + LibTorch/ONNX native memory)
+        # Size Gradle and test JVMs for 16 GB ubuntu-latest runners (leaving room for OS + LibTorch/ONNX native memory).
+        # --max-workers=1 and --no-configuration-cache are required because gradle.properties enables
+        # org.gradle.configuration-cache=true, which runs tasks in parallel and ignores --no-parallel.
         run: |
           xvfb-run --auto-servernum ./gradlew test \
             -Dorg.gradle.jvmargs="-Xmx2g -XX:MaxMetaspaceSize=512m" \
-            -PtestMaxHeapSize=8g \
+            -PtestMaxHeapSize=6g \
             -DexcludeTags=integration \
             -Pserve.plugins=false \
+            -Pkotlin.compiler.execution.strategy=in-process \
             -x :plot:test \
             -x :spark:test \
             -x :studio:test \
+            --max-workers=1 \
+            --no-configuration-cache \
             --no-parallel \
             --no-daemon
 
