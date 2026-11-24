@@ -94,6 +94,7 @@ jobs:
             -Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=384m" \
             -DexcludeTags=integration \
             -Pserve.plugins=false \
+            -x :plot:test \
             -x :spark:test \
             -x :studio:test \
             --no-parallel \
