@@ -410,7 +410,7 @@ public final class InferenceEngine implements AutoCloseable {
                 if (active.isEmpty()) {
                     boolean hasWork;
                     synchronized (queueLock) {
-                        if (waiting.isEmpty() && running) {
+                        if (running) {
                             queueLock.wait(50);
                         }
                         hasWork = !waiting.isEmpty();
@@ -627,11 +627,18 @@ public final class InferenceEngine implements AutoCloseable {
             try {
                 kvId = executor.bind(keyPrompt, desired);
             } catch (KvCacheExhaustedException ex) {
+                if (active.isEmpty()) {
+                    // Nothing is in flight to ever release KV slots: deferring would deadlock forever.
+                    removeWaiting(next);
+                    next.handle.future().completeExceptionally(ex);
+                    continue;
+                }
                 logKvAdmissionDeferred(promptLen, maxGen, desired, ex.getMessage());
                 break;
             } catch (IllegalStateException | IllegalArgumentException ex) {
                 String msg = ex.getMessage() == null ? "" : ex.getMessage();
-                if (msg.contains("KV") || msg.contains("capacity") || msg.contains("exhausted")) {
+                if (!active.isEmpty()
+                        && (msg.contains("KV") || msg.contains("capacity") || msg.contains("exhausted"))) {
                     logKvAdmissionDeferred(promptLen, maxGen, desired, msg);
                     break;
                 }
@@ -649,6 +656,8 @@ public final class InferenceEngine implements AutoCloseable {
             }
             recordQueueWait(next.enqueuedAtNanos);
 
+            int boundCap = executor.boundCapacity(kvId, desired);
+            int effectiveMaxGen = Math.min(maxGen, Math.max(0, boundCap - promptLen));
             int matched = executor.prefixLen(kvId);
             // Multimodal prompts must not reuse KV prefixes (vision embeds + mRoPE).
             if (next.request.hasMultimodal() && !mmReuse) {
@@ -656,7 +665,7 @@ public final class InferenceEngine implements AutoCloseable {
             }
             int from = matched;
             // Keep last prompt token for next-token logits when generating.
-            if (from > 0 && promptLen < desired && promptLen > 0) {
+            if (from > 0 && promptLen < boundCap && promptLen > 0) {
                 from = Math.min(from, promptLen - 1);
             }
             if (from > 0) {
@@ -679,13 +688,13 @@ public final class InferenceEngine implements AutoCloseable {
                 listener.onCachedInputTokens(Math.min(matched, promptLen));
             }
             Active a = new Active(next.handle, next.request, prompt, kvId, from, promptLen,
-                    maxGen, desired, next.request.temperature(), next.request.topp(),
+                    effectiveMaxGen, boundCap, next.request.temperature(), next.request.topp(),
                     next.request.seed(), listener);
             active.add(a);
             inFlight.incrementAndGet();
             logger.info("Admitted requestId={} kvId={} promptLen={} capacity={} maxGen={} "
                             + "inFlight={}/{} queued={} kvFree={}",
-                    next.handle.requestId(), kvId, promptLen, desired, maxGen,
+                    next.handle.requestId(), kvId, promptLen, boundCap, effectiveMaxGen,
                     active.size(), maxInFlight, queuedCount.get(), kvFreeSlots());
         }
     }

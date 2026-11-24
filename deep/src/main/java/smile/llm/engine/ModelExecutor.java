@@ -106,6 +106,26 @@ public interface ModelExecutor {
     int prefixLen(int requestId);
 
     /**
+     * Actual capacity (in token slots) reserved for a bound request, or
+     * {@code desiredCapacity} when the executor does not report per-request
+     * KV pool capacity.
+     *
+     * @param requestId       id from {@link #bind}.
+     * @param desiredCapacity capacity requested at {@link #bind}.
+     * @return bound capacity in token slots.
+     */
+    default int boundCapacity(int requestId, int desiredCapacity) {
+        KvCachePool pool = kvCachePool();
+        if (pool != null) {
+            int cap = pool.requestCapacity(requestId);
+            if (cap > 0) {
+                return Math.min(desiredCapacity, cap);
+            }
+        }
+        return desiredCapacity;
+    }
+
+    /**
      * Prefills the unbound suffix of a prompt (activates this request alone).
      *
      * @param requestId request id.

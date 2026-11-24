@@ -730,4 +730,41 @@ public class KvCachePoolTest {
             }
         }
     }
+
+    @Test
+    public void testGivenEmptyPoolWhenBindRequestExceedsPoolThenClampsToPoolCapacity() {
+        // Given – 32-slot pool (2 pages of 16), prompt of 8 tokens, desired capacity 128
+        try (var pool = new KvCachePool(1, 32, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            int[] prompt = {1, 2, 3, 4, 5, 6, 7, 8};
+
+            // When – sole request asks for more slots than the entire pool holds
+            int id = pool.bindRequest(prompt, 128);
+
+            // Then – clamped to 32 slots rather than throwing KvCacheExhaustedException
+            assertTrue(id > 0);
+            assertEquals(32, pool.requestCapacity(id));
+            assertEquals(32, pool.requestCapacity());
+            assertEquals(0, pool.freeSlots());
+
+            // A second concurrent request while the pool is full still throws KvCacheExhaustedException
+            assertThrows(KvCacheExhaustedException.class, () -> pool.bindRequest(prompt, 16));
+
+            pool.unbindRequest(id);
+            assertEquals(32, pool.freeSlots());
+        }
+    }
+
+    @Test
+    public void testGivenEmptyPoolWhenBindRequestPromptExceedsPoolThenThrowsIllegalArgument() {
+        // Given – 16-slot pool cannot hold a 20-token prompt
+        try (var pool = new KvCachePool(1, 16, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            int[] prompt = new int[20];
+            for (int i = 0; i < prompt.length; i++) {
+                prompt[i] = i + 1;
+            }
+
+            // When / Then
+            assertThrows(IllegalArgumentException.class, () -> pool.bindRequest(prompt, 64));
+        }
+    }
 }

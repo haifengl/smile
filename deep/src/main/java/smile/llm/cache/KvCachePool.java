@@ -1355,14 +1355,23 @@ public class KvCachePool implements AutoCloseable {
      * Allocates slots for one request without clearing other multi-request
      * bindings. If the multi-request map was empty, activates this request.
      *
-     * <p>Requires the full {@code totalCapacity} (page-aligned). When free KV
-     * is insufficient, throws {@link KvCacheExhaustedException} so the caller
-     * can leave the job queued until Instant Eviction frees pages.
+     * <p>When another request is already bound, requires the full
+     * {@code totalCapacity} (page-aligned) and throws
+     * {@link KvCacheExhaustedException} when free KV is insufficient so the
+     * caller can leave the job queued until Instant Eviction frees pages.
+     * When no other request is bound, clamps to available capacity (after
+     * radix eviction) so a sole request whose desired capacity exceeds the
+     * total pool size can still proceed instead of deadlocking admission; if
+     * the prompt itself cannot fit in the pool, throws
+     * {@link IllegalArgumentException}.
      *
      * @param promptTokens  prompt token ids.
      * @param totalCapacity desired slots (prompt + generation headroom).
      * @return request id ({@code > 0}).
-     * @throws KvCacheExhaustedException if the pool cannot reserve {@code totalCapacity}.
+     * @throws KvCacheExhaustedException if another request is bound and the
+     *         pool cannot reserve {@code totalCapacity}.
+     * @throws IllegalArgumentException if {@code promptTokens.length} exceeds
+     *         the available KV capacity.
      */
     public int bindRequest(int[] promptTokens, int totalCapacity) {
         if (promptTokens == null) {
@@ -1378,11 +1387,12 @@ public class KvCachePool implements AutoCloseable {
             releaseLegacyBinding();
         }
 
+        boolean requireFull = !mapWasEmpty;
         RequestBinding binding;
         if (!prefixReuseEnabled) {
-            binding = allocateContiguousBinding(totalCapacity, promptTokens.length, true);
+            binding = allocateContiguousBinding(totalCapacity, promptTokens.length, requireFull);
         } else {
-            binding = allocatePrefixBinding(promptTokens, totalCapacity, true);
+            binding = allocatePrefixBinding(promptTokens, totalCapacity, requireFull);
         }
 
         int id = nextRequestId.getAndIncrement();
@@ -1391,6 +1401,17 @@ public class KvCachePool implements AutoCloseable {
             activateStep(id);
         }
         return id;
+    }
+
+    /**
+     * Returns the bound capacity (in token slots) for a multi-request binding.
+     *
+     * @param requestId id returned by {@link #bindRequest}.
+     * @return reserved capacity in tokens, or {@code 0} if unknown.
+     */
+    public int requestCapacity(int requestId) {
+        RequestBinding binding = bindings.get(requestId);
+        return binding == null ? 0 : binding.capacity();
     }
 
     /**

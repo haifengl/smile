@@ -17,6 +17,7 @@
 package smile.llm.engine;
 
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -626,6 +627,68 @@ public class InferenceEngineTest {
             assertTrue(bad.future().isCompletedExceptionally()
                             || bad.future().get(10, TimeUnit.SECONDS) != null,
                     "the broken request must terminate on its own");
+        }
+    }
+
+    @Test
+    public void testGivenIdleEngineWhenBindThrowsKvCacheExhaustedThenFailsImmediatelyWithoutDeadLoop()
+            throws Exception {
+        // Given – an executor whose bind throws KvCacheExhaustedException even when active is empty
+        StepStub stub = new StepStub() {
+            @Override
+            public int bind(int[] prompt, int totalCapacity) {
+                throw new smile.llm.cache.KvCacheExhaustedException(
+                        "KV cache exhausted: need " + totalCapacity + " slots, have 32 free");
+            }
+        };
+        try (var engine = new InferenceEngine(stub, 1, 1, 64, 120_000L)) {
+            // When
+            var handle = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2, 3}, 100, 0.0, 0.9, false, 0, null));
+
+            // Then – fails immediately rather than spinning until admissionTimeoutMs
+            ExecutionException ex = assertThrows(ExecutionException.class,
+                    () -> handle.future().get(2, TimeUnit.SECONDS));
+            assertInstanceOf(smile.llm.cache.KvCacheExhaustedException.class, ex.getCause());
+            assertEquals(0, engine.queueSize());
+            assertEquals(0, engine.inFlight());
+        }
+    }
+
+    @Test
+    public void testGivenClampedBoundCapacityWhenRequestExceedsPoolThenGeneratesUpToClampedCapacity()
+            throws Exception {
+        // Given – executor uses speculative step (no native Tensor allocation) and clamps boundCapacity to 6
+        StepStub stub = new StepStub() {
+            @Override
+            public int boundCapacity(int requestId, int desiredCapacity) {
+                return Math.min(desiredCapacity, 6);
+            }
+
+            @Override
+            public smile.deep.tensor.Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+                return null;
+            }
+
+            @Override
+            public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                         int numDrafts, double temperature, double topp) {
+                int[][] out = new int[requestIds.length][];
+                for (int i = 0; i < requestIds.length; i++) {
+                    out[i] = new int[]{9, 9};
+                }
+                return out;
+            }
+        };
+        try (var engine = new InferenceEngine(stub, 1, 1, 64, 5_000L)) {
+            // When – prompt has 4 tokens, requests maxGenLen=50, but bound capacity is 6 (room for 2 tokens)
+            var handle = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2, 3, 4}, 50, 0.0, 0.9, false, 0, null, null, true, 2));
+            ChatCompletion completion = handle.future().get(5, TimeUnit.SECONDS);
+
+            // Then – stops cleanly at 2 generated tokens with FinishReason.length
+            assertEquals(FinishReason.length, completion.reason());
+            assertEquals(2, completion.completionTokens().length);
         }
     }
 }

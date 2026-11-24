@@ -247,7 +247,6 @@ export default function ChatApp({
         const request = {
           messages: chatMessages,
           stream: true,
-          max_tokens: 8192,
           conversation: conversationId,
         }
         if (model) request.model = model
