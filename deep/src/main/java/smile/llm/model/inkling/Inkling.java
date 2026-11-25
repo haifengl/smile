@@ -70,6 +70,8 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private final ExecutorService worker;
     private final Device device;
     private final Map<Integer, InklingState> sessions = new ConcurrentHashMap<>();
+    /** Per request: upper bound on state capacity (tokens + margin) so on-demand growth never exceeds the bound window. */
+    private final Map<Integer, Integer> maxCapacities = new ConcurrentHashMap<>();
     private final AtomicInteger nextId = new AtomicInteger(1);
     private InklingModel model;
     private final InklingPrefixCache prefixCache;
@@ -79,6 +81,10 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private InklingDraft draft;
     /** Per request: the draft's context (target features of the processed positions). */
     private final Map<Integer, InklingDraft.State> drafts = new ConcurrentHashMap<>();
+    /** Longest request (tokens) that keeps a DSpark draft context (longer requests decode plainly). */
+    private static final int DRAFT_MAX_CONTEXT = Integer.getInteger("smile.inkling.draft.maxctx", 65536);
+    /** Free device bytes below which the allocator cache is emptied before growing caches or prefilling a chunk. */
+    private static final long MIN_FREE = Long.getLong("smile.inkling.min.free.mb", 2048L) << 20;
     private static final boolean SPECULATE = !"0".equals(System.getenv("SMILE_INKLING_SPECULATE"));
     private final Map<Integer, DecodeGraph> verifyGraphs = new java.util.HashMap<>();
     private InklingVisionArgs visionArgs;
@@ -132,6 +138,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                     logger.info("Inkling DSpark draft loaded ({} drafts per block)", draft.drafts());
                 }
             }
+            releaseMemoryOnWorker("weights");
             if (InklingState.SPILL_DEVICE >= 0 && InklingDecoder.available()) {
                 smile.torch.InklingNative.op(20, new long[]{0}, new long[]{InklingState.SPILL_DEVICE}, new double[0]);
                 logger.info("Inkling KV caches of the last {} global applications live on device {}", InklingState.SPILL_APPS,
@@ -161,8 +168,72 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             } else {
                 logger.info("Inkling decode: reference ops (fused kernels unavailable or disabled)");
             }
+            releaseMemoryOnWorker("graphs");
             return null;
         });
+    }
+
+    /** Frees unreachable loading temporaries and PyTorch caching-allocator blocks; runs on the worker thread. */
+    private void releaseMemoryOnWorker(String stage) {
+        if (!device.isCUDA()) {
+            return;
+        }
+        System.gc();
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        device.emptyCache();
+        try {
+            long free = smile.torch.Native.cudaMemGetInfo(device.index())[0];
+            logger.info("Inkling free GPU memory after {}: {} MiB", stage, free >> 20);
+        } catch (RuntimeException e) {
+            logger.debug("free memory not available: {}", e.toString());
+        }
+    }
+
+    /** Empties the caching allocator when free GPU memory drops below {@link #MIN_FREE}; runs on the worker thread. */
+    private void ensureHeadroom() {
+        if (!device.isCUDA()) {
+            return;
+        }
+        long free;
+        try {
+            free = smile.torch.Native.cudaMemGetInfo(device.index())[0];
+        } catch (RuntimeException e) {
+            return;
+        }
+        if (free < MIN_FREE) {
+            long t0 = System.nanoTime();
+            device.emptyCache();
+            logger.info("Inkling: emptied the allocator cache in {} ms ({} MiB free before, {} MiB after)",
+                    (System.nanoTime() - t0) / 1_000_000, free >> 20,
+                    smile.torch.Native.cudaMemGetInfo(device.index())[0] >> 20);
+        }
+    }
+
+    private int maxCap(int requestId) {
+        return maxCapacities.getOrDefault(requestId, args.maxSeqLen() + InklingState.VERIFY_ROWS);
+    }
+
+    private int draftMaxCap(int requestId) {
+        int block = draft == null ? 0 : draft.drafts() + 1;
+        return Math.min(maxCap(requestId), DRAFT_MAX_CONTEXT) + InklingState.VERIFY_ROWS + block;
+    }
+
+    private void ensureStateCapacity(InklingState st, int required, int maxCap) {
+        if (required > st.capacity) {
+            ensureHeadroom();
+            st.ensureCapacity(required, maxCap);
+        }
+    }
+
+    private void ensureDraftCapacity(InklingDraft.State ds, int required, int maxCap) {
+        if (required > ds.capacity) {
+            ensureHeadroom();
+            ds.ensureCapacity(required, maxCap);
+        }
     }
 
     /**
@@ -454,10 +525,12 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                     is = new ImageState(embeds, before);
                     images.put(requestId, is);
                 }
+                ensureStateCapacity(st, to, maxCap(requestId));
                 int limit = st.maxChunk(args);
                 int pos = from;
                 Tensor logits = null;
                 while (pos < to) {
+                    ensureHeadroom();
                     int end = Math.min(to, pos + limit);
                     long[] chunk = new long[end - pos];
                     java.util.List<Long> where = new ArrayList<>();
@@ -522,12 +595,36 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         if (totalCapacity > args.maxSeqLen()) {
             throw new IllegalArgumentException("capacity " + totalCapacity + " exceeds max_seq_len " + args.maxSeqLen());
         }
-        int margin = draft != null && decoder != null ? InklingState.VERIFY_ROWS : 0;
-        InklingState state = onWorker(() -> model.newState(Math.max(1, totalCapacity) + margin));
+        int logicalMax = Math.max(1, totalCapacity);
+        int promptLen = prompt == null ? 0 : prompt.length;
+        boolean hasSpec = draft != null && decoder != null;
+        boolean canDraft = hasSpec && promptLen <= DRAFT_MAX_CONTEXT;
+        int stateMargin = hasSpec ? InklingState.VERIFY_ROWS : 0;
+        int draftMargin = canDraft ? InklingState.VERIFY_ROWS + draft.drafts() + 1 : 0;
+        int stateMaxCap = logicalMax + stateMargin;
+        int stateInitCap = InklingState.initialCapacity(promptLen + stateMargin, stateMaxCap);
+        int draftMaxCap = canDraft ? Math.min(logicalMax, DRAFT_MAX_CONTEXT) + draftMargin : 0;
+        int draftInitCap = canDraft ? InklingState.initialCapacity(promptLen + draftMargin, draftMaxCap) : 0;
+        record Bound(InklingState state, InklingDraft.State draft) { }
+        Bound bound = onWorker(() -> {
+            ensureHeadroom();
+            InklingState state = model.newState(stateInitCap);
+            InklingDraft.State ds = null;
+            if (canDraft) {
+                try {
+                    ds = draft.newState(draftInitCap);
+                } catch (Throwable t) {
+                    state.close();
+                    throw t;
+                }
+            }
+            return new Bound(state, ds);
+        });
         int id = nextId.getAndIncrement();
-        sessions.put(id, state);
-        if (margin > 0) {
-            drafts.put(id, onWorker(() -> draft.newState(Math.max(1, totalCapacity) + margin)));
+        sessions.put(id, bound.state);
+        maxCapacities.put(id, stateMaxCap);
+        if (bound.draft != null) {
+            drafts.put(id, bound.draft);
         }
         if (prefixCache != null && prefixReuse && prompt != null) {
             // the last prompt token is always processed (its logits are sampled)
@@ -585,6 +682,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             }
             InklingState st = session(requestId);
             onWorker(() -> {
+                ensureStateCapacity(st, prefixLen, maxCap(requestId));
                 st.restore((InklingState.Snapshot) hit.snapshot);
                 return null;
             });
@@ -609,10 +707,24 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         boolean last = to == prompt.length;
         return onWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
+                int stateMargin = draft != null && decoder != null ? InklingState.VERIFY_ROWS : 0;
+                ensureStateCapacity(st, to + stateMargin, maxCap(requestId));
+                InklingDraft.State ds = drafts.get(requestId);
+                if (ds != null) {
+                    if (to > DRAFT_MAX_CONTEXT) {
+                        drafts.remove(requestId);
+                        ds.close();
+                        ds = null;
+                    } else {
+                        ensureDraftCapacity(ds, to + InklingState.VERIFY_ROWS + draft.drafts() + 1, draftMaxCap(requestId));
+                    }
+                }
+                final InklingDraft.State fds = ds;
                 int limit = st.maxChunk(args);
                 int pos = from;
                 Tensor logits = null;
                 while (pos < to) {
+                    ensureHeadroom();
                     int end = Math.min(to, pos + limit);
                     // stop at the next position worth a snapshot: the state there is a prefix of later prompts
                     if (prefixCache != null && prefixReuse) {
@@ -626,10 +738,9 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                         ids[i] = prompt[pos + i];
                     }
                     boolean wantLogits = last && end == to;
-                    InklingDraft.State ds = drafts.get(requestId);
                     final int at = pos;
                     Tensor t = model.forward(st, ids, wantLogits ? null : new int[0], null, null, null,
-                            ds == null ? null : taps -> draft.absorb(ds, taps, at));
+                            fds == null ? null : taps -> draft.absorb(fds, taps, at));
                     if (wantLogits) {
                         logits = t;
                     }
@@ -674,12 +785,18 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         if (decoder != null) {
             return onWorker(() -> {
                 try (var guard = Tensor.noGradGuard()) {
+                    for (int i = 0; i < n; i++) {
+                        ensureStateCapacity(states[i], states[i].length + 1, maxCap(requestIds[i]));
+                    }
                     return stepScoped(() -> fusedStep(states, lastTokens));
                 }
             });
         }
         return onWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
+                for (int i = 0; i < n; i++) {
+                    ensureStateCapacity(states[i], states[i].length + 1, maxCap(requestIds[i]));
+                }
                 return stepScoped(() -> {
                     Tensor[] rows = new Tensor[n];
                     for (int i = 0; i < n; i++) {
@@ -989,9 +1106,26 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             }
         }
         int rowsPer = Math.max(2, Math.min(numDrafts + 1, Math.min(draft.drafts() + 1, InklingState.VERIFY_ROWS)));
+        int block = draft.drafts() + 1;
+        for (int i = 0; i < n; i++) {
+            if (positions[i] + rowsPer > DRAFT_MAX_CONTEXT) {
+                InklingDraft.State dropped = drafts.remove(requestIds[i]);
+                if (dropped != null) {
+                    onWorker(() -> {
+                        dropped.close();
+                        return null;
+                    });
+                }
+                throw new UnsupportedOperationException("request " + requestIds[i] + " reached draft max context " + DRAFT_MAX_CONTEXT);
+            }
+        }
         int reqs = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
         return onWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
+                for (int i = 0; i < n; i++) {
+                    ensureStateCapacity(states[i], states[i].length + rowsPer, maxCap(requestIds[i]));
+                    ensureDraftCapacity(ds[i], states[i].length + rowsPer + block, draftMaxCap(requestIds[i]));
+                }
                 return speculateRound(states, ds, lastTokens, rowsPer, reqs, temperatures, topps);
             }
         });
@@ -1112,6 +1246,8 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             onWorker(() -> {
                 try (var guard = Tensor.noGradGuard()) {
                     store(st, tokens);
+                } catch (RuntimeException e) {
+                    logger.warn("Inkling: could not store the prefix snapshot of {} tokens: {}", tokens.length, e.toString());
                 }
                 return null;
             });
@@ -1121,6 +1257,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
 
     @Override
     public void evict(int requestId) {
+        maxCapacities.remove(requestId);
         InklingPrefixCache.Entry hit = prefixMatches.remove(requestId);
         if (hit != null) {
             synchronized (prefixCache) {

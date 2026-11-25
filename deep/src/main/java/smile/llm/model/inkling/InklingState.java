@@ -51,7 +51,15 @@ final class InklingState implements AutoCloseable {
     static final int SPILL_DEVICE = Integer.getInteger("smile.inkling.kv.spill.device", -1);
     static final int SPILL_APPS = Integer.getInteger("smile.inkling.kv.spill.apps", 6);
 
-    final int capacity;
+    /** Initial per-request KV capacity when the request's upper bound is larger (grows on demand). */
+    static final int INITIAL_CAPACITY = Integer.getInteger("smile.inkling.initial.capacity", 4096);
+    /** Alignment increment (tokens) for on-demand KV growth. */
+    static final int GROW_ALIGN = 4096;
+    /** Maximum single-step capacity increase (tokens) once a state passes 64K tokens. */
+    static final int MAX_GROW_STEP = Integer.getInteger("smile.inkling.grow.maxstep", 32768);
+
+    private final InklingModelArgs args;
+    int capacity;
     /** Tokens a sliding cache holds beyond the window (the chunk limit). */
     final int localSlack;
     /** Cache capacity (tokens) of every application. */
@@ -75,6 +83,7 @@ final class InklingState implements AutoCloseable {
      * @param tp number of ranks the attention is sharded over: this rank caches {@code kvHeads / tp} heads.
      */
     InklingState(InklingModelArgs args, int capacity, Device device, int tp) {
+        this.args = args;
         this.capacity = capacity;
         this.localSlack = tp > 1 ? LOCAL_SLACK_TP : LOCAL_SLACK;
         int apps = args.numApplications();
@@ -90,24 +99,135 @@ final class InklingState implements AutoCloseable {
             }
         }
         int seenGlobals = 0;
-        for (int a = 0; a < apps; a++) {
-            int layer = args.layerOfApplication(a);
-            boolean spill = SPILL_DEVICE >= 0 && !args.isLocal(layer) && seenGlobals++ >= globals - SPILL_APPS;
-            Device cacheDevice = spill ? Device.CUDA((byte) SPILL_DEVICE) : device;
-            int heads = (args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads()) / tp;
-            int dim = args.isLocal(layer) ? args.swaHeadDim() : args.headDim();
-            // a sliding-window layer only needs the last window - 1 tokens plus the chunk being processed
-            cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + localSlack) : capacity;
-            ScalarType kvType = KV_FP8 && !args.isLocal(layer) ? ScalarType.Float8e4m3fn : ScalarType.BFloat16;
-            k[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
-            v[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
-            int rows = args.sconvKernel() - 1;
-            int[] channels = {heads * dim, heads * dim, args.dim(), args.dim()};
-            for (int c = 0; c < 4; c++) {
-                convFull[a][c] = keep(zeros(device, ScalarType.Float, rows + VERIFY_ROWS, channels[c]));
-                conv[a][c] = keep(narrow(convFull[a][c], 0, 0, rows));
+        try {
+            for (int a = 0; a < apps; a++) {
+                int layer = args.layerOfApplication(a);
+                boolean spill = SPILL_DEVICE >= 0 && !args.isLocal(layer) && seenGlobals++ >= globals - SPILL_APPS;
+                Device cacheDevice = spill ? Device.CUDA((byte) SPILL_DEVICE) : device;
+                int heads = (args.isLocal(layer) ? args.swaKvHeads() : args.numKvHeads()) / tp;
+                int dim = args.isLocal(layer) ? args.swaHeadDim() : args.headDim();
+                // a sliding-window layer only needs the last window - 1 tokens plus the chunk being processed
+                cacheCapacity[a] = args.isLocal(layer) ? Math.min(capacity, args.slidingWindow() + localSlack) : capacity;
+                ScalarType kvType = KV_FP8 && !args.isLocal(layer) ? ScalarType.Float8e4m3fn : ScalarType.BFloat16;
+                k[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
+                v[a] = keep(zeros(cacheDevice, kvType, heads, cacheCapacity[a], dim));
+                int rows = args.sconvKernel() - 1;
+                int[] channels = {heads * dim, heads * dim, args.dim(), args.dim()};
+                for (int c = 0; c < 4; c++) {
+                    convFull[a][c] = keep(zeros(device, ScalarType.Float, rows + VERIFY_ROWS, channels[c]));
+                    conv[a][c] = keep(narrow(convFull[a][c], 0, 0, rows));
+                }
+            }
+        } catch (Throwable t) {
+            close();
+            throw t;
+        }
+    }
+
+    /**
+     * Picks the initial KV allocation for a request: large enough for the prompt (and any speculative margin) without
+     * pre-allocating a huge {@code maxCapacity} up front.
+     *
+     * @param minNeeded   tokens needed immediately (prompt + margin).
+     * @param maxCapacity upper bound for this request (tokens + margin).
+     * @return initial capacity in {@code [1, maxCapacity]}.
+     */
+    static int initialCapacity(int minNeeded, int maxCapacity) {
+        int cap = Math.max(1, maxCapacity);
+        int needed = Math.max(1, minNeeded);
+        if (needed >= cap) {
+            return cap;
+        }
+        int init = Math.max(1, INITIAL_CAPACITY);
+        if (cap <= init) {
+            return cap;
+        }
+        if (needed <= init) {
+            return init;
+        }
+        long aligned = alignUp(needed);
+        return (int) Math.min(cap, aligned);
+    }
+
+    /**
+     * Picks the next KV capacity when growing a state from {@code current} to fit at least {@code required} tokens:
+     * doubles up to 64K tokens and then steps by {@link #MAX_GROW_STEP}, aligned to {@link #GROW_ALIGN} and capped at
+     * {@code maxCapacity}.
+     */
+    static int nextCapacity(int current, int required, int maxCapacity) {
+        if (current >= required) {
+            return current;
+        }
+        int cap = Math.max(required, Math.max(1, maxCapacity));
+        long grown = current < 65536
+                ? Math.max((long) required, Math.max((long) GROW_ALIGN, (long) current * 2L))
+                : Math.max((long) required, (long) current + Math.max(GROW_ALIGN, MAX_GROW_STEP));
+        long aligned = alignUp(grown);
+        return (int) Math.min(cap, Math.max(required, aligned));
+    }
+
+    private static long alignUp(long n) {
+        return ((n + GROW_ALIGN - 1) / GROW_ALIGN) * GROW_ALIGN;
+    }
+
+    /**
+     * Ensures this state can hold at least {@code required} tokens, growing caches on demand up to {@code maxCapacity}.
+     */
+    void ensureCapacity(int required, int maxCapacity) {
+        if (required <= capacity) {
+            return;
+        }
+        grow(nextCapacity(capacity, required, maxCapacity));
+    }
+
+    /**
+     * Grows the per-application KV caches in place to {@code newCapacity} tokens, preserving all live entries.
+     * Local (sliding-window) caches stop growing once they reach {@code slidingWindow + localSlack}.
+     * Replaced one tensor at a time so transient peak memory is one tensor rather than the whole cache.
+     */
+    void grow(int newCapacity) {
+        if (newCapacity <= capacity) {
+            return;
+        }
+        table = null;
+        try {
+            for (int a = 0; a < k.length; a++) {
+                boolean local = args.isLocal(args.layerOfApplication(a));
+                int targetCap = local ? Math.min(newCapacity, args.slidingWindow() + localSlack) : newCapacity;
+                int oldCap = cacheCapacity[a];
+                if (targetCap <= oldCap) {
+                    continue;
+                }
+                k[a] = growTensor(k[a], oldCap, targetCap, local);
+                v[a] = growTensor(v[a], oldCap, targetCap, local);
+                cacheCapacity[a] = targetCap;
+            }
+            capacity = newCapacity;
+        } finally {
+            table = null;
+        }
+    }
+
+    private Tensor growTensor(Tensor old, int oldCap, int newCap, boolean local) {
+        Tensor fresh = keep(zeros(old.device(), old.dtype(), old.size(0), newCap, old.size(2)));
+        if (length > 0) {
+            try {
+                inScope(() -> {
+                    if (!local || length <= oldCap) {
+                        o("aten::copy_", narrow(fresh, 1, 0, length), narrow(old, 1, 0, length));
+                    } else {
+                        int n = Math.min(length, args.slidingWindow() - 1);
+                        int from = length - n;
+                        write(fresh, newCap, from, read(old, oldCap, from, n));
+                    }
+                });
+            } catch (Throwable t) {
+                fresh.close();
+                throw t;
             }
         }
+        old.close();
+        return fresh;
     }
 
     /**
@@ -159,10 +279,21 @@ final class InklingState implements AutoCloseable {
         @Override
         public void close() {
             for (int a = 0; a < k.length; a++) {
-                k[a].close();
-                v[a].close();
-                for (Tensor c : conv[a]) {
-                    c.close();
+                if (k[a] != null) {
+                    k[a].close();
+                    k[a] = null;
+                }
+                if (v[a] != null) {
+                    v[a].close();
+                    v[a] = null;
+                }
+                if (conv[a] != null) {
+                    for (int c = 0; c < conv[a].length; c++) {
+                        if (conv[a][c] != null) {
+                            conv[a][c].close();
+                            conv[a][c] = null;
+                        }
+                    }
                 }
             }
         }
@@ -203,21 +334,26 @@ final class InklingState implements AutoCloseable {
         Tensor[][] cs = new Tensor[apps][4];
         int[] start = new int[apps];
         long bytes = 0;
-        for (int a = 0; a < apps; a++) {
-            boolean local = args.isLocal(args.layerOfApplication(a));
-            int n = local ? Math.min(length, args.slidingWindow() - 1) : length;
-            start[a] = length - n;
-            ks[a] = keep(read(k[a], cacheCapacity[a], start[a], n));
-            vs[a] = keep(read(v[a], cacheCapacity[a], start[a], n));
-            for (int c = 0; c < 4; c++) {
-                cs[a][c] = keep(conv[a][c].copy());
+        try {
+            for (int a = 0; a < apps; a++) {
+                boolean local = args.isLocal(args.layerOfApplication(a));
+                int n = local ? Math.min(length, args.slidingWindow() - 1) : length;
+                start[a] = length - n;
+                ks[a] = keep(read(k[a], cacheCapacity[a], start[a], n));
+                vs[a] = keep(read(v[a], cacheCapacity[a], start[a], n));
+                for (int c = 0; c < 4; c++) {
+                    cs[a][c] = keep(conv[a][c].copy());
+                }
+                bytes += (elements(ks[a]) + elements(vs[a])) * (k[a].dtype() == ScalarType.Float8e4m3fn ? 1 : 2);
+                for (Tensor c : cs[a]) {
+                    bytes += elements(c) * 4;
+                }
             }
-            bytes += (elements(ks[a]) + elements(vs[a])) * (k[a].dtype() == ScalarType.Float8e4m3fn ? 1 : 2);
-            for (Tensor c : cs[a]) {
-                bytes += elements(c) * 4;
-            }
+            return new Snapshot(ks, vs, cs, start, length, bytes);
+        } catch (Throwable t) {
+            new Snapshot(ks, vs, cs, start, length, bytes).close();
+            throw t;
         }
-        return new Snapshot(ks, vs, cs, start, length, bytes);
     }
 
     /** Copies the cache rows of positions {@code [from, from + n)} out ({@code [heads, n, dim]}); a ring when it wraps. */
@@ -282,12 +418,27 @@ final class InklingState implements AutoCloseable {
     @Override
     public void close() {
         for (int a = 0; a < k.length; a++) {
-            k[a].close();
-            v[a].close();
-            for (int c = 0; c < 4; c++) {
-                conv[a][c].close();
-                convFull[a][c].close();
+            if (k[a] != null) {
+                k[a].close();
+                k[a] = null;
+            }
+            if (v[a] != null) {
+                v[a].close();
+                v[a] = null;
+            }
+            if (conv[a] != null) {
+                for (int c = 0; c < conv[a].length; c++) {
+                    if (conv[a][c] != null) {
+                        conv[a][c].close();
+                        conv[a][c] = null;
+                    }
+                    if (convFull[a][c] != null) {
+                        convFull[a][c].close();
+                        convFull[a][c] = null;
+                    }
+                }
             }
         }
+        table = null;
     }
 }

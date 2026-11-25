@@ -155,6 +155,17 @@ final class Ix {
         }
     }
 
+    /** Runs an action in its own tensor scope so every temporary tensor created inside is freed on return. */
+    static void inScope(Runnable action) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            action.run();
+        } finally {
+            Tensor.pop();
+        }
+    }
+
     static Tensor zeros(Device device, ScalarType dtype, long... shape) {
         return Tensor.zeros(new Tensor.Options().dtype(dtype).device(device), shape);
     }

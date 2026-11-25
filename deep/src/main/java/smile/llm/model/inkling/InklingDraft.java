@@ -49,7 +49,7 @@ public final class InklingDraft {
     /** Per-request draft state: the context key/value caches {@code [layers][kvHeads, capacity, headDim]} and the last tap. */
     static final class State implements AutoCloseable {
         final Tensor[] k, v;
-        final int capacity;
+        int capacity;
         /** Positions {@code [0, absorbed)} have context rows. */
         int absorbed;
         /** The four taps {@code [4, D]} of the position {@code absorbed - 1} (feeds the Markov head). */
@@ -61,10 +61,50 @@ public final class InklingDraft {
             this.capacity = capacity;
             k = new Tensor[c.layers()];
             v = new Tensor[c.layers()];
-            for (int i = 0; i < k.length; i++) {
-                k[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
-                v[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
+            try {
+                for (int i = 0; i < k.length; i++) {
+                    k[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
+                    v[i] = keep(zeros(device, ScalarType.BFloat16, c.kvHeads(), capacity, c.headDim()));
+                }
+            } catch (Throwable t) {
+                close();
+                throw t;
             }
+        }
+
+        /** Ensures the draft context caches can hold at least {@code required} positions, growing on demand. */
+        void ensureCapacity(int required, int maxCapacity) {
+            if (required <= capacity) {
+                return;
+            }
+            grow(InklingState.nextCapacity(capacity, required, maxCapacity));
+        }
+
+        /** Grows the draft context caches in place to {@code newCapacity} positions, one tensor at a time. */
+        void grow(int newCapacity) {
+            if (newCapacity <= capacity) {
+                return;
+            }
+            int live = Math.min(absorbed, capacity);
+            for (int i = 0; i < k.length; i++) {
+                k[i] = growTensor(k[i], live, newCapacity);
+                v[i] = growTensor(v[i], live, newCapacity);
+            }
+            capacity = newCapacity;
+        }
+
+        private static Tensor growTensor(Tensor old, int live, int newCap) {
+            Tensor fresh = keep(zeros(old.device(), old.dtype(), old.size(0), newCap, old.size(2)));
+            if (live > 0) {
+                try {
+                    inScope(() -> o("aten::copy_", narrow(fresh, 1, 0, live), narrow(old, 1, 0, live)));
+                } catch (Throwable t) {
+                    fresh.close();
+                    throw t;
+                }
+            }
+            old.close();
+            return fresh;
         }
 
         /** Device addresses of the caches: K and V of every layer, then the capacity ({@code 2 * layers + 1} values). */
@@ -81,11 +121,18 @@ public final class InklingDraft {
         @Override
         public void close() {
             for (int i = 0; i < k.length; i++) {
-                k[i].close();
-                v[i].close();
+                if (k[i] != null) {
+                    k[i].close();
+                    k[i] = null;
+                }
+                if (v[i] != null) {
+                    v[i].close();
+                    v[i] = null;
+                }
             }
             if (lastTap != null) {
                 lastTap.close();
+                lastTap = null;
             }
         }
     }
@@ -206,8 +253,14 @@ public final class InklingDraft {
         @Override
         public void close() {
             for (int i = 0; i < k.length; i++) {
-                k[i].close();
-                v[i].close();
+                if (k[i] != null) {
+                    k[i].close();
+                    k[i] = null;
+                }
+                if (v[i] != null) {
+                    v[i].close();
+                    v[i] = null;
+                }
             }
         }
     }
@@ -238,14 +291,19 @@ public final class InklingDraft {
         Tensor[] vs = new Tensor[layers];
         int[] start = new int[layers];
         long bytes = 0;
-        for (int i = 0; i < layers; i++) {
-            int n = isLocal(i) ? Math.min(length, c.window() + c.block() + 8) : length;
-            start[i] = length - n;
-            ks[i] = keep(contiguous(narrow(st.k[i], 1, start[i], n)).copy());
-            vs[i] = keep(contiguous(narrow(st.v[i], 1, start[i], n)).copy());
-            bytes += 2L * c.kvHeads() * n * c.headDim() * 2;
+        try {
+            for (int i = 0; i < layers; i++) {
+                int n = isLocal(i) ? Math.min(length, c.window() + c.block() + 8) : length;
+                start[i] = length - n;
+                ks[i] = keep(contiguous(narrow(st.k[i], 1, start[i], n)).copy());
+                vs[i] = keep(contiguous(narrow(st.v[i], 1, start[i], n)).copy());
+                bytes += 2L * c.kvHeads() * n * c.headDim() * 2;
+            }
+            return new Snapshot(ks, vs, start, length, bytes);
+        } catch (Throwable t) {
+            new Snapshot(ks, vs, start, length, bytes).close();
+            throw t;
         }
-        return new Snapshot(ks, vs, start, length, bytes);
     }
 
     /**

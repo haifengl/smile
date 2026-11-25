@@ -155,13 +155,43 @@ public final class InklingRanks implements AutoCloseable {
     }
 
     /**
-     * Creates the sequence state on every rank.
+     * Creates the sequence state on every rank. If any rank fails (for example out of GPU memory), the states already
+     * created on the other ranks are closed before the failure is rethrown.
      *
      * @param capacity maximum tokens.
      * @return one state per rank.
      */
     public InklingState[] newStates(int capacity) {
-        return onRanks(r -> models[r].newState(capacity)).toArray(new InklingState[0]);
+        InklingState[] states = new InklingState[models.length];
+        try {
+            onRanks(r -> {
+                states[r] = models[r].newState(capacity);
+                return null;
+            });
+            return states;
+        } catch (Throwable t) {
+            closeAll(states);
+            throw t;
+        }
+    }
+
+    /** Closes every non-null resource in {@code items} on its owning rank thread, suppressing close errors. */
+    void closeAll(AutoCloseable[] items) {
+        try {
+            onRanks(r -> {
+                if (items[r] != null) {
+                    try {
+                        items[r].close();
+                    } catch (Exception ignored) {
+                        // best-effort cleanup on an error path
+                    }
+                    items[r] = null;
+                }
+                return null;
+            });
+        } catch (RuntimeException ignored) {
+            // best-effort cleanup on an error path
+        }
     }
 
     /**

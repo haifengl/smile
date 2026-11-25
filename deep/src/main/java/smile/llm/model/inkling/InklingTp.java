@@ -69,6 +69,8 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     private final InklingRanks ranks;
     private final RankContext[] contexts;
     private final Map<Integer, InklingState[]> sessions = new ConcurrentHashMap<>();
+    /** Per request: upper bound on state capacity (tokens + margin) so on-demand growth never exceeds the bound window. */
+    private final Map<Integer, Integer> maxCapacities = new ConcurrentHashMap<>();
     private final AtomicInteger nextId = new AtomicInteger(1);
     private final Object lock = new Object();
     private boolean graphsDisabled;
@@ -751,6 +753,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 is = new ImageState(embeds, before);
                 images.put(requestId, is);
             }
+            ensureStatesCapacity(st, to, maxCap(requestId));
             int limit = st[0].maxChunk(args);
             int pos = from;
             Tensor logits = null;
@@ -875,33 +878,87 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
     }
 
+    private int maxCap(int requestId) {
+        return maxCapacities.getOrDefault(requestId, args.maxSeqLen() + InklingState.VERIFY_ROWS);
+    }
+
+    private int draftMaxCap(int requestId) {
+        int block = drafts[0] == null ? 0 : drafts[0].drafts() + 1;
+        return Math.min(maxCap(requestId), DRAFT_MAX_CONTEXT) + InklingState.VERIFY_ROWS + block;
+    }
+
+    /** Grows a request's per-rank states on demand to hold at least {@code required} tokens. Called with {@code lock} held. */
+    private void ensureStatesCapacity(InklingState[] st, int required, int maxCap) {
+        if (required <= st[0].capacity) {
+            return;
+        }
+        ensureHeadroom();
+        int target = InklingState.nextCapacity(st[0].capacity, required, maxCap);
+        ranks.onRanks(r -> {
+            st[r].grow(target);
+            return null;
+        });
+    }
+
+    /** Grows a request's per-rank draft states on demand to hold at least {@code required} positions. Called with {@code lock} held. */
+    private void ensureDraftsCapacity(InklingDraft.State[] ds, int required, int maxCap) {
+        if (required <= ds[0].capacity) {
+            return;
+        }
+        ensureHeadroom();
+        int target = InklingState.nextCapacity(ds[0].capacity, required, maxCap);
+        ranks.onRanks(r -> {
+            ds[r].grow(target);
+            return null;
+        });
+    }
+
     private int bindImpl(int[] prompt, int totalCapacity) {
         if (totalCapacity > args.maxSeqLen()) {
             throw new IllegalArgumentException("capacity " + totalCapacity + " exceeds max_seq_len " + args.maxSeqLen());
         }
-        InklingState[] states;
-        InklingDraft.State[] ds = null;
+        int logicalMax = Math.max(1, totalCapacity);
+        int promptLen = prompt == null ? 0 : prompt.length;
         // a verify chunk may write up to VERIFY_ROWS rows past the committed ones
         // (the replicated draft keeps ~20 KB of context per token on every rank: very long requests decode plainly)
-        int margin = drafts[0] != null && contexts[0].decoder != null && totalCapacity <= DRAFT_MAX_CONTEXT
-                ? InklingState.VERIFY_ROWS : 0;
-        int capacity = Math.max(1, totalCapacity) + margin;
+        boolean hasSpec = drafts[0] != null && contexts[0].decoder != null;
+        boolean canDraft = hasSpec && promptLen <= DRAFT_MAX_CONTEXT;
+        int stateMargin = hasSpec ? InklingState.VERIFY_ROWS : 0;
+        int draftMargin = canDraft ? InklingState.VERIFY_ROWS + drafts[0].drafts() + 1 : 0;
+        int stateMaxCap = logicalMax + stateMargin;
+        int stateInitCap = InklingState.initialCapacity(promptLen + stateMargin, stateMaxCap);
+        int draftMaxCap = canDraft ? Math.min(logicalMax, DRAFT_MAX_CONTEXT) + draftMargin : 0;
+        int draftInitCap = canDraft ? InklingState.initialCapacity(promptLen + draftMargin, draftMaxCap) : 0;
+        InklingState[] states;
+        InklingDraft.State[] ds = null;
         synchronized (lock) {
             long t0 = System.nanoTime();
-            states = takeSpare(capacity);
+            states = takeSpare(stateInitCap);
             if (states == null) {
                 ensureHeadroom();
-                states = ranks.newStates(stateCapacity(capacity));
+                states = ranks.newStates(stateCapacity(stateInitCap));
             }
-            timed("newStates, capacity " + capacity, t0);
+            timed("newStates, capacity " + stateInitCap, t0);
             long t1 = System.nanoTime();
-            if (margin > 0) {
-                ds = ranks.onRanks(r -> drafts[r].newState(capacity)).toArray(new InklingDraft.State[0]);
+            if (canDraft) {
+                InklingDraft.State[] allocated = new InklingDraft.State[devices.length];
+                try {
+                    ranks.onRanks(r -> {
+                        allocated[r] = drafts[r].newState(draftInitCap);
+                        return null;
+                    });
+                    ds = allocated;
+                } catch (Throwable t) {
+                    ranks.closeAll(allocated);
+                    giveBack(states);
+                    throw t;
+                }
             }
             timed("draft newState", t1);
         }
         int id = nextId.getAndIncrement();
         sessions.put(id, states);
+        maxCapacities.put(id, stateMaxCap);
         if (ds != null) {
             draftStates.put(id, ds);
         }
@@ -1011,6 +1068,10 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             InklingState.Snapshot[] parts = snap.parts();
             InklingDraft.State[] ds = draftStates.get(requestId);
             synchronized (lock) {
+                ensureStatesCapacity(st, prefixLen, maxCap(requestId));
+                if (ds != null && snap.draft() != null) {
+                    ensureDraftsCapacity(ds, prefixLen, draftMaxCap(requestId));
+                }
                 ranks.onRanks(r -> {
                     try (var guard = Tensor.noGradGuard()) {
                         st[r].restore(parts[r]);
@@ -1042,16 +1103,30 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
         }
         ensureHeadroom();
-        InklingState.Snapshot[] parts = ranks.onRanks(r -> {
-            try (var guard = Tensor.noGradGuard()) {
-                return st[r].snapshot(args);
+        InklingState.Snapshot[] parts = new InklingState.Snapshot[devices.length];
+        InklingDraft.Snapshot[] dparts = withDraft ? new InklingDraft.Snapshot[devices.length] : null;
+        try {
+            ranks.onRanks(r -> {
+                try (var guard = Tensor.noGradGuard()) {
+                    parts[r] = st[r].snapshot(args);
+                }
+                return null;
+            });
+            if (withDraft) {
+                ranks.onRanks(r -> {
+                    try (var guard = Tensor.noGradGuard()) {
+                        dparts[r] = drafts[r].snapshot(ds[r], tokens.length);
+                    }
+                    return null;
+                });
             }
-        }).toArray(new InklingState.Snapshot[0]);
-        InklingDraft.Snapshot[] dparts = !withDraft ? null : ranks.onRanks(r -> {
-            try (var guard = Tensor.noGradGuard()) {
-                return drafts[r].snapshot(ds[r], tokens.length);
+        } catch (Throwable t) {
+            ranks.closeAll(parts);
+            if (dparts != null) {
+                ranks.closeAll(dparts);
             }
-        }).toArray(new InklingDraft.Snapshot[0]);
+            throw t;
+        }
         synchronized (prefixCache) {
             prefixCache.put(tokens, new RankSnapshots(parts, dparts));
         }
@@ -1087,6 +1162,20 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
         boolean last = to == prompt.length;
         synchronized (lock) {
+            int stateMargin = drafts[0] != null && contexts[0].decoder != null ? InklingState.VERIFY_ROWS : 0;
+            ensureStatesCapacity(st, to + stateMargin, maxCap(requestId));
+            InklingDraft.State[] ds = draftStates.get(requestId);
+            if (ds != null) {
+                if (to > DRAFT_MAX_CONTEXT) {
+                    draftStates.remove(requestId);
+                    pending.remove(requestId);
+                    ranks.closeAll(ds);
+                    ds = null;
+                } else {
+                    ensureDraftsCapacity(ds, to + InklingState.VERIFY_ROWS + drafts[0].drafts() + 1, draftMaxCap(requestId));
+                }
+            }
+            final InklingDraft.State[] fds = ds;
             int limit = st[0].maxChunk(args);
             int pos = from;
             Tensor logits = null;
@@ -1105,16 +1194,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                     ids[i] = prompt[pos + i];
                 }
                 boolean wantLogits = last && end == to;
-                InklingDraft.State[] ds = draftStates.get(requestId);
                 final int at = pos;
                 Tensor t = ranks.forward(st, ids, wantLogits ? null : new int[0], null,
-                        ds == null ? null : r -> taps -> drafts[r].absorb(ds[r], taps, at));
+                        fds == null ? null : r -> taps -> drafts[r].absorb(fds[r], taps, at));
                 if (wantLogits) {
                     logits = t;
                 }
                 pos = end;
                 if (prefixCache != null && prefixReuse && isSnapshotPosition(pos) && pos < prompt.length && pos <= SNAPSHOT_MAX) {
-                    store(st, draftStates.get(requestId), Arrays.copyOf(prompt, pos));
+                    store(st, fds, Arrays.copyOf(prompt, pos));
                 }
             }
             return logits;
@@ -1133,6 +1221,9 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
         }
         synchronized (lock) {
+            for (int i = 0; i < n; i++) {
+                ensureStatesCapacity(states[i], states[i][0].length + 1, maxCap(requestIds[i]));
+            }
             boolean fused = contexts[0].decoder != null;
             if (fused && GRAPHS && !graphsDisabled && n <= MAX_GRAPH_BATCH && smile.torch.Native.cudaGraphAvailable()) {
                 int nb = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
@@ -1294,8 +1385,23 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
         }
         int rowsPer = Math.max(2, Math.min(numDrafts + 1, Math.min(drafts[0].drafts() + 1, InklingState.VERIFY_ROWS)));
+        int block = drafts[0].drafts() + 1;
         int reqs = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
         synchronized (lock) {
+            for (int i = 0; i < n; i++) {
+                if (positions[i] + rowsPer > DRAFT_MAX_CONTEXT) {
+                    pending.remove(requestIds[i]);
+                    InklingDraft.State[] dropped = draftStates.remove(requestIds[i]);
+                    if (dropped != null) {
+                        ranks.closeAll(dropped);
+                    }
+                    throw new UnsupportedOperationException("request " + requestIds[i] + " reached draft max context " + DRAFT_MAX_CONTEXT);
+                }
+            }
+            for (int i = 0; i < n; i++) {
+                ensureStatesCapacity(states[i], states[i][0].length + rowsPer, maxCap(requestIds[i]));
+                ensureDraftsCapacity(ds[i], states[i][0].length + rowsPer + block, draftMaxCap(requestIds[i]));
+            }
             int key = reqs * 64 + rowsPer;
             if (!contexts[0].verify.containsKey(key)) {
                 captureSpec(reqs, rowsPer);
@@ -1448,6 +1554,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
 
     @Override
     public void evict(int requestId) {
+        maxCapacities.remove(requestId);
         InklingPrefixCache.Entry hit = prefixMatches.remove(requestId);
         if (hit != null) {
             synchronized (prefixCache) {
