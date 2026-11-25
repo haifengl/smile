@@ -1465,39 +1465,60 @@ public class ChatService implements OpenAiModelContributor {
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
         Path configPath = HuggingFaceHub.download(repoId, "config.json");
-        String checkpointDir = configPath.getParent().toString();
-        logger.infof("Downloaded config.json to %s", checkpointDir);
+        Path checkpoint = configPath.getParent();
+        logger.infof("Downloaded config.json to %s", checkpoint);
 
         Set<String> shards = resolveSafeTensorShards(repoId);
         downloadSafeTensorShards(repoId, shards, config.modelLoaderThreads());
 
-        Path checkpoint = Path.of(checkpointDir);
-        if (isQwenCheckpoint(checkpoint)) {
-            resolveHuggingFaceQwenTokenizer(repoId, config.modelLoaderThreads());
-            var parallel = parallelConfig(config);
-            try {
-                smile.llm.quant.QuantBackendOverride.set(config.quantization());
-                return Qwen.build(checkpointDir,
-                        config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                        memFractionStatic, kvCacheDtype, pageSize, parallel,
-                        config.modelLoaderThreads(), speculativeRows(config), config.speculativeTokens());
-            } finally {
-                smile.llm.quant.QuantBackendOverride.clear();
-            }
-        }
+        downloadHuggingFaceSupportFiles(checkpoint, repoId, config.modelLoaderThreads());
+        return loadFromLocal(checkpoint, config, memFractionStatic, kvCacheDtype, pageSize);
+    }
 
-        if (isMiniMaxCheckpoint(checkpoint)) {
-            resolveHuggingFaceQwenTokenizer(repoId, config.modelLoaderThreads());   // tokenizer.json
-            return buildMiniMax(checkpointDir, config, memFractionStatic, pageSize);
+    /**
+     * Returns optional architecture-specific files to fetch from Hugging Face Hub
+     * alongside {@code config.json}, weights, and tokenizer files.
+     */
+    static List<String> huggingFaceOptionalFiles(Path checkpoint) throws IOException {
+        if (isQwenCheckpoint(checkpoint)) {
+            return List.of("tokenizer_config.json", "chat_template.jinja",
+                    "preprocessor_config.json", "video_preprocessor_config.json");
         }
-        String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
-        try {
-            smile.llm.quant.QuantBackendOverride.set(config.quantization());
-            return Llama.build(checkpointDir, tokenizerPath,
-                    config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                    memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
-        } finally {
-            smile.llm.quant.QuantBackendOverride.clear();
+        if (isDeepSeekCheckpoint(checkpoint)) {
+            return List.of("engram_small.safetensors");
+        }
+        if (isGlmCheckpoint(checkpoint)) {
+            return List.of("processor_config.json");
+        }
+        if (isInklingCheckpoint(checkpoint)) {
+            return List.of("hf_quant_config.json", "mtp.safetensors");
+        }
+        return List.of();
+    }
+
+    /**
+     * Downloads tokenizer and architecture-specific auxiliary files from Hugging Face Hub.
+     */
+    private void downloadHuggingFaceSupportFiles(Path checkpoint, String repoId, int modelLoaderThreads)
+            throws IOException {
+        if (isQwenCheckpoint(checkpoint)) {
+            resolveHuggingFaceQwenTokenizer(repoId, modelLoaderThreads);
+        } else if (isMiniMaxCheckpoint(checkpoint)
+                || isDeepSeekCheckpoint(checkpoint)
+                || isGlmCheckpoint(checkpoint)
+                || isInklingCheckpoint(checkpoint)) {
+            Path tok = HuggingFaceHub.download(repoId, "tokenizer.json");
+            logger.infof("Downloaded tokenizer file: %s", tok);
+        } else {
+            resolveHuggingFaceTokenizer(repoId);
+        }
+        List<String> optionalFiles = huggingFaceOptionalFiles(checkpoint);
+        if (!optionalFiles.isEmpty()) {
+            Map<String, Path> downloaded = HuggingFaceHub.downloadFiles(
+                    repoId, optionalFiles, modelLoaderThreads, true);
+            for (var entry : downloaded.entrySet()) {
+                logger.infof("Downloaded auxiliary file: %s", entry.getValue());
+            }
         }
     }
 
@@ -1551,8 +1572,15 @@ public class ChatService implements OpenAiModelContributor {
         }
 
         // Single-file checkpoint.
-        HuggingFaceHub.download(repoId, "model.safetensors");
-        shards.add("model.safetensors");
+        try {
+            HuggingFaceHub.download(repoId, "model.safetensors");
+            shards.add("model.safetensors");
+            return shards;
+        } catch (FileNotFoundException e) {
+            logger.debugf("No model.safetensors in %s; trying model-00001-of-00001.safetensors", repoId);
+        }
+        HuggingFaceHub.download(repoId, "model-00001-of-00001.safetensors");
+        shards.add("model-00001-of-00001.safetensors");
         return shards;
     }
 

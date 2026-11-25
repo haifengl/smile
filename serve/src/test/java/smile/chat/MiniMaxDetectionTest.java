@@ -71,4 +71,30 @@ public class MiniMaxDetectionTest {
         assertFalse(ChatService.isMiniMaxRepoId("MiniMaxAI/MiniMax-M2"));
         assertFalse(ChatService.isMiniMaxRepoId(null));
     }
+
+    @Test
+    public void testGivenInklingCheckpointWhenDetectedThenMatchesAndRequestsQuantAndMtpFiles() throws IOException {
+        Path d = checkpoint("inkling",
+                "{\"model_type\":\"inkling2_loop\",\"architectures\":[\"Inkling2LoopForConditionalGeneration\"]}",
+                true);
+        assertTrue(ChatService.isInklingCheckpoint(d));
+        assertTrue(ChatService.isBuiltinTorchCheckpoint(d));
+        assertTrue(ChatService.isInklingRepoId("thinkingmachines/Inkling-2-Mini"));
+        assertTrue(ChatService.isBuiltinTorchFamily("thinkingmachines/Inkling-2-Mini"));
+        assertEquals(java.util.List.of("hf_quant_config.json", "mtp.safetensors"),
+                ChatService.huggingFaceOptionalFiles(d));
+    }
+
+    @Test
+    public void testGivenDeepSeekAndGlmCheckpointsWhenDetectedThenRequestExpectedOptionalFiles() throws IOException {
+        Path ds = checkpoint("ds", "{\"model_type\":\"deepseek_v4\"}", true);
+        assertTrue(ChatService.isDeepSeekCheckpoint(ds));
+        assertEquals(java.util.List.of("engram_small.safetensors"),
+                ChatService.huggingFaceOptionalFiles(ds));
+
+        Path glm = checkpoint("glm", "{\"model_type\":\"glm5_next\"}", true);
+        assertTrue(ChatService.isGlmCheckpoint(glm));
+        assertEquals(java.util.List.of("processor_config.json"),
+                ChatService.huggingFaceOptionalFiles(glm));
+    }
 }
