@@ -88,7 +88,8 @@ final class InklingExperts {
             this.w13Factor = null;
             this.w2Factor = null;
         } else {
-            throw new IllegalArgumentException("unsupported expert format " + format);
+            throw new IllegalArgumentException("unsupported expert format " + format + " at layer " + layer
+                    + " (missing hf_quant_config.json or quantized expert scale tensors)");
         }
         this.table = keep(Tensor.of(E2M1, 16).to(device));
         if (MARLIN && device.isCUDA() && smile.torch.Native.marlinMoeNvfp4Available()

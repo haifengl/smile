@@ -18,10 +18,16 @@ package smile.llm.model.inkling;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -92,5 +98,70 @@ public class InklingSmallConfigTest {
         // 4 top-level + 11 attention and 12 MLP queries + 1 output query; 10 local layers of 18 tensors and 2 global of 22;
         // 8 NVFP4 expert tensors per layer
         assertEquals(4 + 11 + 12 + 1 + 10 * 18 + 2 * 22 + 12 * 8, InklingWeightNames.expectedNames(s).size());
+    }
+
+    @Test
+    public void testGivenCheckpointWithoutQuantConfigWhenIndexPresentThenExpertFormatsAreInferred(@TempDir Path dir)
+            throws IOException {
+        try (InputStream in = InklingSmallConfigTest.class.getResourceAsStream("/inkling/small-config.json")) {
+            Files.copy(in, dir.resolve("config.json"));
+        }
+        StringBuilder sb = new StringBuilder("{\"weight_map\":{");
+        for (int i = 0; i < 48; i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            sb.append("\"model.llm.layers.").append(i).append(".mlp.experts.w13_weight\":\"model-00001-of-00024.safetensors\",");
+            sb.append("\"model.llm.layers.").append(i).append(".mlp.experts.w13_weight_scale\":\"model-00001-of-00024.safetensors\"");
+            if (i < 40) {
+                sb.append(",\"model.llm.layers.").append(i).append(".mlp.experts.w13_weight_amax\":\"model-00001-of-00024.safetensors\"");
+            }
+        }
+        sb.append("}}");
+        Files.writeString(dir.resolve("model.safetensors.index.json"), sb.toString());
+
+        InklingModelArgs a = InklingModelArgs.fromCheckpoint(dir.toString(), 0);
+        for (int i = 0; i < 48; i++) {
+            InklingModelArgs.ExpertFormat expected = i < 40
+                    ? InklingModelArgs.ExpertFormat.NVFP4
+                    : InklingModelArgs.ExpertFormat.MXFP8;
+            assertEquals(expected, a.expertFormat(i), "layer " + i);
+        }
+    }
+
+    @Test
+    public void testGivenCheckpointWithoutQuantConfigWhenSingleSafetensorsPresentThenExpertFormatsAreInferred(@TempDir Path dir)
+            throws IOException {
+        try (InputStream in = InklingSmallConfigTest.class.getResourceAsStream("/inkling/small-config.json")) {
+            Files.copy(in, dir.resolve("config.json"));
+        }
+        StringBuilder header = new StringBuilder("{");
+        for (int i = 0; i < 24; i++) {
+            if (i > 0) {
+                header.append(',');
+            }
+            header.append("\"model.llm.layers.").append(i)
+                    .append(".mlp.experts.w13_weight_scale\":{\"dtype\":\"U8\",\"shape\":[1],\"data_offsets\":[0,1]}");
+            if (i < 20) {
+                header.append(",\"model.llm.layers.").append(i)
+                        .append(".mlp.experts.w13_weight_amax\":{\"dtype\":\"F32\",\"shape\":[1],\"data_offsets\":[0,0]}");
+            }
+        }
+        header.append('}');
+        byte[] headerBytes = header.toString().getBytes(StandardCharsets.UTF_8);
+        ByteBuffer buf = ByteBuffer.allocate(8 + headerBytes.length + 1).order(ByteOrder.LITTLE_ENDIAN);
+        buf.putLong(headerBytes.length);
+        buf.put(headerBytes);
+        buf.put((byte) 0);
+        Files.write(dir.resolve("model-00001-of-00001.safetensors"), buf.array());
+
+        InklingModelArgs a = InklingModelArgs.fromCheckpoint(dir.toString(), 0);
+        for (int i = 0; i < 20; i++) {
+            assertEquals(InklingModelArgs.ExpertFormat.NVFP4, a.expertFormat(i), "layer " + i);
+        }
+        for (int i = 20; i < 24; i++) {
+            assertEquals(InklingModelArgs.ExpertFormat.MXFP8, a.expertFormat(i), "layer " + i);
+        }
+        assertEquals(InklingModelArgs.ExpertFormat.BF16, a.expertFormat(24));
     }
 }

@@ -20,9 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import smile.deep.tensor.SafeTensors;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -265,7 +268,8 @@ public record InklingModelArgs(
 
     /**
      * Reads the hyperparameters of a checkpoint directory ({@code config.json} and, for the expert formats,
-     * {@code hf_quant_config.json}).
+     * {@code hf_quant_config.json}, falling back to safetensors tensor metadata when {@code hf_quant_config.json}
+     * is absent).
      *
      * @param dir       checkpoint directory.
      * @param maxSeqLen maximum sequence length; {@code <= 0} uses {@code model_max_length}.
@@ -279,13 +283,72 @@ public record InklingModelArgs(
         }
         ObjectMapper mapper = new ObjectMapper();
         JsonNode root = mapper.readTree(config);
-        Map<Integer, ExpertFormat> formats = new HashMap<>();
-        Path quant = Path.of(dir, "hf_quant_config.json");
-        if (Files.exists(quant)) {
-            formats = expertFormats(mapper.readTree(quant.toFile()));
+        Path dirPath = Path.of(dir);
+        Path quant = dirPath.resolve("hf_quant_config.json");
+        Map<Integer, ExpertFormat> formats = Files.exists(quant)
+                ? expertFormats(mapper.readTree(quant.toFile()))
+                : Map.of();
+        if (formats.isEmpty()) {
+            formats = expertFormatsFromCheckpoint(dirPath, mapper);
         }
         int eos = root.has("eos_token_id") ? root.get("eos_token_id").asInt() : 200006;
         return fromConfig(root, eos, maxSeqLen, formats);
+    }
+
+    /**
+     * Infers per-layer expert formats from {@code model.safetensors.index.json} or {@code model*.safetensors}
+     * headers when {@code hf_quant_config.json} is not present in the checkpoint directory: NVFP4 layers carry
+     * {@code w13_weight_amax}, while MXFP8 layers carry {@code w13_weight_scale} without {@code w13_weight_amax}.
+     */
+    static Map<Integer, ExpertFormat> expertFormatsFromCheckpoint(Path dir, ObjectMapper mapper) throws IOException {
+        Path index = dir.resolve("model.safetensors.index.json");
+        if (Files.exists(index)) {
+            JsonNode weightMap = mapper.readTree(index.toFile()).path("weight_map");
+            List<String> names = new ArrayList<>();
+            weightMap.properties().forEach(e -> names.add(e.getKey()));
+            return expertFormatsFromTensorNames(names);
+        }
+        if (!Files.isDirectory(dir)) {
+            return Map.of();
+        }
+        List<String> names = new ArrayList<>();
+        try (var files = Files.list(dir)) {
+            for (Path f : (Iterable<Path>) files.filter(p -> {
+                String n = p.getFileName().toString();
+                return n.startsWith("model") && n.endsWith(".safetensors") && Files.isRegularFile(p);
+            })::iterator) {
+                names.addAll(SafeTensors.listTensors(f.toString()));
+            }
+        }
+        return expertFormatsFromTensorNames(names);
+    }
+
+    /**
+     * Infers per-layer expert formats from Hugging Face tensor names.
+     *
+     * @param names tensor names in {@code model*.safetensors}.
+     * @return layer index to format.
+     */
+    static Map<Integer, ExpertFormat> expertFormatsFromTensorNames(Iterable<String> names) {
+        Map<Integer, ExpertFormat> out = new HashMap<>();
+        String prefix = "model.llm.layers.";
+        for (String name : names) {
+            if (!name.startsWith(prefix)) {
+                continue;
+            }
+            String rest = name.substring(prefix.length());
+            int dot = rest.indexOf('.');
+            if (dot <= 0) {
+                continue;
+            }
+            String suffix = rest.substring(dot);
+            if (".mlp.experts.w13_weight_amax".equals(suffix)) {
+                out.put(Integer.parseInt(rest.substring(0, dot)), ExpertFormat.NVFP4);
+            } else if (".mlp.experts.w13_weight_scale".equals(suffix)) {
+                out.putIfAbsent(Integer.parseInt(rest.substring(0, dot)), ExpertFormat.MXFP8);
+            }
+        }
+        return out;
     }
 
     /**

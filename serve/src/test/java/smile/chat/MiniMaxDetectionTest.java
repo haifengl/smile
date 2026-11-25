@@ -97,4 +97,22 @@ public class MiniMaxDetectionTest {
         assertEquals(java.util.List.of("processor_config.json"),
                 ChatService.huggingFaceOptionalFiles(glm));
     }
+
+    @Test
+    public void testGivenSnapshotDirectoryWhenResolvingRevisionThenReturnsCommitSha() {
+        Path snapshot = Path.of("/model/huggingface/hub/models--thinkingmachines--Inkling-2-Mini"
+                + "/snapshots/7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6");
+        assertEquals("7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6", ChatService.snapshotRevision(snapshot));
+        assertEquals("main", ChatService.snapshotRevision(Path.of("/models/Inkling-2-Mini")));
+        assertEquals("main", ChatService.snapshotRevision(null));
+    }
+
+    @Test
+    public void testGivenCachedSingleShardSnapshotWhenResolvingShardsThenReturnsLocalShardWithoutNetwork() throws IOException {
+        Path snapshot = Files.createDirectory(dir.resolve("7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6"));
+        Files.writeString(snapshot.resolve("model-00001-of-00001.safetensors"), "stub");
+        assertEquals(java.util.Set.of("model-00001-of-00001.safetensors"),
+                ChatService.resolveSafeTensorShards(snapshot, "nonexistent-org/nonexistent-model",
+                        "7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6"));
+    }
 }

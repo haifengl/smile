@@ -1476,17 +1476,54 @@ public class ChatService implements OpenAiModelContributor {
 
         Path configPath = HuggingFaceHub.download(repoId, "config.json");
         Path checkpoint = configPath.getParent();
+        String revision = snapshotRevision(checkpoint);
         if (configCached) {
             logger.infof("Using cached snapshot: %s", checkpoint);
         } else {
             logger.infof("Downloaded config.json to %s", checkpoint);
         }
 
-        Set<String> shards = resolveSafeTensorShards(repoId);
-        downloadSafeTensorShards(repoId, shards, config.modelLoaderThreads());
+        Set<String> shards = resolveSafeTensorShards(checkpoint, repoId, revision);
+        downloadSafeTensorShards(repoId, revision, shards, config.modelLoaderThreads());
 
-        downloadHuggingFaceSupportFiles(checkpoint, repoId, config.modelLoaderThreads());
+        downloadHuggingFaceSupportFiles(checkpoint, repoId, revision, config.modelLoaderThreads());
         return loadFromLocal(checkpoint, config, memFractionStatic, kvCacheDtype, pageSize);
+    }
+
+    /**
+     * Returns the 40-character commit SHA when {@code checkpoint} is a Hugging Face
+     * {@code snapshots/<commit>} directory, or {@code "main"} otherwise. Pinning
+     * companion downloads to the snapshot's commit prevents files from landing in a
+     * newer upstream snapshot directory (or advancing {@code refs/main}) when
+     * {@code config.json} was resolved from cache.
+     */
+    static String snapshotRevision(Path checkpoint) {
+        if (checkpoint != null) {
+            Path name = checkpoint.getFileName();
+            Path parent = checkpoint.getParent();
+            if (name != null && parent != null
+                    && "snapshots".equals(String.valueOf(parent.getFileName()))
+                    && name.toString().matches("[0-9a-fA-F]{40}")) {
+                return name.toString();
+            }
+        }
+        return "main";
+    }
+
+    private static Optional<Path> tryLoadModelFileFromCache(String repoId, String revision, String filename) {
+        return HuggingFaceHub.tryLoadFromCache(repoId, filename, HuggingFaceHub.RepoType.MODEL, revision, null);
+    }
+
+    private static Path downloadModelFile(String repoId, String revision, String filename) throws IOException {
+        return HuggingFaceHub.download(repoId, filename, HuggingFaceHub.RepoType.MODEL, revision,
+                null, null, false, false);
+    }
+
+    private static Map<String, Path> downloadModelFiles(String repoId, String revision,
+                                                        List<String> filenames, int threads,
+                                                        boolean ignoreMissing) throws IOException {
+        return HuggingFaceHub.downloadFiles(repoId, filenames, HuggingFaceHub.RepoType.MODEL, revision,
+                null, null, false, false, threads, ignoreMissing);
     }
 
     /**
@@ -1513,40 +1550,45 @@ public class ChatService implements OpenAiModelContributor {
     /**
      * Downloads tokenizer and architecture-specific auxiliary files from Hugging Face Hub.
      */
-    private void downloadHuggingFaceSupportFiles(Path checkpoint, String repoId, int modelLoaderThreads)
+    private void downloadHuggingFaceSupportFiles(Path checkpoint, String repoId, String revision, int modelLoaderThreads)
             throws IOException {
         if (isQwenCheckpoint(checkpoint)) {
-            resolveHuggingFaceQwenTokenizer(repoId, modelLoaderThreads);
+            resolveHuggingFaceQwenTokenizer(repoId, revision, modelLoaderThreads);
         } else if (isMiniMaxCheckpoint(checkpoint)
                 || isDeepSeekCheckpoint(checkpoint)
                 || isGlmCheckpoint(checkpoint)
                 || isInklingCheckpoint(checkpoint)) {
-            boolean wasCached = HuggingFaceHub.tryLoadFromCache(repoId, "tokenizer.json").isPresent();
-            Path tok = HuggingFaceHub.download(repoId, "tokenizer.json");
+            boolean wasCached = tryLoadModelFileFromCache(repoId, revision, "tokenizer.json").isPresent();
+            Path tok = downloadModelFile(repoId, revision, "tokenizer.json");
             if (wasCached) {
                 logger.debugf("Using cached tokenizer file: %s", tok);
             } else {
                 logger.infof("Downloaded tokenizer file: %s", tok);
             }
         } else {
-            resolveHuggingFaceTokenizer(repoId);
+            resolveHuggingFaceTokenizer(repoId, revision);
         }
         List<String> optionalFiles = huggingFaceOptionalFiles(checkpoint);
         if (!optionalFiles.isEmpty()) {
             Set<String> alreadyCached = new LinkedHashSet<>();
             for (String f : optionalFiles) {
-                if (HuggingFaceHub.tryLoadFromCache(repoId, f).isPresent()) {
+                if (tryLoadModelFileFromCache(repoId, revision, f).isPresent()) {
                     alreadyCached.add(f);
                 }
             }
-            Map<String, Path> downloaded = HuggingFaceHub.downloadFiles(
-                    repoId, optionalFiles, modelLoaderThreads, true);
-            for (var entry : downloaded.entrySet()) {
-                if (alreadyCached.contains(entry.getKey())) {
-                    logger.debugf("Using cached auxiliary file: %s", entry.getValue());
-                } else {
-                    logger.infof("Downloaded auxiliary file: %s", entry.getValue());
+            try {
+                Map<String, Path> downloaded = downloadModelFiles(
+                        repoId, revision, optionalFiles, modelLoaderThreads, true);
+                for (var entry : downloaded.entrySet()) {
+                    if (alreadyCached.contains(entry.getKey())) {
+                        logger.debugf("Using cached auxiliary file: %s", entry.getValue());
+                    } else {
+                        logger.infof("Downloaded auxiliary file: %s", entry.getValue());
+                    }
                 }
+            } catch (IOException e) {
+                logger.warnf("Could not fetch optional auxiliary files %s for %s (%s); continuing with cached snapshot",
+                        optionalFiles, repoId, e.getMessage());
             }
         }
     }
@@ -1555,15 +1597,15 @@ public class ChatService implements OpenAiModelContributor {
      * Downloads Qwen tokenizer files ({@code tokenizer.json}, and optionally
      * {@code vocab.json}/{@code merges.txt}).
      */
-    private void resolveHuggingFaceQwenTokenizer(String repoId, int modelLoaderThreads) throws IOException {
+    private void resolveHuggingFaceQwenTokenizer(String repoId, String revision, int modelLoaderThreads) throws IOException {
         List<String> candidates = List.of("tokenizer.json", "vocab.json", "merges.txt");
         Set<String> alreadyCached = new LinkedHashSet<>();
         for (String c : candidates) {
-            if (HuggingFaceHub.tryLoadFromCache(repoId, c).isPresent()) {
+            if (tryLoadModelFileFromCache(repoId, revision, c).isPresent()) {
                 alreadyCached.add(c);
             }
         }
-        Map<String, Path> downloaded = HuggingFaceHub.downloadFiles(repoId, candidates, modelLoaderThreads, true);
+        Map<String, Path> downloaded = downloadModelFiles(repoId, revision, candidates, modelLoaderThreads, true);
         if (downloaded.isEmpty()) {
             throw new IOException("No Qwen tokenizer files found in Hugging Face repository: " + repoId);
         }
@@ -1579,18 +1621,19 @@ public class ChatService implements OpenAiModelContributor {
     /**
      * Downloads safetensors shards concurrently.
      */
-    private void downloadSafeTensorShards(String repoId, Set<String> shards, int modelLoaderThreads)
+    private void downloadSafeTensorShards(String repoId, String revision, Set<String> shards, int modelLoaderThreads)
             throws IOException {
         if (shards == null || shards.isEmpty()) {
             return;
         }
         int cachedCount = 0;
         for (String shard : shards) {
-            if (HuggingFaceHub.tryLoadFromCache(repoId, shard).isPresent()) {
+            if (tryLoadModelFileFromCache(repoId, revision, shard).isPresent()) {
                 cachedCount++;
             }
         }
-        HuggingFaceHub.downloadFiles(repoId, shards, modelLoaderThreads);
+        HuggingFaceHub.downloadFiles(repoId, shards, HuggingFaceHub.RepoType.MODEL, revision,
+                null, null, false, false, modelLoaderThreads, false);
         int downloadedCount = shards.size() - cachedCount;
         if (downloadedCount == 0) {
             logger.infof("Verified %d cached weight shard(s) for %s", shards.size(), repoId);
@@ -1603,36 +1646,55 @@ public class ChatService implements OpenAiModelContributor {
     /**
      * Resolves the list of safetensors shard filenames for a HuggingFace repo.
      * Prefers {@code model.safetensors.index.json}; falls back to a single
-     * {@code model.safetensors} file.
+     * {@code model.safetensors} or {@code model-00001-of-00001.safetensors} file.
      */
-    private Set<String> resolveSafeTensorShards(String repoId) throws IOException {
+    static Set<String> resolveSafeTensorShards(Path checkpoint, String repoId, String revision) throws IOException {
+        if (checkpoint != null) {
+            Path localIndex = checkpoint.resolve("model.safetensors.index.json");
+            if (Files.isRegularFile(localIndex)) {
+                return parseSafeTensorIndex(localIndex);
+            }
+            for (String single : new String[]{"model.safetensors", "model-00001-of-00001.safetensors"}) {
+                if (Files.isRegularFile(checkpoint.resolve(single))) {
+                    Set<String> shards = new LinkedHashSet<>();
+                    shards.add(single);
+                    return shards;
+                }
+            }
+        }
+
         Set<String> shards = new LinkedHashSet<>();
         try {
-            Path indexPath = HuggingFaceHub.download(repoId, "model.safetensors.index.json");
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(indexPath.toFile());
-            JsonNode weightMap = root.get("weight_map");
-            if (weightMap == null || !weightMap.isObject()) {
-                throw new IOException("Invalid model.safetensors.index.json: missing weight_map");
-            }
-            for (var entry : weightMap.properties()) {
-                shards.add(entry.getValue().asString());
-            }
-            return shards;
+            Path indexPath = downloadModelFile(repoId, revision, "model.safetensors.index.json");
+            return parseSafeTensorIndex(indexPath);
         } catch (FileNotFoundException e) {
             logger.debugf("No model.safetensors.index.json in %s; trying model.safetensors", repoId);
         }
 
         // Single-file checkpoint.
         try {
-            HuggingFaceHub.download(repoId, "model.safetensors");
+            downloadModelFile(repoId, revision, "model.safetensors");
             shards.add("model.safetensors");
             return shards;
         } catch (FileNotFoundException e) {
             logger.debugf("No model.safetensors in %s; trying model-00001-of-00001.safetensors", repoId);
         }
-        HuggingFaceHub.download(repoId, "model-00001-of-00001.safetensors");
+        downloadModelFile(repoId, revision, "model-00001-of-00001.safetensors");
         shards.add("model-00001-of-00001.safetensors");
+        return shards;
+    }
+
+    private static Set<String> parseSafeTensorIndex(Path indexPath) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(indexPath.toFile());
+        JsonNode weightMap = root.get("weight_map");
+        if (weightMap == null || !weightMap.isObject()) {
+            throw new IOException("Invalid model.safetensors.index.json: missing weight_map");
+        }
+        Set<String> shards = new LinkedHashSet<>();
+        for (var entry : weightMap.properties()) {
+            shards.add(entry.getValue().asString());
+        }
         return shards;
     }
 
@@ -1667,27 +1729,30 @@ public class ChatService implements OpenAiModelContributor {
      * <p>Tries {@code original/tokenizer.model}, {@code tokenizer.model}, then
      * {@code tokenizer.json} (quantized Hub cards often ship only the latter).
      *
-     * @param repoId Hugging Face repository id.
+     * @param repoId   Hugging Face repository id.
+     * @param revision git revision or snapshot commit hash.
      * @return path to the downloaded tokenizer file.
      * @throws IOException if no candidate can be downloaded.
      */
-    private String resolveHuggingFaceTokenizer(String repoId) throws IOException {
+    private String resolveHuggingFaceTokenizer(String repoId, String revision) throws IOException {
         String[] candidates = {
                 "original/tokenizer.model", "tokenizer.model", "tokenizer.json"
         };
         for (String candidate : candidates) {
+            Optional<Path> cached = tryLoadModelFileFromCache(repoId, revision, candidate);
+            if (cached.isPresent()) {
+                logger.debugf("Using cached tokenizer: %s", cached.get());
+                return cached.get().toString();
+            }
+        }
+        for (String candidate : candidates) {
             try {
-                boolean wasCached = HuggingFaceHub.tryLoadFromCache(repoId, candidate).isPresent();
-                Path path = HuggingFaceHub.download(repoId, candidate);
+                Path path = downloadModelFile(repoId, revision, candidate);
                 if (!Files.isRegularFile(path)) {
                     logger.warnf("Tokenizer candidate '%s' is not a readable file: %s", candidate, path);
                     continue;
                 }
-                if (wasCached) {
-                    logger.debugf("Using cached tokenizer: %s", path);
-                } else {
-                    logger.infof("Downloaded tokenizer: %s", path);
-                }
+                logger.infof("Downloaded tokenizer: %s", path);
                 return path.toString();
             } catch (FileNotFoundException ignored) {
                 logger.debugf("Tokenizer not found at '%s'", candidate);
