@@ -138,10 +138,11 @@ public final class InklingDraft {
     }
 
     private final Config c;
-    private final InklingModel model;
     private final InklingModelArgs args;
     private final Device device;
     private final int vocab;
+    private final Tensor embed, embedNorm, unembed;
+    private final InklingFp8 unembed8;
     private final Tensor[][] layer;       // per layer: qkv, kvCtx, o, gateUp, down (bf16); input, post, dflare, qNorm, kNorm, kNormCtx (f32)
     private final Tensor alpha;           // softmax(fuse_weight) [layers + 1, taps] f32
     private final Tensor maskEmbed, finalNorm, markovDflare;
@@ -156,10 +157,15 @@ public final class InklingDraft {
 
     private InklingDraft(Config c, InklingModel model, Device device, Map<String, Tensor> t) {
         this.c = c;
-        this.model = model;
         this.args = model.args;
         this.device = device;
         this.vocab = args.unpaddedVocabSize();
+        boolean sameDevice = model.embed.device().equals(device);
+        this.embed = sameDevice ? model.embed : keep(model.embed.to(device));
+        this.embedNorm = sameDevice ? model.embedNorm : keep(model.embedNorm.to(device));
+        this.unembed = sameDevice ? model.unembed : keep(model.unembed.to(device));
+        this.unembed8 = sameDevice ? model.unembed8
+                : (InklingFp8.enabled() && DRAFT_FP8.contains("base") ? InklingFp8.quantize(this.unembed) : null);
         layer = new Tensor[c.layers()][];
         for (int i = 0; i < c.layers(); i++) {
             String p = "layers." + i + ".";
@@ -190,7 +196,7 @@ public final class InklingDraft {
         Tensor fb = zeros(device, ScalarType.BFloat16, vocab);
         for (int from = 0; from < vocab; from += 4096) {
             int n = Math.min(4096, vocab - from);
-            Tensor head = o("aten::_to_copy", narrow(model.unembed, 0, from, n), ScalarType.Double);
+            Tensor head = o("aten::_to_copy", narrow(this.unembed, 0, from, n), ScalarType.Double);
             o("aten::copy_", narrow(fw, 0, from, n), o("aten::mm", head, hw).to(ScalarType.BFloat16));
             o("aten::copy_", narrow(fb, 0, from, n), o("aten::mv", head, hb).to(ScalarType.BFloat16));
             head.close();
@@ -324,6 +330,11 @@ public final class InklingDraft {
         st.absorbed = s.length;
     }
 
+    /** Device hosting the draft weights and state caches. */
+    Device device() {
+        return device;
+    }
+
     /** Draft tokens per round ({@code block - 1}). */
     int drafts() {
         return c.block() - 1;
@@ -393,9 +404,10 @@ public final class InklingDraft {
         if (start + n > st.capacity) {
             throw new IllegalArgumentException("draft context exceeds the capacity " + st.capacity);
         }
+        Tensor localTaps = taps.device().equals(device) ? taps : taps.to(device);
         Tensor[] cs = rope(start, n);
         for (int i = 0; i < c.layers(); i++) {
-            Tensor ctx = mix(taps, i, layer[i][DFLARE]);
+            Tensor ctx = mix(localTaps, i, layer[i][DFLARE]);
             Tensor kv = linear(ctx, layer[i][KV_CTX]);
             int kvw = c.kvHeads() * c.headDim();
             Tensor k = headNorm(reshape(narrow(kv, 1, 0, kvw), n, c.kvHeads(), c.headDim()), layer[i][KNC]);
@@ -408,7 +420,7 @@ public final class InklingDraft {
         if (st.lastTap != null) {
             st.lastTap.close();
         }
-        st.lastTap = keep(contiguous(o("aten::select.int", taps, 0L, (long) n - 1)).copy());
+        st.lastTap = keep(contiguous(o("aten::select.int", localTaps, 0L, (long) n - 1)).copy());
     }
 
     private Tensor fusedAddNorm(Tensor[] residual, Tensor x, Tensor w) {
@@ -432,7 +444,7 @@ public final class InklingDraft {
         int block = c.block(), hid = c.hidden(), heads = c.heads(), kvh = c.kvHeads(), hd = c.headDim();
         Tensor[] cs = rope(anchorPos, block);
         Tensor ids = Tensor.of(new long[]{anchor}, 1).to(device);
-        Tensor anchorEmbed = bf16(rms(o("aten::index_select", model.embed, 0L, ids), model.embedNorm, args.normEps()));
+        Tensor anchorEmbed = bf16(rms(o("aten::index_select", embed, 0L, ids), embedNorm, args.normEps()));
         Tensor x = cat(0, anchorEmbed, o("aten::expand", unsqueeze(maskEmbed, 0), new long[]{block - 1, hid}));
         Tensor[] residual = {null};
         for (int i = 0; i < c.layers(); i++) {
@@ -467,7 +479,7 @@ public final class InklingDraft {
         }
         Tensor hidden = bf16(mul(finalNorm, unweightedRms(add(f32(residual[0]), f32(x)), c.eps())));   // [block, D]
         Tensor rows = narrow(hidden, 0, 1, block - 1);
-        Tensor base = linear(rows, model.unembed);                                       // bf16 [block - 1, V]
+        Tensor base = linear(rows, unembed);                                       // bf16 [block - 1, V]
         Tensor fRnn = mix(unsqueeze(st.lastTap, 0), c.layers(), markovDflare);           // [1, D]
         Tensor ctxIn = f32(cat(1, rows, o("aten::expand", fRnn, new long[]{block - 1, hid})));
         Tensor ctx = add(o("aten::matmul", ctxIn, o("aten::t", rnnCtx)), rnnBias);       // [block - 1, 3 * rank]
@@ -552,7 +564,7 @@ public final class InklingDraft {
         Tensor end = o("aten::add.Scalar", aPos, (long) block);
         Tensor blockPos = reshape(add(unsqueeze(aPos, 1), unsqueeze(row8, 0)), (long) B * block);
         Tensor[] bs = ropeDevice(blockPos, freq);
-        Tensor anchorEmbed = bf16(rms(o("aten::index_select", model.embed, 0L, anchor), model.embedNorm, args.normEps()));
+        Tensor anchorEmbed = bf16(rms(o("aten::index_select", embed, 0L, anchor), embedNorm, args.normEps()));
         Tensor x = reshape(cat(1, unsqueeze(anchorEmbed, 1), o("aten::expand", reshape(maskEmbed, 1, 1, hid), new long[]{B, block - 1, hid})),
                 (long) B * block, hid);
         Tensor[] residual = {null};
@@ -591,10 +603,10 @@ public final class InklingDraft {
         Tensor hidden = bf16(mul(finalNorm, unweightedRms(add(f32(residual[0]), f32(x)), c.eps())));      // [B * block, D]
         Tensor rows = reshape(narrow(reshape(hidden, B, block, hid), 1, 1, block - 1), (long) B * (block - 1), hid);
         int nd = block - 1;
-        boolean qBase = model.unembed8 != null && DRAFT_FP8.contains("base");
+        boolean qBase = unembed8 != null && DRAFT_FP8.contains("base");
         boolean qFold = fold8 != null;
-        Tensor base = qBase ? narrow(reshape(model.unembed8.forward(rows), B, nd, model.unembed8.npad), 2, 0, vocab)
-                : reshape(linear(rows, model.unembed), B, nd, vocab);
+        Tensor base = qBase ? narrow(reshape(unembed8.forward(rows), B, nd, unembed8.npad), 2, 0, vocab)
+                : reshape(linear(rows, unembed), B, nd, vocab);
         // 3. the Markov head, all requests at once
         Tensor lastIdx = o("aten::clamp", add(first, sub(kept.to(smile.deep.tensor.ScalarType.Int64), o("aten::ones_like", first))), 0L, null);
         Tensor lastTap = o("aten::index_select", taps, 0L, lastIdx);                                       // [B, 4, D]

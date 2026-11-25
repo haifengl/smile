@@ -43,6 +43,7 @@ import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.Sampling;
+import smile.llm.parallel.AuxDevicePlacement;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.template.GlmChatTemplate;
@@ -76,6 +77,11 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     /** The vision encoder's arguments, or {@code null} when the checkpoint has no vision weights. */
     private final GlmVisionArgs visionArgs;
     private final GlmVisionProcessor visionProcessor;
+    /** TP rank hosting the vision encoder ({@code >= 0} if in-group, {@code -1} if external GPU). */
+    private final int visionRank;
+    /** Dedicated worker + vision host when the vision encoder lives on an external CUDA device. */
+    private final ExecutorService externalVisionWorker;
+    private final ExternalVision externalVision;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Glm.class);
     private static final boolean GRAPHS = !"0".equals(System.getenv("SMILE_GLM_GRAPH"));
     private static final int MAX_GRAPH_BATCH = Integer.getInteger("smile.glm.graph.maxbatch", 32);
@@ -97,8 +103,72 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     private GlmPrefixCache prefixCache;
     private final Map<Integer, GlmPrefixCache.Entry> prefixMatches = new ConcurrentHashMap<>();
 
+    /** Vision tower + LRU feature cache hosted on an external GPU outside the TP group. */
+    private static final class ExternalVision implements AutoCloseable {
+        private static final long FEATURE_CACHE_BUDGET = Long.getLong("smile.glm.vision.cache.mb", 512L) << 20;
+        private final smile.llm.model.deepseek.DeepSeekCheckpoint ck;
+        private GlmVisionTower tower;
+        private final java.util.LinkedHashMap<String, Tensor> cache = new java.util.LinkedHashMap<>(16, 0.75f, true);
+        private long cacheBytes;
+
+        ExternalVision(Path dir) throws IOException {
+            this.ck = new smile.llm.model.deepseek.DeepSeekCheckpoint(dir);
+        }
+
+        Tensor imageFeatures(GlmVisionArgs va, Tensor pixels, int[][] grids, String[] keys) {
+            if (tower == null) {
+                tower = new GlmVisionTower(va, ck);
+            }
+            if (FEATURE_CACHE_BUDGET <= 0 || keys == null || keys.length != grids.length) {
+                return Gx.keep(tower.forward(pixels, grids));
+            }
+            Tensor[] parts = new Tensor[grids.length];
+            long row = 0;
+            for (int i = 0; i < grids.length; i++) {
+                long patches = (long) grids[i][0] * grids[i][1] * grids[i][2];
+                Tensor f = cache.get(keys[i]);
+                if (f == null) {
+                    Tensor px = Gx.o("aten::contiguous", Gx.narrow(pixels, 0, row, patches));
+                    f = Gx.keep(tower.forward(px, new int[][]{grids[i]}));
+                    cache.put(keys[i], f);
+                    cacheBytes += bytesOf(f);
+                }
+                parts[i] = f;
+                row += patches;
+            }
+            Tensor all = Gx.keep(parts.length == 1 ? Gx.o("aten::clone", parts[0]) : Gx.cat(0, parts));
+            var it = cache.entrySet().iterator();
+            while (cacheBytes > FEATURE_CACHE_BUDGET && it.hasNext()) {
+                var e = it.next();
+                cacheBytes -= bytesOf(e.getValue());
+                e.getValue().close();
+                it.remove();
+            }
+            return all;
+        }
+
+        private static long bytesOf(Tensor t) {
+            long n = 4;
+            for (long d : t.shape()) {
+                n *= d;
+            }
+            return n;
+        }
+
+        @Override
+        public void close() throws IOException {
+            for (Tensor f : cache.values()) {
+                f.close();
+            }
+            cache.clear();
+            cacheBytes = 0;
+            ck.close();
+        }
+    }
+
     @SuppressWarnings("unchecked")
-    private Glm(String name, GlmModelArgs args, GlmTokenizer tokenizer, Path dir, byte[] devices, int maxSessions) {
+    private Glm(String name, GlmModelArgs args, GlmTokenizer tokenizer, Path dir, byte[] devices, int maxSessions,
+                AuxDevicePlacement placement) throws IOException {
         this.name = name;
         this.args = args;
         this.tokenizer = tokenizer;
@@ -116,6 +186,51 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         this.visionArgs = va;
         this.visionProcessor = va == null ? null : new GlmVisionProcessor(va);
         int ranks = devices == null ? 1 : devices.length;
+        AuxDevicePlacement resolved = placement != null ? placement : AuxDevicePlacement.resolve(devices);
+        AuxDevicePlacement.Target visionTarget = resolved.vision();
+        AuxDevicePlacement.Target dsparkTarget = resolved.dspark();
+        if (dsparkTarget.explicit() && (ranks > 1 || dsparkTarget.isExternal())) {
+            logger.info("GLM-5.3 MTP layer is TP/EP-sharded across all ranks; ignoring {}={}",
+                    AuxDevicePlacement.DSPARK_DEVICE_PROPERTY, dsparkTarget.device());
+        }
+        if (va != null && visionTarget.isExternal()) {
+            this.visionRank = -1;
+            ExecutorService vw = Executors.newSingleThreadExecutor(runnable -> {
+                Thread t = new Thread(runnable, "glm-vision");
+                t.setDaemon(true);
+                return t;
+            });
+            try {
+                this.externalVision = vw.submit(() -> {
+                    Gx.setThreadDevice(visionTarget.device());
+                    Gx.setThreadWeightType(smile.deep.tensor.ScalarType.BFloat16);
+                    Gx.setEp(null);
+                    return new ExternalVision(dir);
+                }).get();
+                this.externalVisionWorker = vw;
+            } catch (InterruptedException e) {
+                vw.shutdownNow();
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                vw.shutdownNow();
+                Throwable c = e.getCause();
+                if (c instanceof IOException io) {
+                    throw io;
+                }
+                throw new RuntimeException(c);
+            }
+        } else {
+            this.visionRank = va != null && visionTarget.isInGroup() ? visionTarget.tpRank() : 0;
+            this.externalVisionWorker = null;
+            this.externalVision = null;
+        }
+        if (va != null) {
+            logger.info("GLM vision encoder assigned to {} (lazy-loaded on first image)", visionTarget.describe());
+        } else if (visionTarget.explicit()) {
+            logger.info("GLM checkpoint has no vision weights; ignoring {}={}",
+                    AuxDevicePlacement.VISION_DEVICE_PROPERTY, visionTarget.device());
+        }
         this.group = ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null;
         if (group != null && !"0".equals(System.getenv("SMILE_GLM_CUSTOM_AR"))) {
             group.enableCustomAllReduce();
@@ -194,6 +309,23 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
      */
     public static Glm build(String checkpointDir, int layers, int maxSeqLen, byte[] devices, int maxSessions)
             throws IOException {
+        return build(checkpointDir, layers, maxSeqLen, devices, maxSessions, AuxDevicePlacement.resolve(devices));
+    }
+
+    /**
+     * Loads a GLM-5.3-Flash checkpoint with explicit auxiliary GPU placement for the vision tower.
+     *
+     * @param checkpointDir the checkpoint directory.
+     * @param layers        the number of layers to keep (0 = all), for slices.
+     * @param maxSeqLen     the longest sequence served (0 = the checkpoint's).
+     * @param devices       the GPUs (one rank each; experts are split over them), or {@code null} for the CPU.
+     * @param maxSessions   the number of concurrent requests (slots of the KDA state pools).
+     * @param placement     resolved auxiliary GPU placement.
+     * @return the model.
+     * @throws IOException if the checkpoint cannot be read.
+     */
+    public static Glm build(String checkpointDir, int layers, int maxSeqLen, byte[] devices, int maxSessions,
+                            AuxDevicePlacement placement) throws IOException {
         Path dir = Path.of(checkpointDir);
         GlmModelArgs args = GlmModelArgs.load(dir.resolve("config.json").toFile());
         if (layers > 0) {
@@ -203,7 +335,7 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             args = args.withMaxSeqLen(maxSeqLen);
         }
         return new Glm(dir.getFileName().toString(), args, GlmTokenizer.of(checkpointDir), dir, devices,
-                Math.max(1, maxSessions));
+                Math.max(1, maxSessions), placement);
     }
 
     private static void await(List<? extends Future<?>> futures) {
@@ -632,71 +764,83 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             }
         }
         final List<Integer> cuts = snapshotCuts(key, from, to, mediaEnd);
-        List<ChunkResult> results = gatherAllRanks(rank -> {
-            GlmModel.Snapshot[] mine = new GlmModel.Snapshot[cuts.size()];
-            try (var guard = Tensor.noGradGuard()) {
-                GlmModel m = replicas[rank];
-                Tensor features = !needFeatures ? null : m.imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys());
-                try {
-                    Tensor out = null;
-                    int seen = imagesBefore;
-                    int start = from;
-                    while (start < to) {
-                        final int st = start;
-                        int stop = Math.min(to, start + MM_CHUNK);
-                        for (int c : cuts) {
-                            if (c > st && c < stop) {
-                                stop = c;
-                            }
-                        }
-                        final int en = stop;
-                        int[] chunk = Arrays.copyOfRange(ids, st, en);
-                        int nImage = 0;
-                        for (int id : chunk) {
-                            if (id == imageId) {
-                                nImage++;
-                            }
-                        }
-                        final Tensor rows = nImage == 0 ? null : Gx.narrow(features, 0, seen, nImage);
-                        seen += nImage;
-                        Tensor r = Gx.layerScoped(() -> {
-                            Tensor hidden = m.forward(chunk, s[rank], null, rows, imageId);
-                            if (m.hasMtp()) {
-                                int n = en == ids.length ? chunk.length - 1 : chunk.length;
-                                if (n > 0) {
-                                    m.mtpAbsorb(s[rank], Arrays.copyOfRange(ids, st + 1, st + 1 + n), hidden);
+        // Encode images once on the single configured vision device (in-group TP rank or external GPU),
+        // then transfer compact [imageTokens, dim] features to each TP rank.
+        final Tensor sharedFeatures = !needFeatures ? null : encodeSharedVisionFeatures(mm);
+        List<ChunkResult> results;
+        try {
+            results = gatherAllRanks(rank -> {
+                GlmModel.Snapshot[] mine = new GlmModel.Snapshot[cuts.size()];
+                try (var guard = Tensor.noGradGuard()) {
+                    GlmModel m = replicas[rank];
+                    boolean ownsCopy = sharedFeatures != null && rank != visionRank;
+                    Tensor features = sharedFeatures == null ? null
+                            : (ownsCopy ? Gx.keep(sharedFeatures.to(Gx.device())) : sharedFeatures);
+                    try {
+                        Tensor out = null;
+                        int seen = imagesBefore;
+                        int start = from;
+                        while (start < to) {
+                            final int st = start;
+                            int stop = Math.min(to, start + MM_CHUNK);
+                            for (int c : cuts) {
+                                if (c > st && c < stop) {
+                                    stop = c;
                                 }
-                                m.setLastHidden(s[rank], hidden);
                             }
-                            Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
-                            return last && en == to ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
-                        });
-                        int k = cuts.indexOf(en);
-                        if (k >= 0) {
-                            mine[k] = m.snapshot(s[rank]);
+                            final int en = stop;
+                            int[] chunk = Arrays.copyOfRange(ids, st, en);
+                            int nImage = 0;
+                            for (int id : chunk) {
+                                if (id == imageId) {
+                                    nImage++;
+                                }
+                            }
+                            final Tensor rows = nImage == 0 ? null : Gx.narrow(features, 0, seen, nImage);
+                            seen += nImage;
+                            Tensor r = Gx.layerScoped(() -> {
+                                Tensor hidden = m.forward(chunk, s[rank], null, rows, imageId);
+                                if (m.hasMtp()) {
+                                    int n = en == ids.length ? chunk.length - 1 : chunk.length;
+                                    if (n > 0) {
+                                        m.mtpAbsorb(s[rank], Arrays.copyOfRange(ids, st + 1, st + 1 + n), hidden);
+                                    }
+                                    m.setLastHidden(s[rank], hidden);
+                                }
+                                Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
+                                return last && en == to ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
+                            });
+                            int k = cuts.indexOf(en);
+                            if (k >= 0) {
+                                mine[k] = m.snapshot(s[rank]);
+                            }
+                            if (en == to) {
+                                out = r;
+                            } else {
+                                r.close();
+                            }
+                            start = en;
                         }
-                        if (en == to) {
-                            out = r;
-                        } else {
-                            r.close();
+                        return new ChunkResult(out, mine);
+                    } finally {
+                        if (ownsCopy && features != null) {
+                            features.close();
                         }
-                        start = en;
                     }
-                    return new ChunkResult(out, mine);
-                } finally {
-                    if (features != null) {
-                        features.close();
+                } catch (RuntimeException | Error e) {
+                    for (GlmModel.Snapshot snap : mine) {
+                        if (snap != null) {
+                            snap.close();
+                        }
                     }
+                    throw e;
                 }
-            } catch (RuntimeException | Error e) {
-                for (GlmModel.Snapshot snap : mine) {
-                    if (snap != null) {
-                        snap.close();
-                    }
-                }
-                throw e;
+            });
+        } finally {
+            if (sharedFeatures != null) {
+                sharedFeatures.close();
             }
-        });
+        }
         for (int r = 1; r < results.size(); r++) {
             results.get(r).logits().close();
         }
@@ -713,6 +857,30 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             return null;
         }
         return logits;
+    }
+
+    /** Encodes image patches once on the configured vision worker thread (in-group rank or external GPU). */
+    private Tensor encodeSharedVisionFeatures(GlmMultimodal mm) {
+        Callable<Tensor> task = () -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return externalVision != null
+                        ? externalVision.imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys())
+                        : replicas[visionRank].imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys());
+            }
+        };
+        ExecutorService exec = externalVisionWorker != null ? externalVisionWorker : workers[visionRank];
+        try {
+            return exec.submit(task).get();
+        } catch (ExecutionException e) {
+            Throwable c = e.getCause();
+            if (c instanceof RuntimeException r) {
+                throw r;
+            }
+            throw new RuntimeException(c);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -1629,6 +1797,17 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         }
         for (ExecutorService w : workers) {
             w.shutdownNow();
+        }
+        if (externalVision != null) {
+            try {
+                externalVisionWorker.submit(() -> {
+                    externalVision.close();
+                    return null;
+                }).get();
+            } catch (Exception e) {
+                logger.warn("GLM external vision teardown failed: {}", e.toString());
+            }
+            externalVisionWorker.shutdownNow();
         }
         for (GlmModel m : replicas) {
             if (m != null) {

@@ -48,6 +48,7 @@ import smile.llm.FinishReason;
 import smile.llm.GenerationListener;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.cluster.ClusterFollower;
 import smile.llm.cluster.ClusterLeader;
@@ -56,6 +57,7 @@ import smile.llm.engine.MultimodalPrompt;
 import smile.llm.ImageUrlPart;
 import smile.llm.VideoUrlPart;
 import smile.llm.engine.Sampling;
+import smile.llm.parallel.AuxDevicePlacement;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.template.MiniMaxChatTemplate;
 import smile.llm.quant.MxFp8;
@@ -257,12 +259,35 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     /** Keeps rank 0's result and releases the others. */
     private static Tensor firstAndClose(Tensor[] results) {
-        for (int r = 1; r < results.length; r++) {
-            if (results[r] != null) {
+        return pickAndClose(results, 0);
+    }
+
+    /** Keeps {@code keepRank}'s result and releases all others. */
+    private static Tensor pickAndClose(Tensor[] results, int keepRank) {
+        for (int r = 0; r < results.length; r++) {
+            if (r != keepRank && results[r] != null) {
                 results[r].close();
             }
         }
-        return results[0];
+        return results[keepRank];
+    }
+
+    /** Moves rank 0's result onto {@code targetDevice} (detached) and releases all rank outputs. */
+    private static Tensor moveAndClose(Tensor[] results, Device targetDevice) {
+        Tensor src = pickAndClose(results, 0);
+        if (src == null) {
+            return null;
+        }
+        if (src.device().equals(targetDevice)) {
+            return src;
+        }
+        try {
+            Tensor moved = src.to(targetDevice);
+            moved.detachFromScopes();
+            return moved;
+        } finally {
+            src.close();
+        }
     }
 
     @Override
@@ -298,8 +323,18 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      *
      * @param tower the loaded tower, or {@code null}.
      */
+    /** Target device hosting {@link #vision}, and its TP rank ({@code -1} if external GPU). */
+    private Device visionDevice;
+    private int visionRank;
+
     void setVision(MiniMaxVisionTower tower) {
+        setVision(tower, models[0].device(), 0);
+    }
+
+    void setVision(MiniMaxVisionTower tower, Device device, int rank) {
         this.vision = tower;
+        this.visionDevice = device;
+        this.visionRank = rank;
         this.visionProcessor = tower == null ? null : new MiniMaxVisionProcessor(tower.args());
     }
 
@@ -478,32 +513,23 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         multimodalRequests.add(requestId);
 
         // 1. Encode all media on rank 0 (images first, then videos), 2. every rank prefills window by window
-        // with the placeholder rows replaced by its copy of those embeddings.
-        Tensor[] encoded = onRanks(r -> {
-            if (r != 0) {
-                return null;
-            }
-            try (var scope = new AutoScope()) {
-                Tensor.push(scope);
-                try {
-                    Device device = models[0].device();
-                    ScalarType dtype = models[0].dtype();
-                    List<Tensor> parts = new ArrayList<>();
-                    if (mm.imagePixels() != null) {
-                        parts.add(vision.forward(mm.imagePixels().to(device, dtype), mm.imageGrids()));
-                    }
-                    if (mm.videoPixels() != null) {
-                        parts.add(vision.forward(mm.videoPixels().to(device, dtype), mm.videoGrids()));
-                    }
-                    Tensor all = parts.size() == 1 ? parts.get(0).copy() : Tensor.vstack(parts.toArray(Tensor[]::new));
-                    all.detachFromScopes();
-                    return all;
-                } finally {
-                    Tensor.pop();
+        // Encode media once on the vision tower's device (an in-group TP rank or an external GPU),
+        // then broadcast the compact embeddings to every TP rank.
+        final Device vDev = visionDevice != null ? visionDevice : models[0].device();
+        final int vRank = visionRank;
+        final ScalarType vDtype = models[0].dtype();
+        Tensor embeddings;
+        if (vRank >= 0 && vRank < models.length) {
+            Tensor[] encoded = onRanks(r -> {
+                if (r != vRank) {
+                    return null;
                 }
-            }
-        });
-        Tensor embeddings = firstAndClose(encoded);
+                return encodeMediaOnDevice(mm, vDev, vDtype);
+            });
+            embeddings = pickAndClose(encoded, vRank);
+        } else {
+            embeddings = encodeMediaOnDevice(mm, vDev, vDtype);
+        }
         try {
             int imageBefore = 0;
             int videoBefore = 0;
@@ -520,6 +546,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             // The draft only needs the target's hidden states (never the image embeddings), so a multimodal request can
             // speculate once the taps of its image and text rows are absorbed window by window.
             final boolean capture = auxLayers != null && draft != null && speculativeEnabled && draftTracks(requestId, from);
+            final int tapRank = draftTapRank();
             Tensor[] logits = onRanks(r -> {
                 try (var scope = new AutoScope()) {
                     Tensor.push(scope);
@@ -559,11 +586,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                                 Tensor taps = models[r].takeAux();
                                 if (taps != null) {
                                     try {
-                                        if (r == 0) {
+                                        if (r == tapRank) {
                                             if (a == 0) {
                                                 draft.bind(requestId, draftCapacity.getOrDefault(requestId, params.maxSeqLen()));
                                             }
-                                            draft.absorb(requestId, taps, a);
+                                            absorbOnDraftDevice(requestId, taps, a);
                                         }
                                     } finally {
                                         taps.close();
@@ -599,6 +626,26 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         } finally {
             if (embeddings != null) {
                 embeddings.close();
+            }
+        }
+    }
+
+    private Tensor encodeMediaOnDevice(MiniMaxMultimodal mm, Device device, ScalarType dtype) {
+        try (var scope = new AutoScope()) {
+            Tensor.push(scope);
+            try {
+                List<Tensor> parts = new ArrayList<>();
+                if (mm.imagePixels() != null) {
+                    parts.add(vision.forward(mm.imagePixels().to(device, dtype), mm.imageGrids()));
+                }
+                if (mm.videoPixels() != null) {
+                    parts.add(vision.forward(mm.videoPixels().to(device, dtype), mm.videoGrids()));
+                }
+                Tensor all = parts.size() == 1 ? parts.get(0).copy() : Tensor.vstack(parts.toArray(Tensor[]::new));
+                all.detachFromScopes();
+                return all;
+            } finally {
+                Tensor.pop();
             }
         }
     }
@@ -782,13 +829,18 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         return null;
     }
 
-    /** Moves each rank's taps out of its model: rank 0 keeps them for {@link #takeAux()}, the others free theirs. */
+    /** Rank whose hidden-state taps are retained for DSpark (its own rank if in-group, else rank 0). */
+    private int draftTapRank() {
+        return draftRank >= 0 && draftRank < models.length ? draftRank : 0;
+    }
+
+    /** Moves each rank's taps out of its model: the draft tap rank keeps them for {@link #takeAux()}, the others free theirs. */
     private void stashAux(int rank) {
         Tensor aux = models[rank].takeAux();
         if (aux == null) {
             return;
         }
-        if (rank == 0) {
+        if (rank == draftTapRank()) {
             takeAux(aux);
         } else {
             aux.close();
@@ -797,8 +849,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     // ------------------------------------------------------------------ DSpark speculative decoding
 
-    /** The DSpark block drafter on rank 0's device, or {@code null}. */
+    /** The DSpark block drafter on its configured device, or {@code null}. */
     private MiniMaxDspark draft;
+    /** Target device hosting {@link #draft}, and its TP rank ({@code -1} if external GPU). */
+    private Device draftDevice;
+    private int draftRank;
     private volatile boolean speculativeEnabled = true;
     private volatile int numSpeculativeTokens = 7;
     /** Per request: the next position the draft's context expects, i.e. how many positions of taps it has absorbed. */
@@ -814,40 +869,65 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     private final java.util.concurrent.atomic.AtomicLong acceptNanos = new java.util.concurrent.atomic.AtomicLong();
 
     /**
-     * Installs the DSpark drafter and starts capturing the target taps it consumes.
+     * Installs the DSpark drafter on rank 0 and starts capturing the target taps it consumes.
      *
      * @param drafter the loaded draft (owned by this model from now on), or {@code null} to remove it.
      */
     void setDraft(MiniMaxDspark drafter) {
+        setDraft(drafter, models[0].device(), 0);
+    }
+
+    /**
+     * Installs the DSpark drafter on {@code device} ({@code rank >= 0} if in-group TP rank, {@code -1} if external GPU)
+     * and starts capturing the target taps it consumes.
+     *
+     * @param drafter the loaded draft (owned by this model from now on), or {@code null} to remove it.
+     * @param device  device hosting the draft.
+     * @param rank    TP rank index if in-group, or {@code -1} for an external GPU.
+     */
+    void setDraft(MiniMaxDspark drafter, Device device, int rank) {
         this.draft = drafter;
+        this.draftDevice = device;
+        this.draftRank = rank;
         setAuxLayers(drafter == null ? null : drafter.args().targetLayerIds());
+    }
+
+    /** Absorbs target taps into DSpark, transferring them to {@link #draftDevice} only when on an external GPU. */
+    private void absorbOnDraftDevice(int requestId, Tensor taps, int startPos) {
+        if (draftDevice == null || taps.device().equals(draftDevice)) {
+            draft.absorb(requestId, taps, startPos);
+            return;
+        }
+        try (Tensor moved = taps.to(draftDevice)) {
+            draft.absorb(requestId, moved, startPos);
+        }
     }
 
     /**
      * Builds the target-head callbacks of a draft loaded before this model exists.
      *
      * @param self filled with the model once it is built.
-     * @return callbacks running the embedding / output head on all ranks and returning rank 0's result.
+     * @return callbacks running the embedding / output head on all ranks and returning the result on the draft's device.
      */
     static MiniMaxDspark.TargetHeads headsOf(java.util.concurrent.atomic.AtomicReference<MiniMax> self) {
         return new MiniMaxDspark.TargetHeads() {
             @Override
             public Tensor embed(Tensor ids) {
-                return self.get().embedRank0(ids);
+                return self.get().embedForDraft(ids);
             }
 
             @Override
             public Tensor logits(Tensor hidden) {
-                return self.get().logitsRank0(hidden);
+                return self.get().logitsForDraft(hidden);
             }
         };
     }
 
     // The inputs of the collective calls below are made per rank on the calling thread, before any rank launches its
-    // all-reduce: a rank copying a tensor from rank 0's device inside its own thread would queue that copy on rank
-    // 0's stream behind rank 0's already-launched all-reduce, which waits for the very rank that waits for the copy.
+    // all-reduce: a rank copying a tensor from another rank's device inside its own thread would queue that copy on the
+    // source rank's stream behind its already-launched all-reduce, which waits for the very rank that waits for the copy.
 
-    private Tensor embedRank0(Tensor ids) {
+    private Tensor embedForDraft(Tensor ids) {
         long[] host;
         try (Tensor cpu = ids.to(Device.CPU()).copy()) {
             host = cpu.longArray();
@@ -865,13 +945,17 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 }
             }
         });
-        return firstAndClose(out);
+        if (draftRank >= 0 && draftRank < out.length) {
+            return pickAndClose(out, draftRank);
+        }
+        Device target = draftDevice != null ? draftDevice : models[0].device();
+        return moveAndClose(out, target);
     }
 
-    private Tensor logitsRank0(Tensor hidden) {
+    private Tensor logitsForDraft(Tensor hidden) {
         Tensor[] inputs = new Tensor[models.length];
         for (int r = 0; r < inputs.length; r++) {
-            inputs[r] = r == 0 ? hidden : hidden.to(models[r].device());
+            inputs[r] = r == draftRank ? hidden : hidden.to(models[r].device());
         }
         try {
             Tensor[] out = onRanks(r -> {
@@ -886,10 +970,16 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                     }
                 }
             });
-            return firstAndClose(out);
+            if (draftRank >= 0 && draftRank < out.length) {
+                return pickAndClose(out, draftRank);
+            }
+            Device target = draftDevice != null ? draftDevice : models[0].device();
+            return moveAndClose(out, target);
         } finally {
-            for (int r = 1; r < inputs.length; r++) {
-                inputs[r].close();
+            for (int r = 0; r < inputs.length; r++) {
+                if (inputs[r] != null && inputs[r] != hidden) {
+                    inputs[r].close();
+                }
             }
         }
     }
@@ -987,7 +1077,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             if (from == 0) {
                 draft.bind(requestId, draftCapacity.getOrDefault(requestId, params.maxSeqLen()));
             }
-            draft.absorb(requestId, aux, from);
+            absorbOnDraftDevice(requestId, aux, from);
             draftPosition.put(requestId, to);
         } finally {
             aux.close();
@@ -1253,7 +1343,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                  var keep = smile.deep.tensor.Index.slice(0, accepted + 1);
                  Tensor committed = aux.get(keep, smile.deep.tensor.Index.Colon)) {
                 // Rows 0..accepted are the anchor and the accepted drafts, now committed; the bonus token is next round's anchor.
-                draft.absorb(requestId, committed, pos);
+                absorbOnDraftDevice(requestId, committed, pos);
                 draftPosition.put(requestId, pos + accepted + 1);
             }
         }
@@ -1362,7 +1452,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 draftPosition.remove(requestId);
             } else {
                 try {
-                    draft.absorb(requestId, aux, pos);
+                    absorbOnDraftDevice(requestId, aux, pos);
                     draftPosition.put(requestId, pos + 1);
                 } finally {
                     aux.close();
@@ -1846,6 +1936,30 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
                                 double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster,
                                 boolean loadDraft) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize,
+                weightMode, cluster, loadDraft, AuxDevicePlacement.resolve(devices));
+    }
+
+    /**
+     * Loads a checkpoint with explicit auxiliary GPU placement for the vision tower and DSpark draft.
+     *
+     * @param checkpointDir     directory with {@code config.json}, {@code tokenizer.json} and safetensors.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices, one rank each, or {@code null} for one CPU rank.
+     * @param memFractionStatic fraction of device memory for weights + KV.
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        see {@link #build(String, int, int, byte[], double, int, String)}.
+     * @param cluster           this process's place in the cluster, or {@code null}.
+     * @param loadDraft         load the checkpoint's {@code dspark/} draft when it has one.
+     * @param placement         resolved vision and DSpark GPU placement.
+     * @return the loaded model.
+     * @throws IOException if the checkpoint is missing, unsupported or incomplete.
+     */
+    public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster,
+                                boolean loadDraft, AuxDevicePlacement placement) throws IOException {
+        AuxDevicePlacement resolvedPlacement = placement != null ? placement : AuxDevicePlacement.resolve(devices);
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -1959,15 +2073,17 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             loader.shutdownNow();
         }
 
-        // The vision encoder (~1.7 GB) lives on rank 0's device; load it before the KV pool takes the free memory.
+        // The vision encoder (~1.7 GB) lives on its resolved device (auto-balanced off rank 0 on multi-GPU, or explicit);
+        // load it before the KV pools size against remaining free memory.
+        AuxDevicePlacement.Target visionTarget = resolvedPlacement.vision();
         MiniMaxVisionTower vision = null;
-        boolean follower = cluster != null && cluster.rankOffset() > 0;   // the vision encoder lives on the leader's rank 0
+        boolean follower = cluster != null && cluster.rankOffset() > 0;   // the vision encoder lives on the leader
         if (!follower && !"0".equals(System.getenv("SMILE_MINIMAX_VISION"))) {
             try {
                 long t0 = System.currentTimeMillis();
-                vision = MiniMaxVisionTower.load(dir, networks[0].device(), computeDtype);
+                vision = MiniMaxVisionTower.load(dir, visionTarget.device(), computeDtype);
                 if (vision != null) {
-                    logger.info("vision encoder loaded on {} in {} ms", networks[0].device(),
+                    logger.info("vision encoder loaded on {} in {} ms", visionTarget.describe(),
                             System.currentTimeMillis() - t0);
                 } else {
                     logger.info("checkpoint has no vision weights: images and videos are not supported");
@@ -1977,55 +2093,98 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             }
         }
 
-        // The DSpark drafter (2.3 GB FP8) also lives on rank 0's device, loaded before the KV pool takes the free memory.
+        // The DSpark drafter (2.3 GB FP8) lives on its resolved device (auto-balanced or explicit),
+        // loaded before the KV pools size against remaining free memory.
+        AuxDevicePlacement.Target dsparkTarget = resolvedPlacement.dspark();
         java.util.concurrent.atomic.AtomicReference<MiniMax> self = new java.util.concurrent.atomic.AtomicReference<>();
         MiniMaxDspark draft = null;
-        if (loadDraft && !follower && cluster == null && cuda && computeDtype == ScalarType.BFloat16
-                && !"0".equals(System.getenv("SMILE_MINIMAX_DSPARK")) && new File(dir, "dspark/config.json").exists()) {
-            try {
-                long t0 = System.currentTimeMillis();
-                draft = MiniMaxDspark.load(new File(dir, "dspark").getPath(), networks[0].device(), args.weightMode(),
-                        computeDtype, headsOf(self), args.maxSeqLen() * 2);
-                logger.info("DSpark draft loaded on {} in {} ms (block {}, taps {})", networks[0].device(),
-                        System.currentTimeMillis() - t0, draft.args().blockSize(),
-                        Arrays.toString(draft.args().targetLayerIds()));
-            } catch (IOException | RuntimeException e) {
-                logger.warn("DSpark draft not loaded, speculative decoding is off: {}", e.toString());
+        if (loadDraft && !follower) {
+            File dsparkDir = new File(dir, "dspark");
+            File dsparkConfig = new File(dsparkDir, "config.json");
+            if ("0".equals(System.getenv("SMILE_MINIMAX_DSPARK"))) {
+                logger.info("DSpark draft skipped: SMILE_MINIMAX_DSPARK=0");
+            } else if (!dsparkConfig.exists()) {
+                logger.info("DSpark draft not found at {}", dsparkConfig);
+            } else if (cluster != null) {
+                logger.info("DSpark draft skipped: not supported in multi-node cluster mode");
+            } else if (!cuda || computeDtype != ScalarType.BFloat16) {
+                logger.info("DSpark draft skipped: requires CUDA bfloat16 (cuda={}, dtype={})", cuda, computeDtype);
+            } else {
+                try {
+                    long t0 = System.currentTimeMillis();
+                    draft = MiniMaxDspark.load(dsparkDir.getPath(), dsparkTarget.device(), args.weightMode(),
+                            computeDtype, headsOf(self), args.maxSeqLen() * 2);
+                    logger.info("DSpark draft loaded on {} in {} ms (block {}, taps {})", dsparkTarget.describe(),
+                            System.currentTimeMillis() - t0, draft.args().blockSize(),
+                            Arrays.toString(draft.args().targetLayerIds()));
+                } catch (IOException | RuntimeException e) {
+                    logger.warn("DSpark draft not loaded, speculative decoding is off: {}", e.toString());
+                }
             }
         }
 
         // MSA index keys take extra bytes per token on top of K/V; shrink the pool's share so both fit.
+        // Because asymmetric auxiliary components (vision / DSpark) can reduce free VRAM on one rank relative
+        // to the others, estimate each rank's KV slot budget first and allocate the uniform minimum across all ranks.
         double kvPerToken = 2.0 * args.numLayers() * networks[0].shard().kvHeads(args.numKvHeads()) * args.headDim();
         double indexPerToken = (double) args.numSparseLayers() * args.numIndexKeyHeads() * args.indexDim();
         double kvShare = kvPerToken / (kvPerToken + indexPerToken);
-        for (MiniMaxModel network : networks) {
+        if (vision != null && visionTarget.isExternal()) {
+            visionTarget.device().emptyCache();
+        }
+        if (draft != null && dsparkTarget.isExternal()) {
+            dsparkTarget.device().emptyCache();
+        }
+        KvCacheLayout[] layouts = new KvCacheLayout[ranks];
+        int[] perRankSlots = new int[ranks];
+        for (int r = 0; r < ranks; r++) {
+            MiniMaxModel network = networks[r];
             Device device = network.device();
             device.emptyCache();
-            // The pool counts everything already on the device (weights, NCCL, context) against its budget, so give it
-            // the weights plus its share of what is left under the static fraction.
-            double poolFraction = memFractionStatic;
+            layouts[r] = args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads()));
             if (device.isCUDA()) {
                 long[] memInfo = Native.cudaMemGetInfo(device.index());
                 logger.info("rank {}: {} used of {} MiB before the KV pool", network.shard().rank(), (memInfo[1] - memInfo[0]) >> 20, memInfo[1] >> 20);
             }
-            if (memFractionStatic > 0 && device.isCUDA()) {
-                long[] mem = Native.cudaMemGetInfo(device.index());
-                double used = (double) mem[1] - mem[0];
-                double room = Math.max(0.0, memFractionStatic * mem[1] - used);
-                poolFraction = (used + room * kvShare) / mem[1];
+            if (memFractionStatic > 0) {
+                double poolFraction = memFractionStatic;
+                if (device.isCUDA()) {
+                    long[] mem = Native.cudaMemGetInfo(device.index());
+                    double used = (double) mem[1] - mem[0];
+                    double room = Math.max(0.0, memFractionStatic * mem[1] - used);
+                    poolFraction = (used + room * kvShare) / mem[1];
+                }
+                perRankSlots[r] = KvCachePool.estimateBudget(layouts[r], device, computeDtype, poolFraction, pageSize).numSlots();
             }
+        }
+        int uniformSlots = memFractionStatic > 0 ? KvCachePool.uniformSlots(perRankSlots, pageSize) : 0;
+        if (memFractionStatic > 0 && ranks > 1) {
+            boolean asymmetric = false;
+            for (int slots : perRankSlots) {
+                if (slots != uniformSlots) {
+                    asymmetric = true;
+                    break;
+                }
+            }
+            if (asymmetric) {
+                logger.info("uniform KV pool across {} ranks: {} slots (min of per-rank budgets {})",
+                        ranks, uniformSlots, Arrays.toString(perRankSlots));
+            }
+        }
+        for (int r = 0; r < ranks; r++) {
+            MiniMaxModel network = networks[r];
+            Device device = network.device();
             KvCachePool pool = memFractionStatic > 0
-                    ? KvCachePool.allocate(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device, computeDtype,
-                            poolFraction, pageSize)
-                    : KvCachePool.forTesting(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device);
+                    ? KvCachePool.allocateSlots(layouts[r], uniformSlots, device, computeDtype, pageSize)
+                    : KvCachePool.forTesting(layouts[r], device);
             network.setKvCachePool(pool, false);
             network.eval();
         }
         MiniMax result = new MiniMax(dir.getName(), networks, group, tokenizer, args);
-        result.setVision(vision);
+        result.setVision(vision, visionTarget.device(), visionTarget.tpRank());
         self.set(result);
         if (draft != null) {
-            result.setDraft(draft);
+            result.setDraft(draft, dsparkTarget.device(), dsparkTarget.tpRank());
         }
         return result;
     }

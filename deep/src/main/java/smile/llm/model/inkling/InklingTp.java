@@ -42,6 +42,7 @@ import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.Sampling;
+import smile.llm.parallel.AuxDevicePlacement;
 import smile.llm.template.InklingChatTemplate;
 import smile.util.AutoScope;
 
@@ -75,7 +76,9 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     private final Object lock = new Object();
     private boolean graphsDisabled;
     private InklingVisionArgs visionArgs;
-    private final InklingVisionTower[] vision;
+    private InklingVisionTower vision;
+    private final Device visionDevice;
+    private final int visionRank;
     private InklingImageProcessor imageProcessor;
     /** Per image request: the image embeddings of the whole prompt on every rank and, per position, how many placeholders precede it. */
     private record ImageState(Tensor[] embeds, int[] before) { }
@@ -90,11 +93,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     /** Longest request (tokens) that gets a draft context. */
     private static final int DRAFT_MAX_CONTEXT = Integer.getInteger("smile.inkling.draft.maxctx", 65536);
     private static final boolean SPECULATE = !"0".equals(System.getenv("SMILE_INKLING_SPECULATE"));
-    /** The DSpark draft of every rank (replicated: it needs no communication), or {@code null}s when the checkpoint has none. */
-    private final InklingDraft[] drafts;
+    /** The single DSpark draft on its configured device (in-group TP rank or external GPU), or {@code null} when absent. */
+    private InklingDraft draft;
+    private final Device draftDevice;
+    private final int draftRank;
+    private final Map<Integer, DraftGraph> draftGraphs = new java.util.HashMap<>();
+    private InklingDraft.State padDraft;
     private boolean specDisabled;
-    /** Per request: the draft's context on every rank, and the drafts already computed for its next anchor. */
-    private final Map<Integer, InklingDraft.State[]> draftStates = new ConcurrentHashMap<>();
+    /** Per request: the single draft context on {@link #draftDevice}, and the drafts already computed for its next anchor. */
+    private final Map<Integer, InklingDraft.State> draftStates = new ConcurrentHashMap<>();
     private final Map<Integer, int[]> pending = new ConcurrentHashMap<>();
     private static final boolean TIMING = System.getProperty("smile.inkling.timing") != null;
     private long fillNs, replayNs, timedSteps;
@@ -107,8 +114,6 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         InklingState pad;
         final Map<Integer, Graph> graphs = new java.util.HashMap<>();
         final Map<Integer, VerifyGraph> verify = new java.util.HashMap<>();
-        final Map<Integer, DraftGraph> draftGraphs = new java.util.HashMap<>();
-        InklingDraft.State padDraft;
 
         RankContext(int rank) {
             this.rank = rank;
@@ -161,7 +166,9 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         VerifyGraph(RankContext c, int nb, int rowsPer, int tapCount) {
             this.nb = nb;
             this.rowsPer = rowsPer;
-            this.taps = Ix.keep(Ix.zeros(c.device, smile.deep.tensor.ScalarType.BFloat16, nb, tapCount, args.dim()));
+            this.taps = tapCount > 0
+                    ? Ix.keep(Ix.zeros(c.device, smile.deep.tensor.ScalarType.BFloat16, nb, tapCount, args.dim()))
+                    : null;
             this.accepted = Ix.keep(Tensor.of(new int[nb / rowsPer], nb / rowsPer).to(c.device));
             this.ids = Ix.keep(Tensor.of(new long[nb], nb).to(c.device));
             this.pos = Ix.keep(Tensor.of(new int[nb], nb).to(c.device));
@@ -193,24 +200,27 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
     }
 
-    /** The captured commit + absorb + draft of one (requests, rows) shape, chained after a verify graph. */
+    /** The captured commit + absorb + draft (or draft-only when DSpark is on an external GPU) of one (requests, rows) shape. */
     private final class DraftGraph {
         final int reqs, rowsPer;
         final VerifyGraph verify;
         final InklingDraft draft;
+        final boolean external;
         final Tensor anchor, p0, ptrs, rowT, row8, first, freq;
+        final Tensor extTaps, extAccepted;
         Tensor out;
         java.lang.foreign.MemorySegment graph;
 
-        DraftGraph(RankContext c, InklingDraft draft, VerifyGraph verify, int reqs, int rowsPer) {
+        DraftGraph(Device dev, InklingDraft draft, VerifyGraph verify, int reqs, int rowsPer, boolean external) {
             this.verify = verify;
             this.draft = draft;
             this.reqs = reqs;
             this.rowsPer = rowsPer;
+            this.external = external;
             int block = draft.drafts() + 1;
-            anchor = Ix.keep(Tensor.of(new long[reqs], reqs).to(c.device));
-            p0 = Ix.keep(Tensor.of(new int[reqs], reqs).to(c.device));
-            ptrs = Ix.keep(Tensor.of(new long[reqs * draft.pointerStride()], (long) reqs * draft.pointerStride()).to(c.device));
+            anchor = Ix.keep(Tensor.of(new long[reqs], reqs).to(dev));
+            p0 = Ix.keep(Tensor.of(new int[reqs], reqs).to(dev));
+            ptrs = Ix.keep(Tensor.of(new long[reqs * draft.pointerStride()], (long) reqs * draft.pointerStride()).to(dev));
             int[] rt = new int[rowsPer];
             int[] r8 = new int[block];
             long[] f = new long[reqs];
@@ -223,46 +233,64 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             for (int i = 0; i < reqs; i++) {
                 f[i] = (long) i * rowsPer;
             }
-            rowT = Ix.keep(Tensor.of(rt, rt.length).to(c.device));
-            row8 = Ix.keep(Tensor.of(r8, r8.length).to(c.device));
-            first = Ix.keep(Tensor.of(f, reqs).to(c.device));
+            rowT = Ix.keep(Tensor.of(rt, rt.length).to(dev));
+            row8 = Ix.keep(Tensor.of(r8, r8.length).to(dev));
+            first = Ix.keep(Tensor.of(f, reqs).to(dev));
             freq = draft.frequencies();
+            if (external) {
+                extTaps = Ix.keep(Ix.zeros(dev, smile.deep.tensor.ScalarType.BFloat16,
+                        (long) reqs * rowsPer, draft.taps().length, args.dim()));
+                extAccepted = Ix.keep(Tensor.of(new int[reqs], reqs).to(dev));
+            } else {
+                extTaps = null;
+                extAccepted = null;
+            }
         }
 
-        void fill(RankContext c, InklingDraft.State[] ds, InklingState[] states, int[] anchors) {
+        void fill(Device dev, InklingDraft.State[] ds, InklingState[] states, int[] anchors) {
             int stride = draft.pointerStride();
             long[] pt = new long[reqs * stride];
             long[] av = new long[reqs];
             int[] pv = new int[reqs];
             for (int i = 0; i < reqs; i++) {
                 boolean real = i < ds.length;
-                long[] row = (real ? ds[i] : c.padDraft).pointers();
+                long[] row = (real ? ds[i] : padDraft).pointers();
                 System.arraycopy(row, 0, pt, i * stride, stride);
                 av[i] = real ? anchors[i] : 0;
                 pv[i] = real ? states[i].length : 0;
             }
-            smile.torch.Aten.call("aten::copy_", ptrs, Tensor.of(pt, pt.length).to(c.device), false);
-            smile.torch.Aten.call("aten::copy_", anchor, Tensor.of(av, reqs).to(c.device), false);
-            smile.torch.Aten.call("aten::copy_", p0, Tensor.of(pv, reqs).to(c.device), false);
+            smile.torch.Aten.call("aten::copy_", ptrs, Tensor.of(pt, pt.length).to(dev), false);
+            smile.torch.Aten.call("aten::copy_", anchor, Tensor.of(av, reqs).to(dev), false);
+            smile.torch.Aten.call("aten::copy_", p0, Tensor.of(pv, reqs).to(dev), false);
         }
 
-        Tensor body(RankContext c) {
-            c.decoder.commit(reqs, rowsPer, verify.tbl, verify.accepted);
-            return draft.round(reqs, rowsPer, verify.taps, verify.accepted, p0, anchor, ptrs, rowT, row8, first, freq);
+        Tensor body(RankContext owner) {
+            if (!external) {
+                owner.decoder.commit(reqs, rowsPer, verify.tbl, verify.accepted);
+            }
+            Tensor tapsIn = external ? extTaps : verify.taps;
+            Tensor accIn = external ? extAccepted : verify.accepted;
+            return draft.round(reqs, rowsPer, tapsIn, accIn, p0, anchor, ptrs, rowT, row8, first, freq);
         }
     }
 
-    private InklingTp(String name, InklingModelArgs args, InklingTokenizer tokenizer, Path dir, byte[] devices) throws IOException {
+    private InklingTp(String name, InklingModelArgs args, InklingTokenizer tokenizer, Path dir, byte[] devices,
+                      AuxDevicePlacement placement) throws IOException {
         this.name = name;
         this.args = args;
         this.tokenizer = tokenizer;
         this.devices = devices;
+        AuxDevicePlacement resolved = placement != null ? placement : AuxDevicePlacement.resolve(devices);
+        AuxDevicePlacement.Target visionTarget = resolved.vision();
+        AuxDevicePlacement.Target dsparkTarget = resolved.dspark();
+        this.visionDevice = visionTarget.device();
+        this.visionRank = visionTarget.tpRank();
+        this.draftDevice = dsparkTarget.device();
+        this.draftRank = dsparkTarget.tpRank();
         // the budget is per rank (every rank holds its share of each snapshot)
         long cacheMb = Long.getLong("smile.inkling.prefix.cache.mb", 4096L);
         this.prefixCache = cacheMb > 0 ? new InklingPrefixCache(cacheMb << 20) : null;
         this.ranks = InklingRanks.load(dir.toString(), args, devices);
-        this.drafts = new InklingDraft[devices.length];
-        this.vision = new InklingVisionTower[devices.length];
         this.contexts = new RankContext[devices.length];
         for (int r = 0; r < contexts.length; r++) {
             contexts[r] = new RankContext(r);
@@ -271,21 +299,25 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             contexts[r].pad = ranks.model(r).newState(16);
             return null;
         });
-        // the vision tower (0.6 GB) is replicated: every rank encodes the images itself, so no embeddings cross GPUs
+        // Load ONE vision tower on the resolved vision device (auto-balanced off rank 0, or explicit in-group/external GPU).
         InklingVisionArgs va = InklingVisionArgs.load(dir.toString());
         InklingCheckpoint ck = new InklingCheckpoint(dir.toString());
         if (va != null && !"0".equals(System.getenv("SMILE_INKLING_VISION")) && ck.hasRaw("model.visual.proj_out.weight")) {
             this.visionArgs = va;
-            ranks.onRanks(r -> {
-                try {
-                    vision[r] = InklingVisionTower.load(ck, va, contexts[r].device);
-                } catch (IOException e) {
-                    throw new java.io.UncheckedIOException(e);
-                }
-                return null;
-            });
+            if (visionRank >= 0) {
+                this.vision = ranks.onRank(visionRank, () -> {
+                    try {
+                        return InklingVisionTower.load(ck, va, visionDevice);
+                    } catch (IOException e) {
+                        throw new java.io.UncheckedIOException(e);
+                    }
+                });
+            } else {
+                this.vision = InklingVisionTower.load(ck, va, visionDevice);
+            }
             this.imageProcessor = new InklingImageProcessor(va);
-            logger.info("Inkling vision tower loaded on every rank ({} layers, up to {} tiles per image)", va.layers(), va.maxTokens());
+            logger.info("Inkling vision tower loaded on {} ({} layers, up to {} tiles per image)",
+                    visionTarget.describe(), va.layers(), va.maxTokens());
         }
         releaseMemory("weights");
         if (FUSED && InklingDecoder.available()) {
@@ -295,21 +327,31 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             });
             logger.info("Inkling decode: fused kernels on {} ranks", devices.length);
             if (SPECULATE) {
-                ranks.onRanks(r -> {
-                    try {
-                        drafts[r] = InklingDraft.load(dir.toString(), ranks.model(r), contexts[r].device);
-                    } catch (IOException e) {
-                        throw new java.io.UncheckedIOException(e);
+                int tapRank = draftTapRank();
+                if (draftRank >= 0) {
+                    this.draft = ranks.onRank(draftRank, () -> {
+                        try {
+                            InklingDraft d = InklingDraft.load(dir.toString(), ranks.model(draftRank), draftDevice);
+                            if (d != null) {
+                                ranks.model(draftRank).tapIds = d.taps();
+                                padDraft = d.newState(64);
+                            }
+                            return d;
+                        } catch (IOException e) {
+                            throw new java.io.UncheckedIOException(e);
+                        }
+                    });
+                } else {
+                    InklingDraft d = InklingDraft.load(dir.toString(), ranks.model(0), draftDevice);
+                    if (d != null) {
+                        this.draft = d;
+                        ranks.model(tapRank).tapIds = d.taps();
+                        this.padDraft = d.newState(64);
                     }
-                    if (drafts[r] != null) {
-                        ranks.model(r).tapIds = drafts[r].taps();
-                        contexts[r].padDraft = drafts[r].newState(64);
-                    }
-                    return null;
-                });
-                if (drafts[0] != null) {
-                    logger.info("Inkling DSpark draft loaded on every rank ({} drafts per block, {} taps)", drafts[0].drafts(),
-                            drafts[0].taps().length);
+                }
+                if (this.draft != null) {
+                    logger.info("Inkling DSpark draft loaded on {} ({} drafts per block, {} taps)",
+                            dsparkTarget.describe(), draft.drafts(), draft.taps().length);
                 }
             }
             if (GRAPHS && smile.torch.Native.cudaGraphAvailable()) {
@@ -319,8 +361,8 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 }
                 if (!graphsDisabled) {
                     logger.info("Inkling decode CUDA graphs captured on every rank for batches 1..{}", top);
-                    if (drafts[0] != null) {
-                        int rows = Math.min(drafts[0].drafts() + 1, InklingState.VERIFY_ROWS);
+                    if (draft != null) {
+                        int rows = Math.min(draft.drafts() + 1, InklingState.VERIFY_ROWS);
                         for (int reqs = 1; reqs <= Math.min(4, top) && !specDisabled; reqs <<= 1) {
                             captureSpec(reqs, rows);
                         }
@@ -331,6 +373,16 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             logger.info("Inkling decode: reference ops (fused kernels unavailable or disabled)");
         }
         releaseMemory("graphs");
+    }
+
+    /** Rank whose target hidden-state taps feed DSpark ({@link #draftRank} if in-group, else rank 0). */
+    private int draftTapRank() {
+        return draftRank >= 0 && draftRank < devices.length ? draftRank : 0;
+    }
+
+    /** Runs a draft operation on the draft rank's thread (if in-group) or directly (if external GPU). */
+    private <T> T onDraftThread(Supplier<T> task) {
+        return draftRank >= 0 ? ranks.onRank(draftRank, task) : task.get();
     }
 
     /**
@@ -347,21 +399,48 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
      * lock held.
      */
     private void ensureHeadroom() {
-        long free;
+        long minFree = Long.MAX_VALUE;
+        int tightest = -1;
         try {
-            free = smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0];
+            for (RankContext c : contexts) {
+                long f = smile.torch.Native.cudaMemGetInfo(c.device.index())[0];
+                if (f < minFree) {
+                    minFree = f;
+                    tightest = c.device.index();
+                }
+            }
+            if (vision != null && visionRank < 0 && visionDevice.isCUDA()) {
+                long f = smile.torch.Native.cudaMemGetInfo(visionDevice.index())[0];
+                if (f < minFree) {
+                    minFree = f;
+                    tightest = visionDevice.index();
+                }
+            }
+            if (draft != null && draftRank < 0 && draftDevice.isCUDA()) {
+                long f = smile.torch.Native.cudaMemGetInfo(draftDevice.index())[0];
+                if (f < minFree) {
+                    minFree = f;
+                    tightest = draftDevice.index();
+                }
+            }
         } catch (RuntimeException e) {
             return;
         }
-        if (free < MIN_FREE) {
+        if (minFree < MIN_FREE) {
             long t0 = System.nanoTime();
             ranks.onRanks(r -> {
                 contexts[r].device.emptyCache();
                 return null;
             });
-            logger.info("Inkling: emptied the allocator caches in {} ms ({} MiB free before, {} MiB after)",
-                    (System.nanoTime() - t0) / 1_000_000, free >> 20,
-                    smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0] >> 20);
+            if (vision != null && visionRank < 0 && visionDevice.isCUDA()) {
+                visionDevice.emptyCache();
+            }
+            if (draft != null && draftRank < 0 && draftDevice.isCUDA()) {
+                draftDevice.emptyCache();
+            }
+            long after = tightest >= 0 ? smile.torch.Native.cudaMemGetInfo(tightest)[0] : 0;
+            logger.info("Inkling: emptied allocator caches in {} ms (cuda:{} {} MiB free before, {} MiB after)",
+                    (System.nanoTime() - t0) / 1_000_000, tightest, minFree >> 20, after >> 20);
         }
     }
 
@@ -376,9 +455,23 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             contexts[r].device.emptyCache();
             return null;
         });
+        if (vision != null && visionRank < 0 && visionDevice.isCUDA()) {
+            visionDevice.emptyCache();
+        }
+        if (draft != null && draftRank < 0 && draftDevice.isCUDA()) {
+            draftDevice.emptyCache();
+        }
         try {
-            long free = smile.torch.Native.cudaMemGetInfo(contexts[0].device.index())[0];
-            logger.info("Inkling rank 0 free GPU memory after {}: {} MiB", stage, free >> 20);
+            long minFree = Long.MAX_VALUE;
+            int tightest = contexts[0].device.index();
+            for (RankContext c : contexts) {
+                long f = smile.torch.Native.cudaMemGetInfo(c.device.index())[0];
+                if (f < minFree) {
+                    minFree = f;
+                    tightest = c.device.index();
+                }
+            }
+            logger.info("Inkling min free GPU memory after {}: {} MiB (cuda:{})", stage, minFree >> 20, tightest);
         } catch (RuntimeException e) {
             logger.debug("free memory not available: {}", e.toString());
         }
@@ -395,12 +488,28 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
      * @throws IOException if the checkpoint cannot be read.
      */
     public static InklingTp build(String checkpointDir, int layers, int maxSeqLen, byte... devices) throws IOException {
+        return build(checkpointDir, layers, maxSeqLen, AuxDevicePlacement.resolve(devices), devices);
+    }
+
+    /**
+     * Loads Inkling-2 sharded over {@code devices} with explicit auxiliary GPU placement for the vision tower and DSpark draft.
+     *
+     * @param checkpointDir the checkpoint directory.
+     * @param layers        a slice of the first {@code layers} layers for tests ({@code 0}: all).
+     * @param maxSeqLen     maximum sequence length; {@code <= 0} uses the model's.
+     * @param placement     resolved auxiliary GPU placement.
+     * @param devices       the CUDA device of each rank.
+     * @return the model.
+     * @throws IOException if the checkpoint cannot be read.
+     */
+    public static InklingTp build(String checkpointDir, int layers, int maxSeqLen, AuxDevicePlacement placement,
+                                  byte... devices) throws IOException {
         InklingModelArgs args = InklingModelArgs.fromCheckpoint(checkpointDir, maxSeqLen);
         if (layers > 0) {
             args = args.withLayers(layers, layers >= args.coreEnd() ? args.numPasses() : 1);
         }
         Path dir = Path.of(checkpointDir);
-        return new InklingTp(dir.getFileName().toString(), args, InklingTokenizer.of(checkpointDir), dir, devices);
+        return new InklingTp(dir.getFileName().toString(), args, InklingTokenizer.of(checkpointDir), dir, devices, placement);
     }
 
     /** Hyperparameters. */
@@ -453,18 +562,19 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     }
 
     /**
-     * Captures the verify chunk and the chained commit + absorb + draft of {@code reqs} requests of {@code rowsPer} rows on
-     * every rank at once. Any failure disables speculation everywhere (the rest of the engine keeps decoding plainly).
+     * Captures the verify chunk on every rank (capturing taps only on the draft tap rank) and the single draft graph
+     * on the draft host (in-group rank or external GPU). Any failure disables speculation everywhere.
      */
     private void captureSpec(int reqs, int rowsPer) {
         int key = reqs * 64 + rowsPer;
         long t0 = System.nanoTime();
+        final int tapRank = draftTapRank();
+        final boolean externalDraft = draftRank < 0;
         List<Boolean> ok = ranks.onRanks(r -> {
             RankContext c = contexts[r];
-            InklingDraft draft = drafts[r];
             int nb = reqs * rowsPer;
             try (var guard = Tensor.noGradGuard()) {
-                VerifyGraph g = new VerifyGraph(c, nb, rowsPer, draft.taps().length);
+                VerifyGraph g = new VerifyGraph(c, nb, rowsPer, r == tapRank ? draft.taps().length : 0);
                 g.fill(c, new InklingState[0], new int[0][]);
                 Tensor warm = Ix.stepScoped(() -> c.decoder.forward(nb, rowsPer, g.ids, g.pos, g.tbl, null, g.taps));
                 smile.torch.Aten.one("aten::sum", warm).doubleValue();
@@ -478,33 +588,58 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 }
                 g.logits.detachFromScopes();
                 c.verify.put(key, g);
-                // the draft round: nothing real is committed or absorbed in the warm-up (accepted = 0)
-                DraftGraph dg = new DraftGraph(c, draft, g, reqs, rowsPer);
-                dg.fill(c, new InklingDraft.State[0], new InklingState[0], new int[0]);
-                Tensor w2 = Ix.stepScoped(() -> dg.body(c));
-                smile.torch.Aten.one("aten::sum", w2).doubleValue();
-                w2.close();
-                dg.graph = smile.torch.Native.cudaGraphCreate();
-                smile.torch.Native.cudaGraphCaptureBegin(dg.graph, c.device.index());
-                try {
-                    dg.out = Ix.stepScoped(() -> dg.body(c));
-                } finally {
-                    smile.torch.Native.cudaGraphCaptureEnd(dg.graph);
+                if (!externalDraft && r == draftRank) {
+                    DraftGraph dg = new DraftGraph(c.device, draft, g, reqs, rowsPer, false);
+                    dg.fill(c.device, new InklingDraft.State[0], new InklingState[0], new int[0]);
+                    Tensor w2 = Ix.stepScoped(() -> dg.body(c));
+                    smile.torch.Aten.one("aten::sum", w2).doubleValue();
+                    w2.close();
+                    dg.graph = smile.torch.Native.cudaGraphCreate();
+                    smile.torch.Native.cudaGraphCaptureBegin(dg.graph, c.device.index());
+                    try {
+                        dg.out = Ix.stepScoped(() -> dg.body(c));
+                    } finally {
+                        smile.torch.Native.cudaGraphCaptureEnd(dg.graph);
+                    }
+                    dg.out.detachFromScopes();
+                    draftGraphs.put(key, dg);
                 }
-                dg.out.detachFromScopes();
-                c.draftGraphs.put(key, dg);
                 return true;
             } catch (RuntimeException e) {
                 logger.warn("Inkling verify/draft graph capture failed on rank {} for {} x {}: {}", r, reqs, rowsPer, e.toString());
                 return false;
             }
         });
-        if (ok.contains(false)) {
+        boolean draftOk = !ok.contains(false);
+        if (draftOk && externalDraft) {
+            try (var guard = Tensor.noGradGuard()) {
+                VerifyGraph g0 = contexts[tapRank].verify.get(key);
+                DraftGraph dg = new DraftGraph(draftDevice, draft, g0, reqs, rowsPer, true);
+                dg.fill(draftDevice, new InklingDraft.State[0], new InklingState[0], new int[0]);
+                Tensor w2 = Ix.stepScoped(() -> dg.body(null));
+                smile.torch.Aten.one("aten::sum", w2).doubleValue();
+                w2.close();
+                dg.graph = smile.torch.Native.cudaGraphCreate();
+                smile.torch.Native.cudaGraphCaptureBegin(dg.graph, draftDevice.index());
+                try {
+                    dg.out = Ix.stepScoped(() -> dg.body(null));
+                } finally {
+                    smile.torch.Native.cudaGraphCaptureEnd(dg.graph);
+                }
+                dg.out.detachFromScopes();
+                draftGraphs.put(key, dg);
+            } catch (RuntimeException e) {
+                logger.warn("Inkling external draft graph capture failed on {} for {} x {}: {}",
+                        draftDevice, reqs, rowsPer, e.toString());
+                draftOk = false;
+            }
+        }
+        if (!draftOk) {
             specDisabled = true;
             logger.warn("Inkling speculative decoding disabled; decoding plainly");
         } else {
-            logger.info("Inkling verify + draft CUDA graphs captured on every rank for {} request(s) x {} rows in {} ms", reqs,
-                    rowsPer, (System.nanoTime() - t0) / 1_000_000);
+            logger.info("Inkling verify CUDA graphs (all ranks) + draft CUDA graph ({}) captured for {} request(s) x {} rows in {} ms",
+                    draftDevice, reqs, rowsPer, (System.nanoTime() - t0) / 1_000_000);
         }
     }
 
@@ -722,21 +857,45 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         int[] ids = mm.inputIds();
         boolean last = to == ids.length;
         synchronized (lock) {
-            InklingDraft.State[] noDraft = draftStates.remove(requestId);      // image prompts are not speculated
+            InklingDraft.State noDraft = draftStates.remove(requestId);      // image prompts are not speculated
             if (noDraft != null) {
-                ranks.onRanks(r -> {
-                    noDraft[r].close();
+                onDraftThread(() -> {
+                    noDraft.close();
                     return null;
                 });
             }
             ImageState is = images.get(requestId);
             if (is == null && mm.hasVision()) {
-                // every rank encodes every image once, at the first chunk
-                Tensor[] embeds = ranks.onRanks(r -> {
+                // Encode images once on visionDevice, then fan compact embeddings out to every TP rank.
+                Tensor encoded;
+                if (visionRank >= 0) {
+                    encoded = ranks.onRank(visionRank, () -> {
+                        try (var guard = Tensor.noGradGuard()) {
+                            return Ix.keep(Ix.stepScoped(() -> vision.encode(mm.pixels(), mm.grids())));
+                        }
+                    });
+                } else {
                     try (var guard = Tensor.noGradGuard()) {
-                        return Ix.keep(Ix.stepScoped(() -> vision[r].encode(mm.pixels(), mm.grids())));
+                        encoded = Ix.keep(Ix.stepScoped(() -> vision.encode(mm.pixels(), mm.grids())));
                     }
-                }).toArray(new Tensor[0]);
+                }
+                Tensor[] embeds = new Tensor[devices.length];
+                try {
+                    for (int r = 0; r < devices.length; r++) {
+                        embeds[r] = r == visionRank ? encoded : Ix.keep(encoded.to(contexts[r].device));
+                    }
+                } catch (Throwable t) {
+                    for (int r = 0; r < devices.length; r++) {
+                        if (embeds[r] != null && embeds[r] != encoded) {
+                            embeds[r].close();
+                        }
+                    }
+                    encoded.close();
+                    throw t;
+                }
+                if (visionRank < 0) {
+                    encoded.close();
+                }
                 int[] before = new int[ids.length + 1];
                 for (int i = 0; i < ids.length; i++) {
                     before[i + 1] = before[i] + (ids[i] == visionArgs.imageToken() ? 1 : 0);
@@ -883,7 +1042,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     }
 
     private int draftMaxCap(int requestId) {
-        int block = drafts[0] == null ? 0 : drafts[0].drafts() + 1;
+        int block = draft == null ? 0 : draft.drafts() + 1;
         return Math.min(maxCap(requestId), DRAFT_MAX_CONTEXT) + InklingState.VERIFY_ROWS + block;
     }
 
@@ -900,15 +1059,15 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         });
     }
 
-    /** Grows a request's per-rank draft states on demand to hold at least {@code required} positions. Called with {@code lock} held. */
-    private void ensureDraftsCapacity(InklingDraft.State[] ds, int required, int maxCap) {
-        if (required <= ds[0].capacity) {
+    /** Grows a request's draft state on demand to hold at least {@code required} positions. Called with {@code lock} held. */
+    private void ensureDraftCapacity(InklingDraft.State ds, int required, int maxCap) {
+        if (required <= ds.capacity) {
             return;
         }
         ensureHeadroom();
-        int target = InklingState.nextCapacity(ds[0].capacity, required, maxCap);
-        ranks.onRanks(r -> {
-            ds[r].grow(target);
+        int target = InklingState.nextCapacity(ds.capacity, required, maxCap);
+        onDraftThread(() -> {
+            ds.grow(target);
             return null;
         });
     }
@@ -920,17 +1079,16 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         int logicalMax = Math.max(1, totalCapacity);
         int promptLen = prompt == null ? 0 : prompt.length;
         // a verify chunk may write up to VERIFY_ROWS rows past the committed ones
-        // (the replicated draft keeps ~20 KB of context per token on every rank: very long requests decode plainly)
-        boolean hasSpec = drafts[0] != null && contexts[0].decoder != null;
+        boolean hasSpec = draft != null && contexts[0].decoder != null;
         boolean canDraft = hasSpec && promptLen <= DRAFT_MAX_CONTEXT;
         int stateMargin = hasSpec ? InklingState.VERIFY_ROWS : 0;
-        int draftMargin = canDraft ? InklingState.VERIFY_ROWS + drafts[0].drafts() + 1 : 0;
+        int draftMargin = canDraft ? InklingState.VERIFY_ROWS + draft.drafts() + 1 : 0;
         int stateMaxCap = logicalMax + stateMargin;
         int stateInitCap = InklingState.initialCapacity(promptLen + stateMargin, stateMaxCap);
         int draftMaxCap = canDraft ? Math.min(logicalMax, DRAFT_MAX_CONTEXT) + draftMargin : 0;
         int draftInitCap = canDraft ? InklingState.initialCapacity(promptLen + draftMargin, draftMaxCap) : 0;
         InklingState[] states;
-        InklingDraft.State[] ds = null;
+        InklingDraft.State ds = null;
         synchronized (lock) {
             long t0 = System.nanoTime();
             states = takeSpare(stateInitCap);
@@ -941,15 +1099,9 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             timed("newStates, capacity " + stateInitCap, t0);
             long t1 = System.nanoTime();
             if (canDraft) {
-                InklingDraft.State[] allocated = new InklingDraft.State[devices.length];
                 try {
-                    ranks.onRanks(r -> {
-                        allocated[r] = drafts[r].newState(draftInitCap);
-                        return null;
-                    });
-                    ds = allocated;
+                    ds = onDraftThread(() -> draft.newState(draftInitCap));
                 } catch (Throwable t) {
-                    ranks.closeAll(allocated);
                     giveBack(states);
                     throw t;
                 }
@@ -992,12 +1144,12 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         return pos == 1024 || pos == 2048 || pos >= 4096 && pos % SNAPSHOT_EVERY == 0;
     }
 
-    /** One snapshot per rank, with the draft's context when the request had one covering the whole prefix. */
-    private record RankSnapshots(InklingState.Snapshot[] parts, InklingDraft.Snapshot[] draft)
+    /** One snapshot per rank, with the single draft context snapshot when the request had one covering the whole prefix. */
+    private record RankSnapshots(InklingState.Snapshot[] parts, InklingDraft.Snapshot draft)
             implements InklingPrefixCache.Payload {
         @Override
         public long bytes() {
-            return parts[0].bytes() + (draft == null ? 0 : draft[0].bytes());
+            return parts[0].bytes() + (draft == null ? 0 : draft.bytes());
         }
 
         @Override
@@ -1006,9 +1158,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 p.close();
             }
             if (draft != null) {
-                for (InklingDraft.Snapshot d : draft) {
-                    d.close();
-                }
+                draft.close();
             }
         }
     }
@@ -1066,21 +1216,26 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             InklingState[] st = session(requestId);
             RankSnapshots snap = (RankSnapshots) hit.snapshot;
             InklingState.Snapshot[] parts = snap.parts();
-            InklingDraft.State[] ds = draftStates.get(requestId);
+            InklingDraft.State ds = draftStates.get(requestId);
             synchronized (lock) {
                 ensureStatesCapacity(st, prefixLen, maxCap(requestId));
                 if (ds != null && snap.draft() != null) {
-                    ensureDraftsCapacity(ds, prefixLen, draftMaxCap(requestId));
+                    ensureDraftCapacity(ds, prefixLen, draftMaxCap(requestId));
                 }
                 ranks.onRanks(r -> {
                     try (var guard = Tensor.noGradGuard()) {
                         st[r].restore(parts[r]);
-                        if (ds != null && snap.draft() != null) {
-                            drafts[r].restore(ds[r], snap.draft()[r]);       // the draft sees the reused prompt as well
-                        }
                     }
                     return null;
                 });
+                if (ds != null && snap.draft() != null) {
+                    onDraftThread(() -> {
+                        try (var guard = Tensor.noGradGuard()) {
+                            draft.restore(ds, snap.draft());
+                        }
+                        return null;
+                    });
+                }
             }
         } finally {
             synchronized (prefixCache) {
@@ -1090,13 +1245,13 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
     }
 
     /** Stores a snapshot of {@code st}, which has processed exactly {@code tokens} (call with the lock held). */
-    private void store(InklingState[] st, InklingDraft.State[] ds, int[] tokens) {
+    private void store(InklingState[] st, InklingDraft.State ds, int[] tokens) {
         if (tokens.length < SNAPSHOT_MIN || st[0].length != tokens.length) {
             return;
         }
-        boolean withDraft = ds != null && ds[0].absorbed >= tokens.length;
+        boolean withDraft = ds != null && ds.absorbed >= tokens.length;
         long bytes = InklingState.snapshotBytes(args, tokens.length) / devices.length + (4L << 20)
-                + (withDraft ? drafts[0].snapshotBytes(tokens.length) : 0);
+                + (withDraft ? draft.snapshotBytes(tokens.length) : 0);
         synchronized (prefixCache) {
             if (!prefixCache.fits(bytes) || prefixCache.has(tokens, tokens.length)) {
                 return;
@@ -1104,7 +1259,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
         ensureHeadroom();
         InklingState.Snapshot[] parts = new InklingState.Snapshot[devices.length];
-        InklingDraft.Snapshot[] dparts = withDraft ? new InklingDraft.Snapshot[devices.length] : null;
+        InklingDraft.Snapshot dpart = null;
         try {
             ranks.onRanks(r -> {
                 try (var guard = Tensor.noGradGuard()) {
@@ -1113,22 +1268,21 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 return null;
             });
             if (withDraft) {
-                ranks.onRanks(r -> {
+                dpart = onDraftThread(() -> {
                     try (var guard = Tensor.noGradGuard()) {
-                        dparts[r] = drafts[r].snapshot(ds[r], tokens.length);
+                        return draft.snapshot(ds, tokens.length);
                     }
-                    return null;
                 });
             }
         } catch (Throwable t) {
             ranks.closeAll(parts);
-            if (dparts != null) {
-                ranks.closeAll(dparts);
+            if (dpart != null) {
+                dpart.close();
             }
             throw t;
         }
         synchronized (prefixCache) {
-            prefixCache.put(tokens, new RankSnapshots(parts, dparts));
+            prefixCache.put(tokens, new RankSnapshots(parts, dpart));
         }
     }
 
@@ -1162,20 +1316,25 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
         boolean last = to == prompt.length;
         synchronized (lock) {
-            int stateMargin = drafts[0] != null && contexts[0].decoder != null ? InklingState.VERIFY_ROWS : 0;
+            int stateMargin = draft != null && contexts[0].decoder != null ? InklingState.VERIFY_ROWS : 0;
             ensureStatesCapacity(st, to + stateMargin, maxCap(requestId));
-            InklingDraft.State[] ds = draftStates.get(requestId);
+            InklingDraft.State ds = draftStates.get(requestId);
             if (ds != null) {
                 if (to > DRAFT_MAX_CONTEXT) {
                     draftStates.remove(requestId);
                     pending.remove(requestId);
-                    ranks.closeAll(ds);
+                    final InklingDraft.State dropped = ds;
+                    onDraftThread(() -> {
+                        dropped.close();
+                        return null;
+                    });
                     ds = null;
                 } else {
-                    ensureDraftsCapacity(ds, to + InklingState.VERIFY_ROWS + drafts[0].drafts() + 1, draftMaxCap(requestId));
+                    ensureDraftCapacity(ds, to + InklingState.VERIFY_ROWS + draft.drafts() + 1, draftMaxCap(requestId));
                 }
             }
-            final InklingDraft.State[] fds = ds;
+            final InklingDraft.State fds = ds;
+            final int tapRank = draftTapRank();
             int limit = st[0].maxChunk(args);
             int pos = from;
             Tensor logits = null;
@@ -1196,7 +1355,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 boolean wantLogits = last && end == to;
                 final int at = pos;
                 Tensor t = ranks.forward(st, ids, wantLogits ? null : new int[0], null,
-                        fds == null ? null : r -> taps -> drafts[r].absorb(fds[r], taps, at));
+                        fds == null ? null : r -> r == tapRank ? (taps -> draft.absorb(fds, taps, at)) : null);
                 if (wantLogits) {
                     logits = t;
                 }
@@ -1336,7 +1495,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
      * @return {@code true} if speculative drafting is active.
      */
     public boolean hasDraft() {
-        return drafts[0] != null && contexts[0].decoder != null && GRAPHS && !graphsDisabled && !specDisabled
+        return draft != null && contexts[0].decoder != null && GRAPHS && !graphsDisabled && !specDisabled
                 && smile.torch.Native.cudaGraphAvailable();
     }
 
@@ -1346,7 +1505,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
      * @return the draft block size, or {@code 0} when no draft model is loaded.
      */
     public int draftBlock() {
-        return drafts[0] == null ? 0 : drafts[0].drafts();
+        return draft == null ? 0 : draft.drafts();
     }
 
     @Override
@@ -1372,7 +1531,7 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
         }
         int n = requestIds.length;
         InklingState[][] states = new InklingState[n][];
-        InklingDraft.State[][] ds = new InklingDraft.State[n][];
+        InklingDraft.State[] ds = new InklingDraft.State[n];
         for (int i = 0; i < n; i++) {
             states[i] = session(requestIds[i]);
             ds[i] = draftStates.get(requestIds[i]);
@@ -1380,27 +1539,30 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 throw new IllegalStateException("request " + requestIds[i] + " is at position " + states[i][0].length
                         + ", not " + positions[i]);
             }
-            if (ds[i] == null || ds[i][0].absorbed < positions[i]) {
+            if (ds[i] == null || ds[i].absorbed < positions[i]) {
                 throw new UnsupportedOperationException("request " + requestIds[i] + " has no draft context");
             }
         }
-        int rowsPer = Math.max(2, Math.min(numDrafts + 1, Math.min(drafts[0].drafts() + 1, InklingState.VERIFY_ROWS)));
-        int block = drafts[0].drafts() + 1;
+        int rowsPer = Math.max(2, Math.min(numDrafts + 1, Math.min(draft.drafts() + 1, InklingState.VERIFY_ROWS)));
+        int block = draft.drafts() + 1;
         int reqs = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
         synchronized (lock) {
             for (int i = 0; i < n; i++) {
                 if (positions[i] + rowsPer > DRAFT_MAX_CONTEXT) {
                     pending.remove(requestIds[i]);
-                    InklingDraft.State[] dropped = draftStates.remove(requestIds[i]);
+                    InklingDraft.State dropped = draftStates.remove(requestIds[i]);
                     if (dropped != null) {
-                        ranks.closeAll(dropped);
+                        onDraftThread(() -> {
+                            dropped.close();
+                            return null;
+                        });
                     }
                     throw new UnsupportedOperationException("request " + requestIds[i] + " reached draft max context " + DRAFT_MAX_CONTEXT);
                 }
             }
             for (int i = 0; i < n; i++) {
                 ensureStatesCapacity(states[i], states[i][0].length + rowsPer, maxCap(requestIds[i]));
-                ensureDraftsCapacity(ds[i], states[i][0].length + rowsPer + block, draftMaxCap(requestIds[i]));
+                ensureDraftCapacity(ds[i], states[i][0].length + rowsPer + block, draftMaxCap(requestIds[i]));
             }
             int key = reqs * 64 + rowsPer;
             if (!contexts[0].verify.containsKey(key)) {
@@ -1415,21 +1577,21 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
 
     /**
      * One verify + commit + absorb + draft round. Phase 1 (all ranks): verify the block, rank 0 samples every row and
-     * decides how many drafts are accepted. Phase 2 (all ranks): commit the accepted rows, absorb their taps into the draft
-     * context and draft the next block (the draft is replicated, so every rank computes the same tokens).
+     * decides how many drafts are accepted. Phase 2: every rank commits its accepted main KV rows, while only the single
+     * draft host absorbs the committed taps and drafts the next block (in-group TP rank or external GPU).
      */
-    private int[][] speculateRound(int[] requestIds, InklingState[][] states, InklingDraft.State[][] ds, int[] lastTokens,
+    private int[][] speculateRound(int[] requestIds, InklingState[][] states, InklingDraft.State[] ds, int[] lastTokens,
                                    int rowsPer, int reqs, int key, double[] temperatures, double[] topps) {
         int n = states.length;
         int[][] rows = new int[n][rowsPer];
         for (int i = 0; i < n; i++) {
             int[] next = pending.get(requestIds[i]);
             if (next == null) {
-                // first round of a request: its drafts come from the context absorbed during prefill (rank 0 alone)
+                // first round of a request: its drafts come from the context absorbed during prefill
                 int idx = i;
-                next = ranks.onRank(0, () -> {
+                next = onDraftThread(() -> {
                     try (var guard = Tensor.noGradGuard()) {
-                        return scoped0(() -> drafts[0].draft(ds[idx][0], lastTokens[idx], states[idx][0].length));
+                        return scoped0(() -> draft.draft(ds[idx], lastTokens[idx], states[idx][0].length));
                     }
                 });
             }
@@ -1473,27 +1635,33 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
             return null;
         });
-        int nd = drafts[0].drafts();
+        int nd = draft.drafts();
+        DraftGraph dg = draftGraphs.get(key);
+        final boolean externalDraft = draftRank < 0;
         List<long[]> next = ranks.onRanks(r -> {
             RankContext c = contexts[r];
             InklingState[] mine = new InklingState[n];
-            InklingDraft.State[] dmine = new InklingDraft.State[n];
             for (int i = 0; i < n; i++) {
                 mine[i] = states[i][r];
-                dmine[i] = ds[i][r];
             }
             VerifyGraph g = c.verify.get(key);
-            DraftGraph dg = c.draftGraphs.get(key);
             try (var guard = Tensor.noGradGuard()) {
                 AutoScope scope = new AutoScope();
                 Tensor.push(scope);
                 try {
                     smile.torch.Aten.call("aten::copy_", g.accepted, Tensor.of(kept, reqs).to(c.device), false);
-                    dg.fill(c, dmine, mine, anchors);
-                    smile.torch.Native.cudaGraphReplay(dg.graph);
-                    long[] drafted = r == 0 ? dg.out.to(Device.CPU()).longArray() : null;
+                    long[] drafted = null;
+                    if (!externalDraft && r == draftRank) {
+                        dg.fill(c.device, ds, mine, anchors);
+                        smile.torch.Native.cudaGraphReplay(dg.graph);
+                        drafted = dg.out.to(Device.CPU()).longArray();
+                        for (int i = 0; i < n; i++) {
+                            ds[i].absorbed = mine[i].length + kept[i];
+                        }
+                    } else {
+                        c.decoder.commit(reqs, rowsPer, g.tbl, g.accepted);
+                    }
                     for (int i = 0; i < n; i++) {
-                        dmine[i].absorbed = mine[i].length + kept[i];
                         mine[i].length += kept[i];
                     }
                     return drafted;
@@ -1502,7 +1670,46 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                 }
             }
         });
-        long[] drafted = next.get(0);
+        long[] drafted;
+        if (externalDraft) {
+            InklingState[] refStates = new InklingState[n];
+            for (int i = 0; i < n; i++) {
+                refStates[i] = states[i][0];
+                // mine[i].length was already incremented by kept[i]; dg.fill expects pre-commit length, so adjust below
+            }
+            VerifyGraph g0 = contexts[draftTapRank()].verify.get(key);
+            try (var guard = Tensor.noGradGuard()) {
+                AutoScope scope = new AutoScope();
+                Tensor.push(scope);
+                try {
+                    int stride = draft.pointerStride();
+                    long[] pt = new long[reqs * stride];
+                    long[] av = new long[reqs];
+                    int[] pv = new int[reqs];
+                    for (int i = 0; i < reqs; i++) {
+                        boolean real = i < n;
+                        long[] row = (real ? ds[i] : padDraft).pointers();
+                        System.arraycopy(row, 0, pt, i * stride, stride);
+                        av[i] = real ? anchors[i] : 0;
+                        pv[i] = real ? refStates[i].length - kept[i] : 0;
+                    }
+                    smile.torch.Aten.call("aten::copy_", dg.extAccepted, Tensor.of(kept, reqs).to(draftDevice), false);
+                    smile.torch.Aten.call("aten::copy_", dg.extTaps, g0.taps.to(draftDevice), false);
+                    smile.torch.Aten.call("aten::copy_", dg.ptrs, Tensor.of(pt, pt.length).to(draftDevice), false);
+                    smile.torch.Aten.call("aten::copy_", dg.anchor, Tensor.of(av, reqs).to(draftDevice), false);
+                    smile.torch.Aten.call("aten::copy_", dg.p0, Tensor.of(pv, reqs).to(draftDevice), false);
+                    smile.torch.Native.cudaGraphReplay(dg.graph);
+                    drafted = dg.out.to(Device.CPU()).longArray();
+                    for (int i = 0; i < n; i++) {
+                        ds[i].absorbed = refStates[i].length;
+                    }
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        } else {
+            drafted = next.get(draftRank);
+        }
         for (int i = 0; i < n; i++) {
             int[] p = new int[nd];
             for (int j = 0; j < nd; j++) {
@@ -1571,11 +1778,11 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
             }
         }
         pending.remove(requestId);
-        InklingDraft.State[] ds = draftStates.remove(requestId);
+        InklingDraft.State ds = draftStates.remove(requestId);
         if (ds != null) {
             synchronized (lock) {
-                ranks.onRanks(r -> {
-                    ds[r].close();
+                onDraftThread(() -> {
+                    ds.close();
                     return null;
                 });
             }
@@ -1629,15 +1836,22 @@ public final class InklingTp implements LanguageModel, ModelExecutor, AutoClosea
                     }
                 }
                 contexts[r].verify.clear();
-                for (DraftGraph g : contexts[r].draftGraphs.values()) {
+                if (contexts[r].pad != null) {
+                    contexts[r].pad.close();
+                    contexts[r].pad = null;
+                }
+                return null;
+            });
+            onDraftThread(() -> {
+                for (DraftGraph g : draftGraphs.values()) {
                     if (g.graph != null) {
                         smile.torch.Native.cudaGraphDestroy(g.graph);
                     }
                 }
-                contexts[r].draftGraphs.clear();
-                if (contexts[r].pad != null) {
-                    contexts[r].pad.close();
-                    contexts[r].pad = null;
+                draftGraphs.clear();
+                if (padDraft != null) {
+                    padDraft.close();
+                    padDraft = null;
                 }
                 return null;
             });

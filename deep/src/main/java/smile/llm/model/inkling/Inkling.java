@@ -45,6 +45,7 @@ import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.Sampling;
+import smile.llm.parallel.AuxDevicePlacement;
 import smile.llm.template.InklingChatTemplate;
 
 import static smile.llm.model.inkling.Ix.cat;
@@ -69,6 +70,8 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private final InklingChatTemplate template = new InklingChatTemplate();
     private final ExecutorService worker;
     private final Device device;
+    private final Device visionDevice;
+    private final Device draftDevice;
     private final Map<Integer, InklingState> sessions = new ConcurrentHashMap<>();
     /** Per request: upper bound on state capacity (tokens + margin) so on-demand growth never exceeds the bound window. */
     private final Map<Integer, Integer> maxCapacities = new ConcurrentHashMap<>();
@@ -108,11 +111,18 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     /** Shorter prefixes are not worth a snapshot. */
     private static final int SNAPSHOT_MIN = Integer.getInteger("smile.inkling.prefix.min", 256);
 
-    private Inkling(String name, InklingModelArgs args, InklingTokenizer tokenizer, Path dir, Device device) {
+    private Inkling(String name, InklingModelArgs args, InklingTokenizer tokenizer, Path dir, Device device,
+                    AuxDevicePlacement placement) {
         this.name = name;
         this.args = args;
         this.tokenizer = tokenizer;
         this.device = device;
+        AuxDevicePlacement resolved = placement != null ? placement
+                : AuxDevicePlacement.resolve(device.isCUDA() ? new byte[]{device.index()} : null);
+        AuxDevicePlacement.Target visionTarget = resolved.vision();
+        AuxDevicePlacement.Target dsparkTarget = resolved.dspark();
+        this.visionDevice = visionTarget.device();
+        this.draftDevice = dsparkTarget.device();
         // a failing load must not leave the JVM waiting on this thread
         long cacheMb = Long.getLong("smile.inkling.prefix.cache.mb", 2048L);
         this.prefixCache = cacheMb > 0 ? new InklingPrefixCache(cacheMb << 20) : null;
@@ -128,14 +138,17 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             if (va != null && !"0".equals(System.getenv("SMILE_INKLING_VISION"))
                     && ck.hasRaw("model.visual.proj_out.weight")) {
                 this.visionArgs = va;
-                this.vision = InklingVisionTower.load(ck, va, device);
+                this.vision = InklingVisionTower.load(ck, va, visionDevice);
                 this.imageProcessor = new InklingImageProcessor(va);
-                logger.info("Inkling vision tower loaded ({} layers, up to {} tiles per image)", va.layers(), va.maxTokens());
+                logger.info("Inkling vision tower loaded on {} ({} layers, up to {} tiles per image)",
+                        visionTarget.describe(), va.layers(), va.maxTokens());
             }
             if (SPECULATE) {
-                this.draft = InklingDraft.load(dir.toString(), model, device);
+                this.draft = InklingDraft.load(dir.toString(), model, draftDevice);
                 if (draft != null) {
-                    logger.info("Inkling DSpark draft loaded ({} drafts per block)", draft.drafts());
+                    model.tapIds = draft.taps();
+                    logger.info("Inkling DSpark draft loaded on {} ({} drafts per block)",
+                            dsparkTarget.describe(), draft.drafts());
                 }
             }
             releaseMemoryOnWorker("weights");
@@ -185,6 +198,12 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             Thread.currentThread().interrupt();
         }
         device.emptyCache();
+        if (visionDevice != null && visionDevice.isCUDA() && !visionDevice.equals(device)) {
+            visionDevice.emptyCache();
+        }
+        if (draftDevice != null && draftDevice.isCUDA() && !draftDevice.equals(device) && !draftDevice.equals(visionDevice)) {
+            draftDevice.emptyCache();
+        }
         try {
             long free = smile.torch.Native.cudaMemGetInfo(device.index())[0];
             logger.info("Inkling free GPU memory after {}: {} MiB", stage, free >> 20);
@@ -195,21 +214,31 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
 
     /** Empties the caching allocator when free GPU memory drops below {@link #MIN_FREE}; runs on the worker thread. */
     private void ensureHeadroom() {
-        if (!device.isCUDA()) {
+        emptyCacheIfLow(device);
+        if (draft != null && draftDevice.isCUDA() && !draftDevice.equals(device)) {
+            emptyCacheIfLow(draftDevice);
+        }
+        if (vision != null && visionDevice.isCUDA() && !visionDevice.equals(device) && !visionDevice.equals(draftDevice)) {
+            emptyCacheIfLow(visionDevice);
+        }
+    }
+
+    private void emptyCacheIfLow(Device dev) {
+        if (dev == null || !dev.isCUDA()) {
             return;
         }
         long free;
         try {
-            free = smile.torch.Native.cudaMemGetInfo(device.index())[0];
+            free = smile.torch.Native.cudaMemGetInfo(dev.index())[0];
         } catch (RuntimeException e) {
             return;
         }
         if (free < MIN_FREE) {
             long t0 = System.nanoTime();
-            device.emptyCache();
-            logger.info("Inkling: emptied the allocator cache in {} ms ({} MiB free before, {} MiB after)",
-                    (System.nanoTime() - t0) / 1_000_000, free >> 20,
-                    smile.torch.Native.cudaMemGetInfo(device.index())[0] >> 20);
+            dev.emptyCache();
+            logger.info("Inkling: emptied {} allocator cache in {} ms ({} MiB free before, {} MiB after)",
+                    dev, (System.nanoTime() - t0) / 1_000_000, free >> 20,
+                    smile.torch.Native.cudaMemGetInfo(dev.index())[0] >> 20);
         }
     }
 
@@ -247,12 +276,29 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
      * @throws IOException if the checkpoint cannot be read.
      */
     public static Inkling build(String checkpointDir, int layers, int maxSeqLen, byte device) throws IOException {
+        return build(checkpointDir, layers, maxSeqLen, device, AuxDevicePlacement.resolve(new byte[]{device}));
+    }
+
+    /**
+     * Loads Inkling-2-Mini with explicit auxiliary GPU placement for the vision tower and DSpark draft.
+     *
+     * @param checkpointDir the checkpoint directory.
+     * @param layers        a slice of the first {@code layers} layers for tests ({@code 0}: all).
+     * @param maxSeqLen     maximum sequence length; {@code <= 0} uses the model's.
+     * @param device        the primary CUDA device index.
+     * @param placement     resolved auxiliary GPU placement.
+     * @return the model.
+     * @throws IOException if the checkpoint cannot be read.
+     */
+    public static Inkling build(String checkpointDir, int layers, int maxSeqLen, byte device,
+                                AuxDevicePlacement placement) throws IOException {
         InklingModelArgs args = InklingModelArgs.fromCheckpoint(checkpointDir, maxSeqLen);
         if (layers > 0) {
             args = args.withLayers(layers, layers >= args.coreEnd() ? args.numPasses() : 1);
         }
         Path dir = Path.of(checkpointDir);
-        return new Inkling(dir.getFileName().toString(), args, InklingTokenizer.of(checkpointDir), dir, Device.CUDA(device));
+        return new Inkling(dir.getFileName().toString(), args, InklingTokenizer.of(checkpointDir), dir,
+                Device.CUDA(device), placement);
     }
 
     private <T> T onWorker(Callable<T> task) {
@@ -511,8 +557,11 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             try (var guard = Tensor.noGradGuard()) {
                 ImageState is = images.get(requestId);
                 if (is == null && mm.hasVision()) {
-                    // encode every image once, at the first chunk
-                    Tensor embeds = Ix.keep(Ix.stepScoped(() -> vision.encode(mm.pixels(), mm.grids())));
+                    // encode every image once on visionDevice, then move compact embeddings to main device if needed
+                    Tensor embeds = Ix.keep(Ix.stepScoped(() -> {
+                        Tensor encoded = vision.encode(mm.pixels(), mm.grids());
+                        return visionDevice.equals(device) ? encoded : encoded.to(device);
+                    }));
                     int[] before = new int[ids.length + 1];
                     for (int i = 0; i < ids.length; i++) {
                         before[i + 1] = before[i] + (ids[i] == visionArgs.imageToken() ? 1 : 0);
@@ -930,11 +979,14 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         return smile.torch.Aten.one("aten::clone", Ix.narrow(g.logits, 0, 0, n));
     }
 
-    /** The captured commit + absorb + draft of one (requests, rows) shape, chained after a verify graph. */
+    /** The captured commit + absorb + draft (or draft-only when DSpark lives on an external GPU) of one (requests, rows) shape. */
     private final class DraftGraph {
         final int reqs, rowsPer;
         final DecodeGraph verify;
+        final boolean external;
         final Tensor anchor, p0, ptrs, rowT, row8, first, freq;
+        /** Non-null only when DSpark lives on an external GPU (verify taps and accepted counts copied onto {@link #draftDevice}). */
+        final Tensor extTaps, extAccepted;
         Tensor drafts;
         java.lang.foreign.MemorySegment graph;
 
@@ -942,10 +994,11 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             this.verify = verify;
             this.reqs = reqs;
             this.rowsPer = rowsPer;
+            this.external = !draftDevice.equals(device);
             int block = draft.drafts() + 1;
-            anchor = Ix.keep(Tensor.of(new long[reqs], reqs).to(device));
-            p0 = Ix.keep(Tensor.of(new int[reqs], reqs).to(device));
-            ptrs = Ix.keep(Tensor.of(new long[reqs * draft.pointerStride()], (long) reqs * draft.pointerStride()).to(device));
+            anchor = Ix.keep(Tensor.of(new long[reqs], reqs).to(draftDevice));
+            p0 = Ix.keep(Tensor.of(new int[reqs], reqs).to(draftDevice));
+            ptrs = Ix.keep(Tensor.of(new long[reqs * draft.pointerStride()], (long) reqs * draft.pointerStride()).to(draftDevice));
             int[] rt = new int[rowsPer];
             int[] r8 = new int[block];
             long[] f = new long[reqs];
@@ -958,10 +1011,18 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             for (int i = 0; i < reqs; i++) {
                 f[i] = (long) i * rowsPer;
             }
-            rowT = Ix.keep(Tensor.of(rt, rt.length).to(device));
-            row8 = Ix.keep(Tensor.of(r8, r8.length).to(device));
-            first = Ix.keep(Tensor.of(f, reqs).to(device));
+            rowT = Ix.keep(Tensor.of(rt, rt.length).to(draftDevice));
+            row8 = Ix.keep(Tensor.of(r8, r8.length).to(draftDevice));
+            first = Ix.keep(Tensor.of(f, reqs).to(draftDevice));
             freq = draft.frequencies();
+            if (external) {
+                extTaps = Ix.keep(Ix.zeros(draftDevice, smile.deep.tensor.ScalarType.BFloat16,
+                        (long) reqs * rowsPer, model.tapIds.length, args.dim()));
+                extAccepted = Ix.keep(Tensor.of(new int[reqs], reqs).to(draftDevice));
+            } else {
+                extTaps = null;
+                extAccepted = null;
+            }
         }
 
         void fill(InklingDraft.State[] ds, InklingState[] states, int[] anchors) {
@@ -976,14 +1037,18 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                 av[i] = real ? anchors[i] : 0;
                 pv[i] = real ? states[i].length : 0;
             }
-            smile.torch.Aten.call("aten::copy_", ptrs, Tensor.of(pt, pt.length).to(device), false);
-            smile.torch.Aten.call("aten::copy_", anchor, Tensor.of(av, reqs).to(device), false);
-            smile.torch.Aten.call("aten::copy_", p0, Tensor.of(pv, reqs).to(device), false);
+            smile.torch.Aten.call("aten::copy_", ptrs, Tensor.of(pt, pt.length).to(draftDevice), false);
+            smile.torch.Aten.call("aten::copy_", anchor, Tensor.of(av, reqs).to(draftDevice), false);
+            smile.torch.Aten.call("aten::copy_", p0, Tensor.of(pv, reqs).to(draftDevice), false);
         }
 
         Tensor body() {
-            decoder.commit(reqs, rowsPer, verify.tbl, verify.accepted);
-            return draft.round(reqs, rowsPer, verify.taps, verify.accepted, p0, anchor, ptrs, rowT, row8, first, freq);
+            if (!external) {
+                decoder.commit(reqs, rowsPer, verify.tbl, verify.accepted);
+            }
+            Tensor tapsIn = external ? extTaps : verify.taps;
+            Tensor accIn = external ? extAccepted : verify.accepted;
+            return draft.round(reqs, rowsPer, tapsIn, accIn, p0, anchor, ptrs, rowT, row8, first, freq);
         }
     }
 
@@ -1007,7 +1072,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         smile.torch.Aten.one("aten::sum", warm).doubleValue();
         warm.close();
         dg.graph = smile.torch.Native.cudaGraphCreate();
-        smile.torch.Native.cudaGraphCaptureBegin(dg.graph, device.index());
+        smile.torch.Native.cudaGraphCaptureBegin(dg.graph, draftDevice.index());
         try {
             dg.drafts = stepScoped(dg::body);
         } finally {
@@ -1015,8 +1080,8 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         }
         dg.drafts.detachFromScopes();
         draftGraphs.put(key, dg);
-        logger.info("Inkling draft CUDA graph captured for {} request(s) x {} rows in {} ms", reqs, rowsPer,
-                (System.nanoTime() - t0) / 1_000_000);
+        logger.info("Inkling draft CUDA graph captured on {} for {} request(s) x {} rows in {} ms",
+                draftDevice, reqs, rowsPer, (System.nanoTime() - t0) / 1_000_000);
         return dg;
     }
 
@@ -1172,6 +1237,11 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             }
             long t3 = System.nanoTime();
             smile.torch.Aten.call("aten::copy_", g.accepted, Tensor.of(kept, reqs).to(device), false);
+            if (dg.external) {
+                decoder.commit(reqs, rowsPer, g.tbl, g.accepted);
+                smile.torch.Aten.call("aten::copy_", dg.extAccepted, Tensor.of(kept, reqs).to(draftDevice), false);
+                smile.torch.Aten.call("aten::copy_", dg.extTaps, g.taps.to(draftDevice), false);
+            }
             dg.fill(ds, states, anchors);
             smile.torch.Native.cudaGraphReplay(dg.graph);
             long[] next = dg.drafts.to(smile.deep.tensor.Device.CPU()).longArray();

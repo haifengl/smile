@@ -43,6 +43,7 @@ import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.Sampling;
+import smile.llm.parallel.AuxDevicePlacement;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.template.DeepSeekChatTemplate;
@@ -90,14 +91,31 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
     private volatile boolean graphsDisabled;
     private final int minGraphPos;
     private final boolean onCuda;
+    /** TP rank hosting the DSpark draft ({@code >= 0} if in-group, {@code -1} if on an external GPU). */
+    private final int draftRank;
+    /** Index inside each request's {@code Session[]} holding the draft state ({@code draftRank}, or {@code workers.length} when external). */
+    private final int draftSlot;
+    /** Device hosting the DSpark draft (in-group or external). */
+    private final Device draftDevice;
+    /** Dedicated worker and draft-only model when DSpark is placed on an external GPU; {@code null} when in-group. */
+    private final ExecutorService externalDraftWorker;
+    private final DeepSeekModel externalDraftModel;
+    private DeepSeekModel.Session externalDraftPad;
 
     private DeepSeek(String name, DeepSeekModelArgs args, DeepSeekTokenizer tokenizer, Path dir, byte[] devices,
-                     boolean marlin, java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows) throws IOException {
+                     boolean marlin, java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows,
+                     AuxDevicePlacement placement) throws IOException {
         this.name = name;
         this.args = args;
         this.tokenizer = tokenizer;
         this.rowsSource = new DeepSeekCheckpoint(dir);
         int ranks = devices == null ? 1 : devices.length;
+        AuxDevicePlacement resolved = placement != null ? placement : AuxDevicePlacement.resolve(devices);
+        if (resolved.vision().explicit()) {
+            logger.info("DeepSeek-V4.1 has no vision tower; ignoring {}={}",
+                    AuxDevicePlacement.VISION_DEVICE_PROPERTY, resolved.vision().device());
+        }
+        AuxDevicePlacement.Target dsparkTarget = resolved.dspark();
         this.group = ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null;
         this.workers = new ExecutorService[ranks];
         this.replicas = new DeepSeekModel[ranks];
@@ -123,18 +141,90 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
             });
         }
         Dsv.marlin = marlin;
+
+        ExecutorService extWorker = null;
+        DeepSeekModel extModel = null;
+        if (dsparkTarget.isExternal()) {
+            extWorker = Executors.newSingleThreadExecutor(runnable -> {
+                Thread t = new Thread(runnable, "deepseek-dspark");
+                t.setDaemon(true);
+                return t;
+            });
+            try {
+                Future<DeepSeekModel> ef = extWorker.submit(() -> {
+                    Dsv.setThreadDevice(dsparkTarget.device());
+                    Dsv.setEp(null);
+                    return DeepSeekModel.draftOnly(args, dir);
+                });
+                extModel = ef.get();
+                if (!extModel.hasDraft()) {
+                    extModel.close();
+                    extModel = null;
+                    extWorker.shutdownNow();
+                    extWorker = null;
+                }
+            } catch (InterruptedException e) {
+                extWorker.shutdownNow();
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            } catch (ExecutionException e) {
+                extWorker.shutdownNow();
+                Throwable c = e.getCause();
+                if (c instanceof IOException io) {
+                    throw io;
+                }
+                throw new RuntimeException(c);
+            }
+        }
+        this.externalDraftWorker = extWorker;
+        this.externalDraftModel = extModel;
+        this.draftRank = extModel != null ? -1 : (dsparkTarget.isInGroup() ? dsparkTarget.tpRank() : 0);
+        this.draftSlot = extModel != null ? ranks : this.draftRank;
+        this.draftDevice = extModel != null ? dsparkTarget.device()
+                : (devices == null ? Device.CPU() : Device.CUDA(devices[this.draftRank]));
+
+        final boolean captureExternalOnRank0 = extModel != null;
+        final int loadDraftRank = extModel != null ? -1 : this.draftRank;
         List<Future<?>> loading = new ArrayList<>();
         for (int r = 0; r < ranks; r++) {
             final int rank = r;
             loading.add(workers[r].submit(() -> {
                 Dsv.setThreadDevice(devices == null ? Device.CPU() : Device.CUDA(devices[rank]));
                 Dsv.setEp(group == null ? null : new Dsv.Ep(group, rank, ranks));
-                replicas[rank] = new DeepSeekModel(args, dir, engramRows != null ? engramRows : l -> new DeepSeekEngram.FileRows(rowsSource, l));
+                replicas[rank] = new DeepSeekModel(args, dir,
+                        engramRows != null ? engramRows : l -> new DeepSeekEngram.FileRows(rowsSource, l),
+                        rank == loadDraftRank, captureExternalOnRank0 && rank == 0);
                 return null;
             }));
         }
         await(loading);
+        if (hasDraft()) {
+            logger.info("DeepSeek DSpark draft loaded on {} (block {})", dsparkTarget.describe(), draftBlock());
+        }
         startEngramPrefetch();
+    }
+
+    private DeepSeekModel draftModel() {
+        return externalDraftModel != null ? externalDraftModel : replicas[draftRank];
+    }
+
+    private ExecutorService draftWorker() {
+        return externalDraftWorker != null ? externalDraftWorker : workers[draftRank];
+    }
+
+    private <T> T onDraftWorker(Callable<T> task) {
+        try {
+            return draftWorker().submit(task).get();
+        } catch (ExecutionException e) {
+            Throwable c = e.getCause();
+            if (c instanceof RuntimeException r) {
+                throw r;
+            }
+            throw new RuntimeException(c);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -181,12 +271,34 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
      * @throws IOException if the checkpoint is incomplete.
      */
     public static DeepSeek build(String checkpointDir, int layers, int maxSeqLen, byte[] devices) throws IOException {
-        return build(checkpointDir, layers, maxSeqLen, devices, null);
+        return build(checkpointDir, layers, maxSeqLen, devices, null, AuxDevicePlacement.resolve(devices));
+    }
+
+    /**
+     * Loads a checkpoint with explicit auxiliary GPU placement for the DSpark draft.
+     *
+     * @param checkpointDir directory with {@code config.json}, {@code tokenizer.json} and the safetensors shards.
+     * @param layers        number of layers to load ({@code <= 0}: all); a truncated model is for testing only.
+     * @param maxSeqLen     maximum context length ({@code <= 0}: the checkpoint's).
+     * @param devices       CUDA device ids, one rank each (routed experts are split over them), or {@code null} for CPU.
+     * @param placement     resolved auxiliary GPU placement.
+     * @return the model.
+     * @throws IOException if the checkpoint is incomplete.
+     */
+    public static DeepSeek build(String checkpointDir, int layers, int maxSeqLen, byte[] devices,
+                                 AuxDevicePlacement placement) throws IOException {
+        return build(checkpointDir, layers, maxSeqLen, devices, null, placement);
     }
 
     /** As {@link #build(String, int, int, byte[])} with the engram rows supplied by the caller (tests). */
     static DeepSeek build(String checkpointDir, int layers, int maxSeqLen, byte[] devices,
                           java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows) throws IOException {
+        return build(checkpointDir, layers, maxSeqLen, devices, engramRows, AuxDevicePlacement.resolve(devices));
+    }
+
+    static DeepSeek build(String checkpointDir, int layers, int maxSeqLen, byte[] devices,
+                          java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows,
+                          AuxDevicePlacement placement) throws IOException {
         Path dir = Path.of(checkpointDir);
         DeepSeekModelArgs args = DeepSeekModelArgs.load(dir.resolve("config.json").toFile());
         if (layers > 0) {
@@ -196,7 +308,7 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
             args = args.withMaxSeqLen(maxSeqLen);
         }
         return new DeepSeek(dir.getFileName().toString(), args, DeepSeekTokenizer.of(checkpointDir), dir, devices,
-                devices != null, engramRows);
+                devices != null, engramRows, placement);
     }
 
     private static void await(List<? extends Future<?>> futures) {
@@ -244,22 +356,46 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
         if (s == null) {
             throw new IllegalArgumentException("unknown request " + requestId);
         }
-        return onAllRanks(rank -> {
+        java.util.concurrent.atomic.AtomicReference<Tensor> extTap = externalDraftModel != null
+                ? new java.util.concurrent.atomic.AtomicReference<>() : null;
+        Tensor logits = onAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
                 DeepSeekModel m = replicas[rank];
                 m.use(s[rank]);
                 return Dsv.scoped(() -> {
-                    Tensor logits = m.forward(ids, startPos, null);
+                    Tensor out = m.forward(ids, startPos, null);
                     if (startPos == 0) {
                         Tensor tap = m.takeTap();
                         if (tap != null) {
-                            m.seedDraft(s[rank], tap);
+                            if (extTap != null && rank == 0) {
+                                tap.detachFromScopes();
+                                extTap.set(tap);
+                            } else {
+                                m.seedDraft(s[rank], tap);
+                            }
                         }
                     }
-                    return logits;
+                    return out;
                 });
             }
         }, Tensor::close);
+        if (extTap != null && extTap.get() != null) {
+            Tensor tap = extTap.get();
+            try {
+                onDraftWorker(() -> {
+                    try (var guard = Tensor.noGradGuard()) {
+                        Dsv.scoped0(() -> {
+                            externalDraftModel.seedDraft(s[draftSlot], tap.to(draftDevice));
+                            return null;
+                        });
+                    }
+                    return null;
+                });
+            } finally {
+                tap.close();
+            }
+        }
+        return logits;
     }
 
     // ------------------------------------------------------------------ LanguageModel
@@ -417,7 +553,8 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
         if (totalCapacity > args.maxSeqLen()) {
             throw new IllegalArgumentException("capacity " + totalCapacity + " exceeds max_seq_len " + args.maxSeqLen());
         }
-        DeepSeekModel.Session[] s = new DeepSeekModel.Session[workers.length];
+        int slots = workers.length + (externalDraftModel != null ? 1 : 0);
+        DeepSeekModel.Session[] s = new DeepSeekModel.Session[slots];
         DeepSeekModel.Session[] reuse = sessionPool.poll();
         List<Future<?>> allocation = new ArrayList<>();
         for (int r = 0; r < workers.length; r++) {
@@ -429,6 +566,17 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
                     s[rank] = reuse[rank];
                 } else {
                     s[rank] = replicas[rank].newSession();
+                }
+                return null;
+            }));
+        }
+        if (externalDraftModel != null) {
+            allocation.add(externalDraftWorker.submit(() -> {
+                if (reuse != null) {
+                    reuse[draftSlot].reset();
+                    s[draftSlot] = reuse[draftSlot];
+                } else {
+                    s[draftSlot] = externalDraftModel.newSession();
                 }
                 return null;
             }));
@@ -464,7 +612,8 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
      * @return {@code true} if the model has an active draft head.
      */
     public boolean hasDraft() {
-        return replicas[0] != null && replicas[0].hasDraft();
+        DeepSeekModel dm = draftModel();
+        return dm != null && dm.hasDraft();
     }
 
     /**
@@ -473,33 +622,30 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
      * @return the number of tokens drafted per round.
      */
     public int draftBlock() {
-        return hasDraft() ? replicas[0].draft().block() : 0;
+        return hasDraft() ? draftModel().draft().block() : 0;
     }
 
     /**
      * Drafts the block of tokens that follows {@code lastTokens[i]} for requests whose prompt was prefilled (greedy).
-     * Experimental baseline: the draft state is only seeded by prefill.
+     * Runs only on the rank or external GPU hosting the DSpark draft (zero redundant work on other TP ranks).
      */
     DeepSeekDraft.Result[] draft(int[] requestIds, int[] lastTokens) {
         int n = requestIds.length;
-        if (GRAPHS && !draftGraphsDisabled && onCuda && Native.dsGraphAvailable() && n <= MAX_GRAPH_BATCH) {
+        if (GRAPHS && !draftGraphsDisabled && draftDevice.isCUDA() && Native.dsGraphAvailable() && n <= MAX_GRAPH_BATCH) {
             DeepSeekDraft.Result[] r = draftGraphed(requestIds, lastTokens);
             if (r != null) {
                 return r;
             }
         }
-        DeepSeekModel.Session[][] mine = new DeepSeekModel.Session[workers.length][n];
+        DeepSeekModel.Session[] mine = new DeepSeekModel.Session[n];
         for (int i = 0; i < n; i++) {
-            DeepSeekModel.Session[] s = sessions.get(requestIds[i]);
-            for (int r = 0; r < workers.length; r++) {
-                mine[r][i] = s[r];
-            }
+            mine[i] = sessions.get(requestIds[i])[draftSlot];
         }
-        return onAllRanks(rank -> {
+        return onDraftWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
-                return Dsv.scoped0(() -> replicas[rank].draftBatch(lastTokens, mine[rank]));
+                return Dsv.scoped0(() -> draftModel().draftBatch(lastTokens, mine));
             }
-        }, r -> { });
+        });
     }
 
     /**
@@ -508,18 +654,42 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
      */
     private Tensor decodeTapped(int requestId, int token, int pos) {
         DeepSeekModel.Session[] s = sessions.get(requestId);
-        return onAllRanks(rank -> {
+        java.util.concurrent.atomic.AtomicReference<Tensor> extTap = externalDraftModel != null
+                ? new java.util.concurrent.atomic.AtomicReference<>() : null;
+        Tensor logits = onAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
                 return Dsv.scoped(() -> {
-                    Tensor logits = replicas[rank].forwardBatch(new int[]{token}, new int[]{pos}, new DeepSeekModel.Session[]{s[rank]});
+                    Tensor out = replicas[rank].forwardBatch(new int[]{token}, new int[]{pos}, new DeepSeekModel.Session[]{s[rank]});
                     Tensor tap = replicas[rank].takeTap();
                     if (tap != null) {
-                        replicas[rank].advanceDraft(s[rank], tap, pos);
+                        if (extTap != null && rank == 0) {
+                            tap.detachFromScopes();
+                            extTap.set(tap);
+                        } else {
+                            replicas[rank].advanceDraft(s[rank], tap, pos);
+                        }
                     }
-                    return logits;
+                    return out;
                 });
             }
         }, Tensor::close);
+        if (extTap != null && extTap.get() != null) {
+            Tensor tap = extTap.get();
+            try {
+                onDraftWorker(() -> {
+                    try (var guard = Tensor.noGradGuard()) {
+                        Dsv.scoped0(() -> {
+                            externalDraftModel.advanceDraft(s[draftSlot], tap.to(draftDevice), pos);
+                            return null;
+                        });
+                    }
+                    return null;
+                });
+            } finally {
+                tap.close();
+            }
+        }
+        return logits;
     }
 
     /**
@@ -577,8 +747,8 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
         List<Integer> spec = new ArrayList<>();
         List<Integer> plain = new ArrayList<>();
         for (int i = 0; i < total; i++) {
-            DeepSeekModel.Session s0 = sessions.get(requestIds[i])[0];
-            (s0.draft != null && s0.lastTap != null && s0.draftPos == positions[i] - 1 ? spec : plain).add(i);
+            DeepSeekModel.Session sd = sessions.get(requestIds[i])[draftSlot];
+            (sd.draft != null && sd.lastTap != null && sd.draftPos == positions[i] - 1 ? spec : plain).add(i);
         }
         if (!plain.isEmpty()) {
             plainRound(requestIds, lastTokens, positions, temperatures, topps, plain, out);
@@ -714,7 +884,7 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
             greedy &= t == 0.0;
         }
         int n = requestIds.length;
-        int kMax = Math.min(Math.max(numDrafts, 1), replicas[0].draft().block());
+        int kMax = Math.min(Math.max(numDrafts, 1), draftModel().draft().block());
         int maxPos = 0;
         boolean eligible = GRAPHS && !verifyGraphsDisabled && onCuda && Native.dsGraphAvailable() && Native.dsStateAvailable()
                 && n * (kMax + 1) <= ROW_BUCKETS[ROW_BUCKETS.length - 1];
@@ -851,6 +1021,24 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
             }
             return null;
         });
+        if (externalDraftModel != null) {
+            Tensor tap = graphs[0].get(key).tap();
+            if (tap != null) {
+                DeepSeekModel.Session[] extSessions = new DeepSeekModel.Session[n];
+                for (int i = 0; i < n; i++) {
+                    extSessions[i] = sessions.get(requestIds[i])[draftSlot];
+                }
+                onDraftWorker(() -> {
+                    try (var guard = Tensor.noGradGuard()) {
+                        Dsv.scoped0(() -> {
+                            externalDraftModel.commitDraftBatch(extSessions, tap.to(draftDevice), base, accepted, positions);
+                            return null;
+                        });
+                    }
+                    return null;
+                });
+            }
+        }
         specNs[2] += System.nanoTime() - tc;
         specRounds++;
         specRows += total;
@@ -928,54 +1116,59 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
     private final Map<Integer, DeepSeekDraftGraph> draftGraphs = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile boolean draftGraphsDisabled;
 
-    /** The draft of {@link #draft} as a captured graph per slot count; {@code null} when it cannot be captured. */
+    /** The draft of {@link #draft} as a captured graph per slot count on the draft host; {@code null} when it cannot be captured. */
     private DeepSeekDraft.Result[] draftGraphed(int[] requestIds, int[] lastTokens) {
         int n = requestIds.length;
         int slots = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
-        boolean ready = true;
-        for (boolean ok : gatherAllRanks(rank -> {
+        boolean ready = onDraftWorker(() -> {
             try {
-                if (draftGraphs.containsKey(rank * 1024 + slots)) {
+                if (draftGraphs.containsKey(slots)) {
                     return true;
                 }
-                if (pads[rank] == null) {
-                    pads[rank] = replicas[rank].newSession();
+                DeepSeekModel dm = draftModel();
+                DeepSeekModel.Session pad;
+                if (externalDraftModel != null) {
+                    if (externalDraftPad == null) {
+                        externalDraftPad = dm.newSession();
+                    }
+                    pad = externalDraftPad;
+                } else {
+                    if (pads[draftRank] == null) {
+                        pads[draftRank] = dm.newSession();
+                    }
+                    pad = pads[draftRank];
                 }
                 long t0 = System.nanoTime();
-                draftGraphs.put(rank * 1024 + slots, DeepSeekDraftGraph.capture(replicas[rank], pads[rank], slots,
+                draftGraphs.put(slots, DeepSeekDraftGraph.capture(dm, pad, slots,
                         3 * args.dim(), Dsv.device().index()));
-                if (rank == 0) {
-                    logger.info("Captured DeepSeek draft graph: {} slots in {} ms", slots, (System.nanoTime() - t0) / 1_000_000L);
-                }
+                logger.info("Captured DeepSeek draft graph on {}: {} slots in {} ms",
+                        Dsv.device(), slots, (System.nanoTime() - t0) / 1_000_000L);
                 return true;
             } catch (Throwable t) {
-                logger.warn("DeepSeek draft graph capture failed on rank {}: {}", rank, t.toString());
+                logger.warn("DeepSeek draft graph capture failed on {}: {}", Dsv.device(), t.toString());
                 return false;
             }
-        })) {
-            ready &= ok;
-        }
+        });
         if (!ready) {
             draftGraphsDisabled = true;
             return null;
         }
         int[] startPos = new int[n];
-        DeepSeekModel.Session[][] mine = new DeepSeekModel.Session[workers.length][n];
+        DeepSeekModel.Session[] mine = new DeepSeekModel.Session[n];
         for (int i = 0; i < n; i++) {
-            DeepSeekModel.Session[] s = sessions.get(requestIds[i]);
-            if (s[0].draft == null || s[0].lastTap == null) {
+            DeepSeekModel.Session sd = sessions.get(requestIds[i])[draftSlot];
+            if (sd.draft == null || sd.lastTap == null) {
                 throw new IllegalStateException("sequence has no draft state (prefill it first)");
             }
-            startPos[i] = s[0].draftPos;
-            for (int r = 0; r < workers.length; r++) {
-                mine[r][i] = s[r];
-            }
+            startPos[i] = sd.draftPos;
+            mine[i] = sd;
         }
-        return onAllRanks(rank -> {
+        return onDraftWorker(() -> {
+            DeepSeekModel.Session pad = externalDraftModel != null ? externalDraftPad : pads[draftRank];
             try (var guard = Tensor.noGradGuard()) {
-                return Dsv.scoped0(() -> draftGraphs.get(rank * 1024 + slots).replay(lastTokens, startPos, mine[rank], pads[rank]));
+                return Dsv.scoped0(() -> draftGraphs.get(slots).replay(lastTokens, startPos, mine, pad));
             }
-        }, r -> { });
+        });
     }
 
     @Override
@@ -999,11 +1192,50 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
                 mine[r][i] = s[r];
             }
         }
+        java.util.concurrent.atomic.AtomicReference<Tensor> extTap = externalDraftModel != null
+                ? new java.util.concurrent.atomic.AtomicReference<>() : null;
         Tensor all = onAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
-                return Dsv.scoped(() -> replicas[rank].forwardPrefillBatch(prompts, mine[rank]));
+                return Dsv.scoped(() -> {
+                    Tensor res = replicas[rank].forwardPrefillBatch(prompts, mine[rank]);
+                    if (extTap != null && rank == 0) {
+                        Tensor tap = replicas[rank].takeTap();
+                        if (tap != null) {
+                            tap.detachFromScopes();
+                            extTap.set(tap);
+                        }
+                    }
+                    return res;
+                });
             }
         }, Tensor::close);
+        if (extTap != null && extTap.get() != null) {
+            Tensor tap = extTap.get();
+            try {
+                DeepSeekModel.Session[] extSessions = new DeepSeekModel.Session[n];
+                for (int i = 0; i < n; i++) {
+                    extSessions[i] = sessions.get(requestIds[i])[draftSlot];
+                }
+                onDraftWorker(() -> {
+                    try (var guard = Tensor.noGradGuard()) {
+                        Dsv.scoped0(() -> {
+                            Tensor moved = tap.to(draftDevice);
+                            int from = 0;
+                            for (int i = 0; i < n; i++) {
+                                int len = prompts[i].length;
+                                externalDraftModel.seedDraft(extSessions[i],
+                                        smile.torch.Aten.one("aten::narrow", moved, 1L, (long) from, (long) len));
+                                from += len;
+                            }
+                            return null;
+                        });
+                    }
+                    return null;
+                });
+            } finally {
+                tap.close();
+            }
+        }
         Tensor[] out = new Tensor[n];
         for (int i = 0; i < n; i++) {
             out[i] = smile.torch.Aten.one("aten::clone", smile.torch.Aten.one("aten::narrow", all, 0L, (long) i, 1L));
@@ -1163,10 +1395,17 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
             return;
         }
         List<Future<?>> frees = new ArrayList<>();
-        for (int r = 0; r < s.length; r++) {
+        for (int r = 0; r < workers.length; r++) {
             final DeepSeekModel.Session mine = s[r];
             frees.add(workers[r].submit(() -> {
                 mine.close();
+                return null;
+            }));
+        }
+        if (externalDraftModel != null && s.length > draftSlot && s[draftSlot] != null) {
+            final DeepSeekModel.Session extMine = s[draftSlot];
+            frees.add(externalDraftWorker.submit(() -> {
+                extMine.close();
                 return null;
             }));
         }
@@ -1178,10 +1417,16 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
         for (ExecutorService w : workers) {
             w.shutdownNow();
         }
+        if (externalDraftWorker != null) {
+            externalDraftWorker.shutdownNow();
+        }
         for (DeepSeekModel m : replicas) {
             if (m != null) {
                 m.close();
             }
+        }
+        if (externalDraftModel != null) {
+            externalDraftModel.close();
         }
         rowsSource.close();
         if (group != null) {

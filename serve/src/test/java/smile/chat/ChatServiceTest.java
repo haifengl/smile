@@ -261,4 +261,40 @@ public class ChatServiceTest {
             Files.deleteIfExists(dir);
         }
     }
+
+    @Test
+    public void testGivenAuxDeviceOverridesWhenResolvedThroughChatServiceThenAppliesExplicitAndAutoBalance() {
+        // Given — 2-GPU TP group with no overrides: auto-balances DSpark on rank 0, vision on rank 1
+        byte[] tp2 = {0, 1};
+        ChatServiceConfig defaultCfg = DynamicChatConfig.overlay(chatServiceConfig, "test-model", null);
+        var auto = ChatService.auxDevicePlacement(defaultCfg, tp2);
+        assertEquals(0, auto.dspark().device().index());
+        assertEquals(1, auto.vision().device().index());
+        assertFalse(auto.vision().explicit());
+        assertFalse(auto.dspark().explicit());
+
+        // When — explicit JSON overrides pin vision to external GPU 2 and DSpark to TP rank 1
+        ChatServiceConfig customCfg = DynamicChatConfig.overlay(
+                chatServiceConfig, "test-model",
+                new JsonObject().put("vision_device", 2).put("dspark_device", 1));
+        var custom = ChatService.auxDevicePlacement(customCfg, tp2);
+
+        // Then
+        assertEquals(2, custom.vision().device().index());
+        assertTrue(custom.vision().isExternal());
+        assertTrue(custom.vision().explicit());
+        assertEquals(1, custom.dspark().device().index());
+        assertEquals(1, custom.dspark().tpRank());
+        assertTrue(custom.dspark().explicit());
+
+        // And — camelCase alias works too
+        ChatServiceConfig camelCfg = DynamicChatConfig.overlay(
+                chatServiceConfig, "test-model",
+                new JsonObject().put("visionDevice", 0).put("dsparkDevice", 3));
+        var camel = ChatService.auxDevicePlacement(camelCfg, tp2);
+        assertEquals(0, camel.vision().device().index());
+        assertEquals(0, camel.vision().tpRank());
+        assertEquals(3, camel.dspark().device().index());
+        assertTrue(camel.dspark().isExternal());
+    }
 }

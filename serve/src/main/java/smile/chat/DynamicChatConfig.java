@@ -58,6 +58,25 @@ public final class DynamicChatConfig {
         return defaultValue;
     }
 
+    private static Optional<Integer> optOptionalInt(JsonObject json, JsonObject nested, Optional<Integer> defaultValue, String... keys) {
+        for (String k : keys) {
+            for (JsonObject src : new JsonObject[]{nested, json}) {
+                if (src != null && src.containsKey(k)) {
+                    Object val = src.getValue(k);
+                    if (val == null) return Optional.empty();
+                    if (val instanceof Number n) return Optional.of(n.intValue());
+                    String s = val.toString().trim();
+                    if (s.isEmpty()) return Optional.empty();
+                    try {
+                        return Optional.of(Integer.parseInt(s));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
+        }
+        return defaultValue;
+    }
+
     private static double optDouble(JsonObject json, JsonObject nested, double defaultValue, String... keys) {
         for (String k : keys) {
             if (nested != null && nested.containsKey(k)) {
@@ -118,6 +137,10 @@ public final class DynamicChatConfig {
         long admitCoalesceMs = (long) optDouble(overrides, nested, base.admitCoalesceMs(), "admit_coalesce_ms", "admitCoalesceMs", "admit-coalesce-ms");
         double memFractionStatic = optDouble(overrides, nested, base.memFractionStatic(), "mem_fraction_static", "memFractionStatic", "mem-fraction-static");
         String devices = optString(overrides, nested, base.devices(), "devices");
+        Optional<Integer> visionDevice = optOptionalInt(overrides, nested, base.visionDevice(),
+                "vision_device", "visionDevice", "vision-device", "vision.device");
+        Optional<Integer> dsparkDevice = optOptionalInt(overrides, nested, base.dsparkDevice(),
+                "dspark_device", "dsparkDevice", "dspark-device", "dspark.device");
         int tensorParallelSize = optInt(overrides, nested, base.tensorParallelSize(), "tensor_parallel_size", "tensorParallelSize", "tensor-parallel-size");
         int pipelineParallelSize = optInt(overrides, nested, base.pipelineParallelSize(), "pipeline_parallel_size", "pipelineParallelSize", "pipeline-parallel-size");
         int modelLoaderThreads = optInt(overrides, nested, base.modelLoaderThreads(), "model_loader_threads", "modelLoaderThreads", "model-loader-threads");
@@ -139,6 +162,8 @@ public final class DynamicChatConfig {
             @Override public long admitCoalesceMs() { return admitCoalesceMs; }
             @Override public double memFractionStatic() { return memFractionStatic; }
             @Override public String devices() { return devices; }
+            @Override public Optional<Integer> visionDevice() { return visionDevice; }
+            @Override public Optional<Integer> dsparkDevice() { return dsparkDevice; }
             @Override public int tensorParallelSize() { return tensorParallelSize; }
             @Override public int pipelineParallelSize() { return pipelineParallelSize; }
             @Override public int modelLoaderThreads() { return modelLoaderThreads; }

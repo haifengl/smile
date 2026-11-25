@@ -1322,15 +1322,26 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     /**
+     * Resolves auxiliary GPU placement (vision tower and DSpark draft) from {@link ChatServiceConfig}
+     * (falling back to JVM system properties, environment variables, and automatic multi-GPU balancing).
+     */
+    static smile.llm.parallel.AuxDevicePlacement auxDevicePlacement(ChatServiceConfig config, byte[] devices) {
+        return smile.llm.parallel.AuxDevicePlacement.resolve(
+                devices, config.visionDevice(), config.dsparkDevice());
+    }
+
+    /**
      * Loads GLM-5.3-Flash with its routed experts spread over {@code smile.chat.devices} (expert parallelism). The weights
      * come in the checkpoint's own FP8 format; {@code smile.chat.quantization} has no effect. One request slot of the
      * linear-attention state pools is reserved per batch entry ({@code smile.chat.max-batch-size}).
      */
     private LanguageModel buildGlm(String checkpointDir, ChatServiceConfig config) throws Exception {
         byte[] devices = parallelConfig(config).devices();
+        var placement = auxDevicePlacement(config, devices);
         logger.infof("Loading GLM-5.x from %s on %d device(s) for %d concurrent request(s)", checkpointDir, devices.length,
                 Math.max(1, config.maxBatchSize()));
-        return smile.llm.model.glm.Glm.build(checkpointDir, 0, config.maxSeqLen(), devices, Math.max(1, config.maxBatchSize()));
+        return smile.llm.model.glm.Glm.build(checkpointDir, 0, config.maxSeqLen(), devices,
+                Math.max(1, config.maxBatchSize()), placement);
     }
 
     /**
@@ -1370,10 +1381,11 @@ public class ChatService implements OpenAiModelContributor {
      */
     private LanguageModel buildInkling(String checkpointDir, ChatServiceConfig config) throws Exception {
         byte[] devices = parallelConfig(config).devices();
+        var placement = auxDevicePlacement(config, devices);
         if (devices.length > 1) {
             // Inkling-2-Small (594B) does not fit one GPU: attention by head and the experts by block over the devices
             logger.infof("Loading Inkling-2 from %s sharded over %d devices", checkpointDir, devices.length);
-            return smile.llm.model.inkling.InklingTp.build(checkpointDir, 0, config.maxSeqLen(), devices);
+            return smile.llm.model.inkling.InklingTp.build(checkpointDir, 0, config.maxSeqLen(), placement, devices);
         }
         smile.llm.model.inkling.InklingModelArgs args =
                 smile.llm.model.inkling.InklingModelArgs.fromCheckpoint(checkpointDir, config.maxSeqLen());
@@ -1382,7 +1394,7 @@ public class ChatService implements OpenAiModelContributor {
                     + "to shard it over (for example 0,1,2,3,4,5,6,7)");
         }
         logger.infof("Loading Inkling-2 from %s on device %d", checkpointDir, devices[0]);
-        return smile.llm.model.inkling.Inkling.build(checkpointDir, 0, config.maxSeqLen(), devices[0]);
+        return smile.llm.model.inkling.Inkling.build(checkpointDir, 0, config.maxSeqLen(), devices[0], placement);
     }
 
     /** Returns {@code true} when a Hugging Face repo id names a DeepSeek-V4 model. */
@@ -1396,8 +1408,9 @@ public class ChatService implements OpenAiModelContributor {
      */
     private LanguageModel buildDeepSeek(String checkpointDir, ChatServiceConfig config) throws Exception {
         byte[] devices = parallelConfig(config).devices();
+        var placement = auxDevicePlacement(config, devices);
         logger.infof("Loading DeepSeek-V4 from %s on %d device(s)", checkpointDir, devices.length);
-        return smile.llm.model.deepseek.DeepSeek.build(checkpointDir, 0, config.maxSeqLen(), devices);
+        return smile.llm.model.deepseek.DeepSeek.build(checkpointDir, 0, config.maxSeqLen(), devices, placement);
     }
 
     /**
@@ -1418,10 +1431,11 @@ public class ChatService implements OpenAiModelContributor {
                             + "(use auto, marlin, fp8 or dense)");
         };
         byte[] devices = parallelConfig(config).devices();
+        var placement = auxDevicePlacement(config, devices);
         logger.infof("Loading MiniMax-M3 from %s on %d device(s), weight mode %s",
                 checkpointDir, devices.length, weightMode == null ? "auto" : weightMode);
         return MiniMax.build(checkpointDir, config.maxBatchSize(), config.maxSeqLen(), devices,
-                memFraction, pageSize, weightMode, null, config.speculative());
+                memFraction, pageSize, weightMode, null, config.speculative(), placement);
     }
 
     /**
@@ -1486,7 +1500,7 @@ public class ChatService implements OpenAiModelContributor {
         Set<String> shards = resolveSafeTensorShards(checkpoint, repoId, revision);
         downloadSafeTensorShards(repoId, revision, shards, config.modelLoaderThreads());
 
-        downloadHuggingFaceSupportFiles(checkpoint, repoId, revision, config.modelLoaderThreads());
+        downloadHuggingFaceSupportFiles(checkpoint, repoId, revision, config.modelLoaderThreads(), config.speculative());
         return loadFromLocal(checkpoint, config, memFractionStatic, kvCacheDtype, pageSize);
     }
 
@@ -1550,7 +1564,8 @@ public class ChatService implements OpenAiModelContributor {
     /**
      * Downloads tokenizer and architecture-specific auxiliary files from Hugging Face Hub.
      */
-    private void downloadHuggingFaceSupportFiles(Path checkpoint, String repoId, String revision, int modelLoaderThreads)
+    private void downloadHuggingFaceSupportFiles(Path checkpoint, String repoId, String revision,
+                                                 int modelLoaderThreads, boolean speculative)
             throws IOException {
         if (isQwenCheckpoint(checkpoint)) {
             resolveHuggingFaceQwenTokenizer(repoId, revision, modelLoaderThreads);
@@ -1591,6 +1606,60 @@ public class ChatService implements OpenAiModelContributor {
                         optionalFiles, repoId, e.getMessage());
             }
         }
+        if (isMiniMaxCheckpoint(checkpoint) && speculative && !"0".equals(System.getenv("SMILE_MINIMAX_DSPARK"))) {
+            downloadMiniMaxDsparkFiles(checkpoint, repoId, revision, modelLoaderThreads);
+        }
+    }
+
+    /**
+     * Downloads the optional MiniMax DSpark draft directory ({@code dspark/config.json},
+     * {@code dspark/model.safetensors.index.json}, and its weight shards) into the pinned
+     * Hugging Face snapshot when present in the repository.
+     */
+    private void downloadMiniMaxDsparkFiles(Path checkpoint, String repoId, String revision, int modelLoaderThreads) {
+        Path configPath = checkpoint.resolve("dspark/config.json");
+        if (!Files.isRegularFile(configPath)) {
+            try {
+                configPath = downloadModelFile(repoId, revision, "dspark/config.json");
+                logger.infof("Downloaded DSpark draft config: %s", configPath);
+            } catch (FileNotFoundException e) {
+                logger.debugf("No dspark/config.json in %s at %s; skipping optional DSpark draft", repoId, revision);
+                return;
+            } catch (IOException e) {
+                logger.warnf("Could not fetch optional dspark/config.json for %s (%s); continuing without DSpark",
+                        repoId, e.getMessage());
+                return;
+            }
+        }
+        Path indexPath = checkpoint.resolve("dspark/model.safetensors.index.json");
+        if (!Files.isRegularFile(indexPath)) {
+            try {
+                indexPath = downloadModelFile(repoId, revision, "dspark/model.safetensors.index.json");
+                logger.infof("Downloaded DSpark draft index: %s", indexPath);
+            } catch (IOException e) {
+                logger.warnf("Could not fetch optional dspark/model.safetensors.index.json for %s (%s); continuing without DSpark",
+                        repoId, e.getMessage());
+                return;
+            }
+        }
+        try {
+            Set<String> dsparkShards = resolveMiniMaxDsparkShards(indexPath);
+            downloadSafeTensorShards(repoId, revision, dsparkShards, modelLoaderThreads);
+        } catch (IOException e) {
+            logger.warnf("Could not fetch optional DSpark draft shards for %s (%s); continuing without DSpark",
+                    repoId, e.getMessage());
+        }
+    }
+
+    /**
+     * Resolves repository-relative safetensors shard paths from a MiniMax {@code dspark/model.safetensors.index.json}.
+     */
+    static Set<String> resolveMiniMaxDsparkShards(Path dsparkIndexPath) throws IOException {
+        Set<String> shards = new LinkedHashSet<>();
+        for (String shard : parseSafeTensorIndex(dsparkIndexPath)) {
+            shards.add(shard.startsWith("dspark/") ? shard : "dspark/" + shard);
+        }
+        return shards;
     }
 
     /**

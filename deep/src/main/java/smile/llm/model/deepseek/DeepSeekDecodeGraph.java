@@ -285,6 +285,11 @@ final class DeepSeekDecodeGraph {
         return Dsv.narrow(logits, 0, 0, rows);
     }
 
+    /** The captured verify taps {@code [nb, targets * dim]}, or {@code null} if this rank does not capture taps. */
+    Tensor tap() {
+        return tap;
+    }
+
     /**
      * After the verify step: writes each compressor's unfinished group from the rows each sequence processed, puts the
      * accepted rows' main hidden states into the draft rings and keeps the last one as the draft's latest.

@@ -767,4 +767,40 @@ public class KvCachePoolTest {
             assertThrows(IllegalArgumentException.class, () -> pool.bindRequest(prompt, 64));
         }
     }
+
+    @Test
+    public void testGivenAsymmetricPerRankBudgetsWhenUniformSlotsComputedThenUsesPageAlignedMinimum() {
+        // Given — rank 1 hosts vision/DSpark and has fewer free slots than rank 0
+        int[] perRank = {4096, 3080, 4096, 3900};
+
+        // When
+        int uniform = KvCachePool.uniformSlots(perRank, 16);
+
+        // Then — min(3080) aligned down to pageSize=16 is 3072
+        assertEquals(3072, uniform);
+
+        // And — too-small rank fails fast
+        assertThrows(IllegalStateException.class,
+                () -> KvCachePool.uniformSlots(new int[]{4096, 8}, 16));
+        assertThrows(IllegalArgumentException.class,
+                () -> KvCachePool.uniformSlots(new int[0], 16));
+    }
+
+    @Test
+    public void testGivenEstimateBudgetAndAllocateSlotsWhenCalledOnCpuThenProducesUniformPool() {
+        // Given
+        KvCacheLayout layout = tinyLayout(2, 2, 32);
+
+        // When
+        KvCachePool.StaticKvBudget budget = KvCachePool.estimateBudget(
+                layout, Device.CPU(), ScalarType.Float, 0.85, 16);
+        int uniform = KvCachePool.uniformSlots(new int[]{budget.numSlots(), 48}, 16);
+        try (var pool = KvCachePool.allocateSlots(layout, uniform, Device.CPU(), ScalarType.Float, 16)) {
+            // Then
+            assertEquals(64, budget.numSlots());
+            assertEquals(48, uniform);
+            assertEquals(48, pool.numSlots());
+            assertEquals(48, pool.freeSlots());
+        }
+    }
 }

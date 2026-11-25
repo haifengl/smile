@@ -20,6 +20,7 @@ package smile.chat;
 import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 
 /**
  * Configuration for the LLM chat completion service.
@@ -133,6 +134,31 @@ public interface ChatServiceConfig {
      */
     @WithDefault("0")
     String devices();
+
+    /**
+     * Optional CUDA device index for the vision tower (supported by MiniMax,
+     * GLM-5.3, and Inkling-2; ignored with an info log when a checkpoint has
+     * no vision encoder). May be one of {@link #devices()} or an external GPU
+     * outside the TP group. When unset on multi-GPU setups, the vision tower
+     * is auto-balanced away from rank 0 (typically rank 1) so vision and DSpark
+     * do not compete for the same GPU's KV headroom.
+     *
+     * <p>Property: {@code smile.chat.vision.device} (env {@code SMILE_CHAT_VISION_DEVICE}).
+     */
+    @WithName("vision.device")
+    Optional<Integer> visionDevice();
+
+    /**
+     * Optional CUDA device index for the DSpark/speculative draft head (supported
+     * by MiniMax, DeepSeek-V4.1, and Inkling-2; GLM-5.3's MTP layer is TP/EP-sharded
+     * across {@link #devices()}). May be one of {@link #devices()} or an external GPU
+     * outside the TP group. When unset on multi-GPU setups, auto-balanced against
+     * {@link #visionDevice()} (typically rank 0).
+     *
+     * <p>Property: {@code smile.chat.dspark.device} (env {@code SMILE_CHAT_DSPARK_DEVICE}).
+     */
+    @WithName("dspark.device")
+    Optional<Integer> dsparkDevice();
 
     /**
      * Tensor-parallel size. When greater than 1 and {@link #devices()} has a

@@ -45,13 +45,15 @@ public final class DeepSeekModel implements AutoCloseable {
     private volatile boolean headMmUnavailable;
     private final List<DeepSeekBlock> blocks = new ArrayList<>();
     private final DeepSeekEngram.Hash engramHash;
-    /** The DSpark draft head, or {@code null} when the checkpoint has none or it is turned off ({@code SMILE_DS_DRAFT=0}). */
+    /** The DSpark draft head, or {@code null} when the checkpoint has none, it is turned off, or another rank hosts it. */
     private DeepSeekDraft draft;
+    /** Whether this replica captures target hidden-state taps for DSpark (locally or for an external draft GPU). */
+    private final boolean captureTaps;
     /** The main hidden states captured by the last {@link #forward} (for the draft), or {@code null}. */
     private Tensor tapOut;
 
     /**
-     * Loads the first {@code args.numLayers()} layers.
+     * Loads the first {@code args.numLayers()} layers (with DSpark draft if present).
      *
      * @param args       model arguments (use {@link DeepSeekModelArgs#slice} and {@link DeepSeekModelArgs#withMaxSeqLen}).
      * @param checkpoint the checkpoint directory.
@@ -60,6 +62,22 @@ public final class DeepSeekModel implements AutoCloseable {
      */
     DeepSeekModel(DeepSeekModelArgs args, Path checkpoint, java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows)
             throws IOException {
+        this(args, checkpoint, engramRows, true, false);
+    }
+
+    /**
+     * Loads the first {@code args.numLayers()} layers with explicit control over whether this replica
+     * hosts the DSpark draft and/or captures target hidden-state taps.
+     *
+     * @param args             model arguments.
+     * @param checkpoint       the checkpoint directory.
+     * @param engramRows       source of engram table rows by layer.
+     * @param loadDraft        whether this replica should load the DSpark draft head.
+     * @param captureExternal  whether this replica should capture target taps for an external draft GPU.
+     * @throws IOException if the checkpoint cannot be read.
+     */
+    DeepSeekModel(DeepSeekModelArgs args, Path checkpoint, java.util.function.IntFunction<DeepSeekEngram.Rows> engramRows,
+                  boolean loadDraft, boolean captureExternal) throws IOException {
         this.args = args;
         this.ck = new DeepSeekCheckpoint(checkpoint);
         this.embed = ck.dev("embed.weight");
@@ -77,9 +95,44 @@ public final class DeepSeekModel implements AutoCloseable {
         for (int i = 0; i < args.numLayers(); i++) {
             blocks.add(new DeepSeekBlock(args, ck, i, args.engramSlot(i) >= 0 ? engramRows.apply(i) : null));
         }
-        if (!"0".equals(System.getenv("SMILE_DS_DRAFT")) && DeepSeekDraft.available(args, ck)) {
+        if (loadDraft && !"0".equals(System.getenv("SMILE_DS_DRAFT")) && DeepSeekDraft.available(args, ck)) {
             this.draft = new DeepSeekDraft(args, ck);
         }
+        this.captureTaps = this.draft != null || captureExternal;
+    }
+
+    /**
+     * Loads a lightweight draft-only instance (embedding, final norm, output head, and DSpark draft —
+     * no transformer blocks or engram tables) for hosting DSpark on an external CUDA device.
+     */
+    static DeepSeekModel draftOnly(DeepSeekModelArgs args, Path checkpoint) throws IOException {
+        return new DeepSeekModel(args, checkpoint);
+    }
+
+    private DeepSeekModel(DeepSeekModelArgs args, Path checkpoint) throws IOException {
+        this.args = args;
+        this.ck = new DeepSeekCheckpoint(checkpoint);
+        this.engramHash = null;
+        if (!"0".equals(System.getenv("SMILE_DS_DRAFT")) && DeepSeekDraft.available(args, ck)) {
+            this.embed = ck.dev("embed.weight");
+            this.normWeight = ck.dev("norm.weight");
+            Tensor h0 = ck.dev("head.weight");
+            if (h0.dtype() == ScalarType.BFloat16 && Dsv.device().isCUDA()) {
+                this.headBf16 = h0;
+                this.head = null;
+            } else {
+                this.headBf16 = null;
+                this.head = DeepSeekOps.f32(h0);
+            }
+            this.draft = new DeepSeekDraft(args, ck);
+        } else {
+            this.embed = null;
+            this.normWeight = null;
+            this.headBf16 = null;
+            this.head = null;
+            this.draft = null;
+        }
+        this.captureTaps = false;
     }
 
     /** Whether this model has a DSpark draft head. */
@@ -218,7 +271,7 @@ public final class DeepSeekModel implements AutoCloseable {
     }
 
     private boolean isTap(int layer) {
-        if (draft == null) {
+        if (!captureTaps) {
             return false;
         }
         for (int t : args.dsparkTargetLayers()) {
@@ -263,7 +316,9 @@ public final class DeepSeekModel implements AutoCloseable {
                 lastTap = null;
             }
             draftPos = -1;
-            java.util.Arrays.fill(history, 0L);
+            if (history != null) {
+                java.util.Arrays.fill(history, 0L);
+            }
         }
 
         @Override
@@ -340,7 +395,7 @@ public final class DeepSeekModel implements AutoCloseable {
             one[i * hc] = 1f;
         }
         Tensor pre = Dsv.dev(Tensor.of(one, 1, ids.length, hc));
-        List<Tensor> taps = draft == null ? null : new ArrayList<>();
+        List<Tensor> taps = captureTaps ? new ArrayList<>() : null;
         for (DeepSeekBlock block : blocks) {
             if (trace != null) {
                 if (block.hasEngram()) {
@@ -420,7 +475,7 @@ public final class DeepSeekModel implements AutoCloseable {
             one[i * hc] = 1f;
         }
         Tensor pre = Dsv.dev(Tensor.of(one, 1, total, hc));
-        final List<Tensor> taps = draft == null ? null : new ArrayList<>();
+        final List<Tensor> taps = captureTaps ? new ArrayList<>() : null;
         for (DeepSeekBlock block : blocks) {
             final Tensor hin = h, pin = pre;
             final Tensor hs = hashes;
@@ -442,10 +497,14 @@ public final class DeepSeekModel implements AutoCloseable {
         }
         if (taps != null && !taps.isEmpty()) {
             Tensor tap = taps.size() == 1 ? taps.get(0) : Dsv.cat(-1, taps.toArray(new Tensor[0]));
-            int from = 0;
-            for (int i = 0; i < n; i++) {
-                seedDraft(sessions[i], o("aten::narrow", tap, 1L, (long) from, (long) lens[i]));
-                from += lens[i];
+            if (draft != null) {
+                int from = 0;
+                for (int i = 0; i < n; i++) {
+                    seedDraft(sessions[i], o("aten::narrow", tap, 1L, (long) from, (long) lens[i]));
+                    from += lens[i];
+                }
+            } else {
+                tapOut = tap;
             }
         }
         Tensor normed = DeepSeekOps.rmsNorm(DeepSeekBlock.hcPre(h, pre), normWeight, args.normEps());
@@ -493,7 +552,7 @@ public final class DeepSeekModel implements AutoCloseable {
         Tensor pre = Dsv.dev(Tensor.of(one, 1, n, hc));
         DeepSeekAttention.BatchShared batch = new DeepSeekAttention.BatchShared();
         tm = Dsv.tick("model.engram+embed", tm);
-        List<Tensor> taps = draft == null ? null : new ArrayList<>();
+        List<Tensor> taps = captureTaps ? new ArrayList<>() : null;
         for (DeepSeekBlock block : blocks) {
             if (block.hasEngram()) {
                 h = block.applyEngram(h, hashes);
@@ -602,7 +661,7 @@ public final class DeepSeekModel implements AutoCloseable {
         h = o("aten::repeat", h.unsqueeze(2), new long[]{1, 1, hc, 1});
         Tensor pre = pre0;
         DeepSeekAttention.BatchShared batch = new DeepSeekAttention.BatchShared();
-        List<Tensor> taps = aux && draft != null ? new ArrayList<>() : null;
+        List<Tensor> taps = aux && captureTaps ? new ArrayList<>() : null;
         Dsv.stamp("model.embed");
         for (DeepSeekBlock block : blocks) {
             if (block.hasEngram()) {

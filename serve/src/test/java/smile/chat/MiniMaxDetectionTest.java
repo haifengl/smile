@@ -115,4 +115,21 @@ public class MiniMaxDetectionTest {
                 ChatService.resolveSafeTensorShards(snapshot, "nonexistent-org/nonexistent-model",
                         "7a67ae2314b44ef05c87fd1d4d311c58aaeb18f6"));
     }
+
+    @Test
+    public void testGivenMiniMaxDsparkIndexWhenResolvedThenPrefixesDsparkSubfolder() throws IOException {
+        Path dsparkDir = Files.createDirectories(dir.resolve("m3/dspark"));
+        Path index = dsparkDir.resolve("model.safetensors.index.json");
+        Files.writeString(index, """
+                {
+                  "weight_map": {
+                    "language_model.model.dspark.fc.weight": "model-dspark-00001.safetensors",
+                    "language_model.model.dspark.final_norm.weight": "model-dspark-00001.safetensors",
+                    "language_model.model.dspark.extra.weight": "dspark/model-dspark-00002.safetensors"
+                  }
+                }
+                """);
+        assertEquals(java.util.Set.of("dspark/model-dspark-00001.safetensors", "dspark/model-dspark-00002.safetensors"),
+                ChatService.resolveMiniMaxDsparkShards(index));
+    }
 }
