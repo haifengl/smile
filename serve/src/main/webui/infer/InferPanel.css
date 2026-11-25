@@ -46,8 +46,8 @@
 }
 
 .infer-batch {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
+  margin-top: 0.75rem;
+  padding-top: 1.1rem;
   border-top: 1px solid var(--border);
 }
 
@@ -208,7 +208,7 @@
 }
 
 .infer-action-footer {
-  margin-top: 0.5rem;
+  margin-top: 0;
 }
 
 .infer-file-row {

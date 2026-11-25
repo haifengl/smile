@@ -15,7 +15,7 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import {
@@ -41,6 +41,7 @@ import InferActionFooter from "./InferActionFooter";
 import "./InferPanel.css";
 
 function OnnxForm({ modelId, versions = [], defaultVersion = null }) {
+  const formIdPrefix = `onnx_${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [selectedVersion, setSelectedVersion] = useState("");
   const [info, setInfo] = useState(null);
   const [mode, setMode] = useState("auto");
@@ -507,6 +508,7 @@ function OnnxForm({ modelId, versions = [], defaultVersion = null }) {
           ) : (
             numericSchema && (
               <Form
+                idPrefix={formIdPrefix}
                 schema={numericSchema.schema}
                 uiSchema={numericSchema.uiSchema}
                 validator={validator}

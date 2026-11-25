@@ -68,7 +68,8 @@
   margin-bottom: 0.85rem;
 }
 
-.rjsf .form-group:last-child {
+.rjsf .form-group:last-child,
+.rjsf > .form-group {
   margin-bottom: 0;
 }
 

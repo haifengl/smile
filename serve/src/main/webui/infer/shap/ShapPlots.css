@@ -69,7 +69,7 @@
 
 .shap-svg-wrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow: hidden;
   background: var(--bg-base);
   border: 1px solid var(--border);
   border-radius: 0.65rem;
@@ -77,6 +77,8 @@
 
 .shap-plot-svg {
   display: block;
+  width: 100%;
+  height: auto;
   user-select: none;
 }
 

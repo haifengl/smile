@@ -15,7 +15,7 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import Form from "@rjsf/core";
 import validator from "@rjsf/validator-ajv8";
 import {
@@ -86,6 +86,7 @@ function schemaKeys(model, onlineMode = false) {
 }
 
 function SmileForm({ modelId, versions = [], defaultVersion = null }) {
+  const formIdPrefix = `smile_${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [selectedVersion, setSelectedVersion] = useState("");
   const [modelMeta, setModelMeta] = useState(null);
   const [schema, setSchema] = useState(null);
@@ -420,6 +421,7 @@ function SmileForm({ modelId, versions = [], defaultVersion = null }) {
             </div>
           )}
           <Form
+            idPrefix={formIdPrefix}
             schema={schema}
             validator={validator}
             formData={formData}

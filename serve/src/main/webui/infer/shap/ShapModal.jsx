@@ -74,7 +74,12 @@ export default function ShapModal({
       return undefined;
     }
     const updateWidth = () => {
-      const w = el.clientWidth - 28;
+      const style = getComputedStyle(el);
+      const padX =
+        (parseFloat(style.paddingLeft) || 0) +
+        (parseFloat(style.paddingRight) || 0);
+      // Subtract container padding and .shap-svg-wrapper 1px left/right border
+      const w = el.clientWidth - padX - 2;
       if (w > 240) {
         setPlotWidth(Math.max(420, Math.floor(w)));
       }
