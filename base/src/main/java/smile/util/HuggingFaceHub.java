@@ -285,13 +285,37 @@ public class HuggingFaceHub {
             return Map.of();
         }
 
-        int poolSize = resolveConcurrency(threads, fileList.size());
-        if (poolSize <= 1) {
-            Map<String, Path> results = new LinkedHashMap<>();
+        Map<String, Path> cachedHits = new LinkedHashMap<>();
+        List<String> uncached = new ArrayList<>();
+        if (forceDownload) {
+            uncached.addAll(fileList);
+        } else {
+            String prefix = (subfolder != null && !subfolder.isBlank())
+                    ? subfolder.replace('\\', '/') + "/"
+                    : "";
             for (String file : fileList) {
+                String effectiveFile = prefix.isEmpty() ? file : prefix + file.replace('\\', '/');
+                Optional<Path> hit = tryLoadFromCache(repoId, effectiveFile, repoType, revision, cacheDir);
+                if (hit.isPresent()) {
+                    cachedHits.put(file, hit.get());
+                } else {
+                    uncached.add(file);
+                }
+            }
+        }
+
+        if (uncached.isEmpty()) {
+            logger.debug("All {} file(s) for {} found in local cache", fileList.size(), repoId);
+            return cachedHits;
+        }
+
+        Map<String, Path> downloaded = new LinkedHashMap<>();
+        int poolSize = resolveConcurrency(threads, uncached.size());
+        if (poolSize <= 1) {
+            for (String file : uncached) {
                 try {
                     Path path = download(repoId, file, repoType, revision, subfolder, cacheDir, forceDownload, localFilesOnly);
-                    results.put(file, path);
+                    downloaded.put(file, path);
                 } catch (FileNotFoundException e) {
                     if (ignoreMissing) {
                         logger.warn("Optional file missing on {}: {}", repoId, file);
@@ -300,41 +324,54 @@ public class HuggingFaceHub {
                     }
                 }
             }
-            return results;
+        } else {
+            if (ignoreMissing) {
+                logger.debug("Checking {} optional file(s) from {} with {} threads", uncached.size(), repoId, poolSize);
+            } else {
+                logger.info("Downloading {} file(s) from {} with {} threads", uncached.size(), repoId, poolSize);
+            }
+            ExecutorService pool = Executors.newFixedThreadPool(poolSize,
+                    Thread.ofPlatform().name("hf-download-", 0).daemon().factory());
+            try {
+                Map<String, Future<Path>> futures = new LinkedHashMap<>();
+                for (String file : uncached) {
+                    futures.put(file, pool.submit(() -> download(repoId, file, repoType, revision, subfolder, cacheDir, forceDownload, localFilesOnly)));
+                }
+                for (Map.Entry<String, Future<Path>> entry : futures.entrySet()) {
+                    String file = entry.getKey();
+                    try {
+                        downloaded.put(file, entry.getValue().get());
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Download interrupted for: " + repoId + "/" + file, e);
+                    } catch (ExecutionException e) {
+                        Throwable cause = e.getCause() != null ? e.getCause() : e;
+                        if (ignoreMissing && cause instanceof FileNotFoundException) {
+                            logger.warn("Optional file missing on {}: {}", repoId, file);
+                            continue;
+                        }
+                        if (cause instanceof IOException ioe) {
+                            throw ioe;
+                        }
+                        throw new IOException("Download failed for " + repoId + "/" + file, cause);
+                    }
+                }
+            } finally {
+                pool.shutdownNow();
+            }
         }
 
-        logger.info("Downloading {} file(s) from {} with {} threads", fileList.size(), repoId, poolSize);
-        ExecutorService pool = Executors.newFixedThreadPool(poolSize,
-                Thread.ofPlatform().name("hf-download-", 0).daemon().factory());
-        try {
-            Map<String, Future<Path>> futures = new LinkedHashMap<>();
-            for (String file : fileList) {
-                futures.put(file, pool.submit(() -> download(repoId, file, repoType, revision, subfolder, cacheDir, forceDownload, localFilesOnly)));
+        Map<String, Path> results = new LinkedHashMap<>();
+        for (String file : fileList) {
+            Path path = cachedHits.get(file);
+            if (path == null) {
+                path = downloaded.get(file);
             }
-            Map<String, Path> results = new LinkedHashMap<>();
-            for (Map.Entry<String, Future<Path>> entry : futures.entrySet()) {
-                String file = entry.getKey();
-                try {
-                    results.put(file, entry.getValue().get());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    throw new IOException("Download interrupted for: " + repoId + "/" + file, e);
-                } catch (ExecutionException e) {
-                    Throwable cause = e.getCause() != null ? e.getCause() : e;
-                    if (ignoreMissing && cause instanceof FileNotFoundException) {
-                        logger.warn("Optional file missing on {}: {}", repoId, file);
-                        continue;
-                    }
-                    if (cause instanceof IOException ioe) {
-                        throw ioe;
-                    }
-                    throw new IOException("Download failed for " + repoId + "/" + file, cause);
-                }
+            if (path != null) {
+                results.put(file, path);
             }
-            return results;
-        } finally {
-            pool.shutdownNow();
         }
+        return results;
     }
 
     /**
@@ -1112,6 +1149,18 @@ public class HuggingFaceHub {
     }
 
     /**
+     * Returns the expected local path for a cached model file on the {@code "main"}
+     * revision <em>without</em> making any network request.
+     *
+     * @param repoId   the repository identifier ({@code "owner/name"}).
+     * @param filename the file path inside the repository.
+     * @return an {@link Optional} containing the cached path, or empty.
+     */
+    public static Optional<Path> tryLoadFromCache(String repoId, String filename) {
+        return tryLoadFromCache(repoId, filename, RepoType.MODEL, "main", null);
+    }
+
+    /**
      * Returns the expected local path for a cached file <em>without</em> making
      * any network request. Returns an empty {@link Optional} if the file is not
      * currently cached.
@@ -1128,9 +1177,9 @@ public class HuggingFaceHub {
                                                    RepoType repoType,
                                                    String revision,
                                                    Path cacheDir) {
-        if (repoId == null || filename == null) return Optional.empty();
+        if (repoId == null || repoId.isBlank() || filename == null || filename.isBlank()) return Optional.empty();
         if (repoType == null) repoType = RepoType.MODEL;
-        if (revision == null) revision = "main";
+        if (revision == null || revision.isBlank()) revision = "main";
 
         Path cache = resolveCacheDir(cacheDir);
         String repoCacheName = repoType.cachePrefix() + "--" + repoId.replace("/", "--");
@@ -1138,10 +1187,10 @@ public class HuggingFaceHub {
         Path snapshotsDir = repoCache.resolve("snapshots");
         Path refsDir      = repoCache.resolve("refs");
 
-        // If revision is a commit hash, look it up directly.
+        // If revision is a commit hash, look it up directly (normalized to lowercase).
         if (isCommitHash(revision)) {
-            Path p = snapshotsDir.resolve(revision).resolve(filename);
-            return Files.exists(p) ? Optional.of(p) : Optional.empty();
+            Path p = snapshotsDir.resolve(revision.toLowerCase(Locale.ROOT)).resolve(filename);
+            return isUsableCachedFile(p) ? Optional.of(p) : Optional.empty();
         }
 
         // Resolve branch/tag → commit via the refs/ cache.
@@ -1150,8 +1199,9 @@ public class HuggingFaceHub {
 
         try {
             String commitHash = Files.readString(refFile, StandardCharsets.UTF_8).strip();
+            if (commitHash.isEmpty()) return Optional.empty();
             Path p = snapshotsDir.resolve(commitHash).resolve(filename);
-            return Files.exists(p) ? Optional.of(p) : Optional.empty();
+            return isUsableCachedFile(p) ? Optional.of(p) : Optional.empty();
         } catch (IOException e) {
             return Optional.empty();
         }

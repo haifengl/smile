@@ -632,12 +632,53 @@ public class HuggingFaceHubTest {
             Optional<Path> hit = HuggingFaceHub.tryLoadFromCache(
                     "owner/ucmodel", "config.json",
                     HuggingFaceHub.RepoType.MODEL, upperHash, cacheDir);
-            // Note: tryLoadFromCache does path resolution via isCommitHash then resolve();
-            // the snapshot dir was created in lowercase, so if the hash is not normalized
-            // the lookup will miss. This test documents the expected behavior.
-            // After the fix, isCommitHash accepts uppercase and the caller normalizes.
             assertTrue(HuggingFaceHub.isCommitHash(upperHash),
                     "isCommitHash must accept uppercase hex commit hashes");
+            assertTrue(hit.isPresent(), "tryLoadFromCache must normalize uppercase commit hashes");
+            assertEquals(snapshotFile, hit.get());
+        } finally {
+            deleteRecursively(cacheDir);
+        }
+    }
+
+    @Test
+    public void testGivenCachedSnapshotWhenDownloadFilesWithNetworkEnabledThenReturnsFastWithoutNetwork() throws Exception {
+        // Given a local HF cache containing two shards on main
+        Path cacheDir = Files.createTempDirectory("smile-hf-fast-");
+        try {
+            String repoId = "Qwen/Qwen3.8-27B";
+            String commitHash = "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0";
+
+            Path repoCache = cacheDir.resolve("models--Qwen--Qwen3.8-27B");
+            Path snapshotsDir = repoCache.resolve("snapshots").resolve(commitHash);
+            Path refsDir = repoCache.resolve("refs");
+            Files.createDirectories(snapshotsDir);
+            Files.createDirectories(refsDir);
+
+            Path shard1 = snapshotsDir.resolve("model-00001-of-00002.safetensors");
+            Path shard2 = snapshotsDir.resolve("model-00002-of-00002.safetensors");
+            Files.writeString(shard1, "s1", StandardCharsets.UTF_8);
+            Files.writeString(shard2, "s2", StandardCharsets.UTF_8);
+            Files.writeString(refsDir.resolve("main"), commitHash, StandardCharsets.UTF_8);
+
+            // When downloadFiles is called with localFilesOnly=false and multiple threads
+            Map<String, Path> result = HuggingFaceHub.downloadFiles(
+                    repoId,
+                    List.of("model-00002-of-00002.safetensors", "model-00001-of-00002.safetensors"),
+                    HuggingFaceHub.RepoType.MODEL,
+                    "main",
+                    null,
+                    cacheDir,
+                    false,
+                    false,
+                    4,
+                    false);
+
+            // Then all cached paths are returned in requested order without contacting the Hub
+            assertEquals(List.of("model-00002-of-00002.safetensors", "model-00001-of-00002.safetensors"),
+                    new java.util.ArrayList<>(result.keySet()));
+            assertEquals(shard2, result.get("model-00002-of-00002.safetensors"));
+            assertEquals(shard1, result.get("model-00001-of-00002.safetensors"));
         } finally {
             deleteRecursively(cacheDir);
         }
