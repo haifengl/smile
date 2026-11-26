@@ -94,9 +94,41 @@ public class GoogleOAuthService {
         return Optional.empty();
     }
 
+    /**
+     * Resolves Google OAuth 2.0 credentials valid for the given request {@code origin}.
+     * Built-in Desktop OAuth credentials from {@code OAuthClientVault} are restricted to
+     * RFC 8252 plain-HTTP loopback redirect URIs ({@code localhost}, {@code 127.0.0.1}, {@code ::1})
+     * because Google rejects non-loopback or HTTPS redirect URIs on Desktop clients.
+     *
+     * @param origin browser-facing request origin (scheme + host + optional port).
+     * @return credentials usable for {@code origin}, or empty if unavailable.
+     */
+    public Optional<ChatAgentBridge.OAuthAppCredentials> resolveCredentials(String origin) {
+        Optional<ChatAgentBridge.OAuthAppCredentials> resolved = resolveCredentials();
+        if (resolved.isEmpty()) {
+            return Optional.empty();
+        }
+        ChatAgentBridge.OAuthAppCredentials creds = resolved.get();
+        if (creds.builtIn() && !isLoopbackRedirectUri(resolveRedirectUri(origin))) {
+            return Optional.empty();
+        }
+        return resolved;
+    }
+
     /** {@code true} when Google OAuth credentials are available (explicitly or via built-in vault). */
     public boolean isEnabled() {
         return resolveCredentials().isPresent();
+    }
+
+    /**
+     * {@code true} when Google OAuth credentials are usable for the given request {@code origin}.
+     * Returns {@code false} on remote or HTTPS origins when only built-in Desktop credentials exist.
+     *
+     * @param origin browser-facing request origin.
+     * @return {@code true} if Google login can succeed for {@code origin}.
+     */
+    public boolean isEnabled(String origin) {
+        return resolveCredentials(origin).isPresent();
     }
 
     /**
@@ -120,8 +152,8 @@ public class GoogleOAuthService {
      * @return redirect URI.
      */
     public URI authorizationRedirect(String origin, String state, String codeVerifier) {
-        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials()
-                .orElseThrow(() -> new IllegalStateException("Google OAuth is not configured"));
+        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials(origin)
+                .orElseThrow(() -> new IllegalStateException("Google OAuth is not configured for origin: " + origin));
         String redirect = resolveRedirectUri(origin);
         boolean requestAgentScopes = agentBridge != null && agentBridge.isAvailable();
         String scopes = requestAgentScopes ? UNIFIED_SCOPES : "openid email profile";
@@ -163,8 +195,8 @@ public class GoogleOAuthService {
      * @return Google profile fields and OAuth tokens.
      */
     public GoogleProfile exchangeCode(String origin, String code, String codeVerifier) {
-        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials()
-                .orElseThrow(() -> new IllegalStateException("Google OAuth is not configured"));
+        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials(origin)
+                .orElseThrow(() -> new IllegalStateException("Google OAuth is not configured for origin: " + origin));
         String redirect = resolveRedirectUri(origin);
         StringBuilder body = new StringBuilder()
                 .append("code=").append(enc(code))
@@ -247,9 +279,45 @@ public class GoogleOAuthService {
         }
     }
 
+    /**
+     * Returns {@code true} when {@code redirectUri} is an RFC 8252 plain-HTTP
+     * loopback URI ({@code http://localhost[:port]/...}, {@code http://127.0.0.1[:port]/...},
+     * or {@code http://[::1][:port]/...}). Built-in Desktop / PublicClient credentials
+     * from {@code OAuthClientVault} only work with loopback redirect URIs; remote or
+     * HTTPS origins require an explicit Web OAuth client configuration.
+     *
+     * @param redirectUri resolved OAuth callback URI.
+     * @return {@code true} if the URI uses {@code http} with a loopback host.
+     */
+    public static boolean isLoopbackRedirectUri(String redirectUri) {
+        if (redirectUri == null || redirectUri.isBlank()) {
+            return false;
+        }
+        try {
+            URI uri = URI.create(redirectUri.trim());
+            if (!"http".equalsIgnoreCase(uri.getScheme())) {
+                return false;
+            }
+            String host = uri.getHost();
+            if (host == null || host.isBlank()) {
+                return false;
+            }
+            String lower = host.toLowerCase(java.util.Locale.ROOT);
+            return "localhost".equals(lower)
+                    || "127.0.0.1".equals(lower)
+                    || "::1".equals(lower)
+                    || "[::1]".equals(lower);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     private String resolveRedirectUri(String origin) {
         if (config != null && config.googleRedirectUri() != null && !config.googleRedirectUri().isBlank()) {
             return config.googleRedirectUri();
+        }
+        if (origin == null || origin.isBlank()) {
+            return "";
         }
         return origin + "/api/v1/auth/callback/google";
     }

@@ -76,7 +76,7 @@ public class AuthResource {
      */
     @GET
     @Path("/me")
-    public AuthMeResponse me() {
+    public AuthMeResponse me(@Context ContainerRequestContext requestContext) {
         if (isOidcActive()) {
             String label = oidcAuthProvider.displayName();
             if (!authContext.isLoggedIn()) {
@@ -94,8 +94,9 @@ public class AuthResource {
             return AuthMeResponse.of(user, agentMode, false, false, true, true, label);
         }
 
-        boolean googleEnabled = googleOAuth != null && googleOAuth.isEnabled();
-        boolean microsoftEnabled = microsoftOAuth != null && microsoftOAuth.isEnabled();
+        String origin = requestContext != null ? origin(requestContext) : "";
+        boolean googleEnabled = googleOAuth != null && googleOAuth.isEnabled(origin);
+        boolean microsoftEnabled = microsoftOAuth != null && microsoftOAuth.isEnabled(origin);
         if (!authContext.isLoggedIn()) {
             return AuthMeResponse.guest(googleEnabled, microsoftEnabled);
         }
@@ -262,13 +263,23 @@ public class AuthResource {
         if (isOidcActive()) {
             return consumerProviderDisabled();
         }
-        if (!googleOAuth.isEnabled()) {
+        String origin = origin(requestContext);
+        if (!googleOAuth.isEnabled(origin)) {
+            if (googleOAuth.isEnabled()) {
+                LOG.warnf("Google OAuth login blocked for non-loopback origin %s: "
+                        + "built-in Desktop client only supports http://localhost / 127.0.0.1; "
+                        + "configure Web OAuth credentials via smile.auth.google.client-id and smile.auth.google.client-secret",
+                        origin);
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                        .entity("{\"error\":\"Google Web OAuth client is not configured for remote or HTTPS origins\"}")
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("{\"error\":\"Google login is not configured\"}")
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
-        String origin = origin(requestContext);
         String state = googleOAuth.newState();
         String codeVerifier = googleOAuth.newCodeVerifier();
         String returnPath = OAuthReturnPath.normalize(returnTo);
@@ -299,15 +310,16 @@ public class AuthResource {
         if (isOidcActive()) {
             return consumerProviderDisabled();
         }
+        String origin = origin(requestContext);
         var stateCookie = requestContext.getCookies().get(AuthFilter.OAUTH_STATE_COOKIE);
         if (stateCookie == null || state == null || !constantTimeEquals(state, stateCookie.getValue())) {
-            if (!googleOAuth.isEnabled()) {
+            if (!googleOAuth.isEnabled(origin)) {
                 return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
             }
             LOG.warn("Google OAuth state mismatch");
             return Response.status(Response.Status.BAD_REQUEST).entity("Invalid OAuth state").build();
         }
-        if (!googleOAuth.isEnabled()) {
+        if (!googleOAuth.isEnabled(origin)) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
         }
         if (code == null || code.isBlank()) {
@@ -318,7 +330,7 @@ public class AuthResource {
         boolean secure = isSecure(requestContext);
         try {
             GoogleOAuthService.GoogleProfile profile =
-                    googleOAuth.exchangeCode(origin(requestContext), code, codeVerifier);
+                    googleOAuth.exchangeCode(origin, code, codeVerifier);
             User user = userService.upsertGoogleUser(
                     profile.sub(), profile.email(), profile.name(), profile.picture());
             userService.mergeGuestConversations(user.id,
@@ -362,13 +374,23 @@ public class AuthResource {
         if (isOidcActive()) {
             return consumerProviderDisabled();
         }
-        if (!microsoftOAuth.isEnabled()) {
+        String origin = origin(requestContext);
+        if (!microsoftOAuth.isEnabled(origin)) {
+            if (microsoftOAuth.isEnabled()) {
+                LOG.warnf("Microsoft OAuth login blocked for non-loopback origin %s: "
+                        + "built-in PublicClient app only supports http://localhost / 127.0.0.1; "
+                        + "configure Web OAuth credentials via smile.auth.microsoft.client-id",
+                        origin);
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                        .entity("{\"error\":\"Microsoft Web OAuth client is not configured for remote or HTTPS origins\"}")
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("{\"error\":\"Microsoft login is not configured\"}")
                     .type(MediaType.APPLICATION_JSON)
                     .build();
         }
-        String origin = origin(requestContext);
         String state = microsoftOAuth.newState();
         String codeVerifier = googleOAuth.newCodeVerifier();
         String returnPath = OAuthReturnPath.normalize(returnTo);
@@ -399,15 +421,16 @@ public class AuthResource {
         if (isOidcActive()) {
             return consumerProviderDisabled();
         }
+        String origin = origin(requestContext);
         var stateCookie = requestContext.getCookies().get(AuthFilter.OAUTH_STATE_COOKIE);
         if (stateCookie == null || state == null || !constantTimeEquals(state, stateCookie.getValue())) {
-            if (!microsoftOAuth.isEnabled()) {
+            if (!microsoftOAuth.isEnabled(origin)) {
                 return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
             }
             LOG.warn("Microsoft OAuth state mismatch");
             return Response.status(Response.Status.BAD_REQUEST).entity("Invalid OAuth state").build();
         }
-        if (!microsoftOAuth.isEnabled()) {
+        if (!microsoftOAuth.isEnabled(origin)) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
         }
         if (code == null || code.isBlank()) {
@@ -418,7 +441,7 @@ public class AuthResource {
         boolean secure = isSecure(requestContext);
         try {
             MicrosoftOAuthService.MicrosoftProfile profile =
-                    microsoftOAuth.exchangeCode(origin(requestContext), code, codeVerifier);
+                    microsoftOAuth.exchangeCode(origin, code, codeVerifier);
             User user = userService.upsertMicrosoftUser(
                     profile.sub(), profile.email(), profile.name(), null);
             userService.mergeGuestConversations(user.id,
@@ -533,14 +556,23 @@ public class AuthResource {
                 b.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String origin(ContainerRequestContext requestContext) {
+    private String origin(ContainerRequestContext requestContext) {
         URI uri = requestContext.getUriInfo().getRequestUri();
         String scheme = uri.getScheme();
         String forwardedProto = requestContext.getHeaderString("X-Forwarded-Proto");
         if (forwardedProto != null && !forwardedProto.isBlank()) {
             scheme = forwardedProto.split(",")[0].trim();
         }
-        String host = requestContext.getHeaderString(HttpHeaders.HOST);
+        String host = null;
+        if (authConfig != null && authConfig.trustForwardedHeaders()) {
+            String forwardedHost = requestContext.getHeaderString("X-Forwarded-Host");
+            if (forwardedHost != null && !forwardedHost.isBlank()) {
+                host = forwardedHost.split(",")[0].trim();
+            }
+        }
+        if (host == null || host.isBlank()) {
+            host = requestContext.getHeaderString(HttpHeaders.HOST);
+        }
         if (host == null || host.isBlank()) {
             host = uri.getHost();
             int port = uri.getPort();
@@ -554,7 +586,7 @@ public class AuthResource {
     /**
      * Absolute URI for the Quinoa-hosted SPA route chosen at login.
      */
-    private static URI postLoginUri(ContainerRequestContext requestContext) {
+    private URI postLoginUri(ContainerRequestContext requestContext) {
         var cookies = requestContext.getCookies();
         var returnCookie = cookies != null ? cookies.get(AuthFilter.OAUTH_RETURN_COOKIE) : null;
         String path = returnCookie != null ? returnCookie.getValue() : null;

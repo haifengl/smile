@@ -34,14 +34,35 @@ public class AuthResourceTest {
     }
 
     @Test
-    public void testGivenRemoteHostWhenMeThenGuest() {
+    public void testGivenRemoteHostWhenMeThenGuestAndBuiltInOAuthDisabled() {
         given()
             .header("Host", "example.com")
             .when().get("/api/v1/auth/me")
             .then()
                 .statusCode(200)
                 .body("logged_in", equalTo(false))
-                .body("agent_mode", equalTo(false));
+                .body("agent_mode", equalTo(false))
+                .body("google_enabled", equalTo(false))
+                .body("microsoft_enabled", equalTo(false));
+    }
+
+    @Test
+    public void testGivenReverseProxiedHttpsHostWithoutWebClientWhenLoginThenServiceUnavailable() {
+        given()
+            .header("Host", "s3.octo.equinix.com")
+            .header("X-Forwarded-Proto", "https")
+            .redirects().follow(false)
+            .when().get("/api/v1/auth/login/google")
+            .then()
+                .statusCode(503);
+
+        given()
+            .header("Host", "s3.octo.equinix.com")
+            .header("X-Forwarded-Proto", "https")
+            .redirects().follow(false)
+            .when().get("/api/v1/auth/login/microsoft")
+            .then()
+                .statusCode(503);
     }
 
     @Test

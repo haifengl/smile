@@ -30,6 +30,8 @@ export default function ChatNavSidebar({
     user,
     loggedIn,
     agentMode,
+    googleEnabled,
+    microsoftEnabled,
     oidcEnabled,
     ssoRequired,
     oidcLabel,
@@ -216,16 +218,20 @@ export default function ChatNavSidebar({
                       Log out
                     </button>
                   </div>
-                  {isLocalMe && (
+                  {isLocalMe && (googleEnabled || microsoftEnabled) && (
                     <div className="chat-nav__login-group chat-nav__login-group--compact">
-                      <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
-                        <GoogleIcon className="chat-nav__login-icon" />
-                        Login with Google
-                      </button>
-                      <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
-                        <MicrosoftIcon className="chat-nav__login-icon" />
-                        Login with Microsoft
-                      </button>
+                      {googleEnabled && (
+                        <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
+                          <GoogleIcon className="chat-nav__login-icon" />
+                          Login with Google
+                        </button>
+                      )}
+                      {microsoftEnabled && (
+                        <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
+                          <MicrosoftIcon className="chat-nav__login-icon" />
+                          Login with Microsoft
+                        </button>
+                      )}
                     </div>
                   )}
                 </>
@@ -247,22 +253,30 @@ export default function ChatNavSidebar({
                     </>
                   )}
                 </>
-              ) : (
+              ) : googleEnabled || microsoftEnabled ? (
                 <>
                   <p className="chat-nav__hint">
                     Sign in to browse history, pin chats, and activate Kirin personal assistant.
                   </p>
                   <div className="chat-nav__login-group">
-                    <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
-                      <GoogleIcon className="chat-nav__login-icon" />
-                      Login with Google
-                    </button>
-                    <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
-                      <MicrosoftIcon className="chat-nav__login-icon" />
-                      Login with Microsoft
-                    </button>
+                    {googleEnabled && (
+                      <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
+                        <GoogleIcon className="chat-nav__login-icon" />
+                        Login with Google
+                      </button>
+                    )}
+                    {microsoftEnabled && (
+                      <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
+                        <MicrosoftIcon className="chat-nav__login-icon" />
+                        Login with Microsoft
+                      </button>
+                    )}
                   </div>
                 </>
+              ) : (
+                <p className="chat-nav__hint">
+                  Chatting in guest mode. Sign-in is not configured for this server.
+                </p>
               )}
             </div>
           </div>

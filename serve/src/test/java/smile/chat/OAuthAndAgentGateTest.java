@@ -280,6 +280,95 @@ public class OAuthAndAgentGateTest {
     }
 
     @Test
+    public void testGivenBuiltInVaultCredentialsWhenOriginIsRemoteOrHttpsThenLoopbackGuardBlocksFallback() throws Exception {
+        // Given — loopback check utility handles HTTP loopback vs HTTPS / remote hosts
+        assertTrue(GoogleOAuthService.isLoopbackRedirectUri("http://localhost:8080/api/v1/auth/callback/google"));
+        assertTrue(GoogleOAuthService.isLoopbackRedirectUri("http://127.0.0.1:8888/api/v1/auth/callback/google"));
+        assertTrue(GoogleOAuthService.isLoopbackRedirectUri("http://[::1]:8888/api/v1/auth/callback/google"));
+        assertFalse(GoogleOAuthService.isLoopbackRedirectUri("https://localhost:8080/api/v1/auth/callback/google"));
+        assertFalse(GoogleOAuthService.isLoopbackRedirectUri("https://127.0.0.1:8888/api/v1/auth/callback/google"));
+        assertFalse(GoogleOAuthService.isLoopbackRedirectUri("https://s3.octo.equinix.com/api/v1/auth/callback/google"));
+        assertFalse(GoogleOAuthService.isLoopbackRedirectUri("http://192.168.1.50:8888/api/v1/auth/callback/google"));
+        assertFalse(GoogleOAuthService.isLoopbackRedirectUri("http://localhost.evil.com/api/v1/auth/callback/google"));
+
+        // Given — built-in Desktop / PublicClient credentials from OAuthClientVault
+        ChatAgentBridge builtInBridge = new ChatAgentBridge() {
+            @Override
+            public boolean isAvailable() {
+                return true;
+            }
+
+            @Override
+            public Optional<OAuthAppCredentials> resolveOAuthCredentials(
+                    AuthProviderKind provider, String id, String secret, String tenant) {
+                if (id != null && !id.isBlank()) {
+                    return Optional.of(new OAuthAppCredentials(id, secret, tenant, false));
+                }
+                if (provider == AuthProviderKind.GOOGLE) {
+                    return Optional.of(new OAuthAppCredentials("built-in-google-desktop", "built-in-secret", null, true));
+                }
+                if (provider == AuthProviderKind.MICROSOFT) {
+                    return Optional.of(new OAuthAppCredentials("built-in-ms-public", null, "common", true));
+                }
+                return Optional.empty();
+            }
+
+            @Override
+            public void onOAuthLogin(User user, OAuthLoginPayload payload) {
+            }
+
+            @Override
+            public ChatCompletion complete(
+                    User user, CompletionRequest req, int port, String model, Consumer<String> sink) {
+                return null;
+            }
+        };
+
+        AuthConfig defaultConfig = new AuthConfig();
+        ObjectMapper mapper = new ObjectMapper();
+
+        GoogleOAuthService google = new GoogleOAuthService();
+        setField(google, "config", defaultConfig);
+        setField(google, "objectMapper", mapper);
+        setField(google, "agentBridge", builtInBridge);
+
+        MicrosoftOAuthService microsoft = new MicrosoftOAuthService();
+        setField(microsoft, "config", defaultConfig);
+        setField(microsoft, "objectMapper", mapper);
+        setField(microsoft, "agentBridge", builtInBridge);
+
+        // When / Then — local Docker/desktop loopback HTTP is allowed on any port
+        assertTrue(google.isEnabled("http://localhost:8080"));
+        assertTrue(google.isEnabled("http://127.0.0.1:8888"));
+        assertTrue(microsoft.isEnabled("http://127.0.0.1:8888"));
+
+        // When / Then — reverse-proxied HTTPS or LAN origins block built-in loopback credentials
+        assertFalse(google.isEnabled("https://s3.octo.equinix.com"));
+        assertFalse(google.isEnabled("https://127.0.0.1:8888"));
+        assertFalse(google.isEnabled("http://192.168.1.50:8888"));
+        assertFalse(microsoft.isEnabled("https://s3.octo.equinix.com"));
+        assertThrows(IllegalStateException.class,
+                () -> google.authorizationRedirect("https://s3.octo.equinix.com", "state1", "verifier1"));
+        assertThrows(IllegalStateException.class,
+                () -> microsoft.authorizationRedirect("https://s3.octo.equinix.com", "state2", "verifier2"));
+
+        // Given — explicit Web OAuth client configured for remote HTTPS server
+        AuthConfig webConfig = new AuthConfig();
+        setField(webConfig, "googleClientId", Optional.of("web-google-client-id"));
+        setField(webConfig, "googleClientSecret", Optional.of("web-google-secret"));
+        setField(webConfig, "microsoftClientId", Optional.of("web-ms-client-id"));
+        setField(google, "config", webConfig);
+        setField(microsoft, "config", webConfig);
+
+        // When / Then — explicit Web client works on remote HTTPS origin
+        assertTrue(google.isEnabled("https://s3.octo.equinix.com"));
+        assertTrue(microsoft.isEnabled("https://s3.octo.equinix.com"));
+        URI webGoogleUri = google.authorizationRedirect("https://s3.octo.equinix.com", "state3", "verifier3");
+        assertTrue(webGoogleUri.toString().contains("client_id=web-google-client-id"));
+        assertTrue(webGoogleUri.toString().contains("redirect_uri=https%3A%2F%2Fs3.octo.equinix.com%2Fapi%2Fv1%2Fauth%2Fcallback%2Fgoogle"));
+    }
+
+    @Test
     public void testAuthMeResponseFlags() {
         User user = new User();
         user.id = 10L;

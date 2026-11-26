@@ -95,9 +95,41 @@ public class MicrosoftOAuthService {
         return Optional.empty();
     }
 
+    /**
+     * Resolves Microsoft OAuth 2.0 credentials valid for the given request {@code origin}.
+     * Built-in PublicClient credentials from {@code OAuthClientVault} are restricted to
+     * RFC 8252 plain-HTTP loopback redirect URIs ({@code localhost}, {@code 127.0.0.1}, {@code ::1})
+     * so remote or HTTPS deployments require an explicit Entra Web application registration.
+     *
+     * @param origin browser-facing request origin (scheme + host + optional port).
+     * @return credentials usable for {@code origin}, or empty if unavailable.
+     */
+    public Optional<ChatAgentBridge.OAuthAppCredentials> resolveCredentials(String origin) {
+        Optional<ChatAgentBridge.OAuthAppCredentials> resolved = resolveCredentials();
+        if (resolved.isEmpty()) {
+            return Optional.empty();
+        }
+        ChatAgentBridge.OAuthAppCredentials creds = resolved.get();
+        if (creds.builtIn() && !GoogleOAuthService.isLoopbackRedirectUri(resolveRedirectUri(origin))) {
+            return Optional.empty();
+        }
+        return resolved;
+    }
+
     /** {@code true} when Microsoft OAuth credentials are available (explicitly or via built-in vault). */
     public boolean isEnabled() {
         return resolveCredentials().isPresent();
+    }
+
+    /**
+     * {@code true} when Microsoft OAuth credentials are usable for the given request {@code origin}.
+     * Returns {@code false} on remote or HTTPS origins when only built-in PublicClient credentials exist.
+     *
+     * @param origin browser-facing request origin.
+     * @return {@code true} if Microsoft login can succeed for {@code origin}.
+     */
+    public boolean isEnabled(String origin) {
+        return resolveCredentials(origin).isPresent();
     }
 
     /**
@@ -109,8 +141,8 @@ public class MicrosoftOAuthService {
      * @return redirect URI.
      */
     public URI authorizationRedirect(String origin, String state, String codeVerifier) {
-        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials()
-                .orElseThrow(() -> new IllegalStateException("Microsoft OAuth is not configured"));
+        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials(origin)
+                .orElseThrow(() -> new IllegalStateException("Microsoft OAuth is not configured for origin: " + origin));
         String tenant = (creds.tenantId() != null && !creds.tenantId().isBlank()) ? creds.tenantId() : "common";
         String authUrl = authUrlTemplate.replace("{tenant}", enc(tenant));
         String redirect = resolveRedirectUri(origin);
@@ -140,8 +172,8 @@ public class MicrosoftOAuthService {
      * @return Microsoft profile fields and OAuth tokens.
      */
     public MicrosoftProfile exchangeCode(String origin, String code, String codeVerifier) {
-        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials()
-                .orElseThrow(() -> new IllegalStateException("Microsoft OAuth is not configured"));
+        ChatAgentBridge.OAuthAppCredentials creds = resolveCredentials(origin)
+                .orElseThrow(() -> new IllegalStateException("Microsoft OAuth is not configured for origin: " + origin));
         String tenant = (creds.tenantId() != null && !creds.tenantId().isBlank()) ? creds.tenantId() : "common";
         String tokenUrl = tokenUrlTemplate.replace("{tenant}", enc(tenant));
         String redirect = resolveRedirectUri(origin);
@@ -228,6 +260,9 @@ public class MicrosoftOAuthService {
     private String resolveRedirectUri(String origin) {
         if (config != null && config.microsoftRedirectUri() != null && !config.microsoftRedirectUri().isBlank()) {
             return config.microsoftRedirectUri();
+        }
+        if (origin == null || origin.isBlank()) {
+            return "";
         }
         return origin + "/api/v1/auth/callback/microsoft";
     }
