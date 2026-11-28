@@ -2,6 +2,21 @@ plugins {
     id("buildlogic.java-application-conventions")
 }
 
+repositories {
+    exclusiveContent {
+        forRepositories(
+            mavenLocal(),
+            maven {
+                url = uri("https://maven.aihalo.dev/releases")
+            }
+        )
+        filter {
+            includeGroup("org.ioa")
+            includeModule("com.github.haifengl", "smile-license")
+        }
+    }
+}
+
 dependencies {
     implementation(project(":base"))
     implementation(project(":core"))
@@ -12,8 +27,6 @@ dependencies {
 
     implementation(libs.swingx)
     implementation(libs.bundles.jackson)
-    implementation(libs.bundles.jsonschema)
-    implementation(libs.jsonschema.swagger)
     implementation(libs.duckdb) // smile.data.SQL, used by the agents (e.g. AutoML)
     implementation(libs.bundles.arrow)
     implementation(libs.bundles.kotlin.scripting)
@@ -22,9 +35,6 @@ dependencies {
     implementation("org.scala-lang:scala3-repl_3:3.9.0")
     implementation("info.picocli:picocli:4.7.7")
     implementation("ch.qos.logback:logback-classic:1.6.6")
-    implementation("com.openai:openai-java:4.105.0")
-    implementation("com.anthropic:anthropic-java:3.8.0")
-    implementation("com.google.genai:google-genai:2.3.0")
     implementation("org.commonmark:commonmark:0.32.0")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.32.0")
     implementation("org.commonmark:commonmark-ext-gfm-strikethrough:0.32.0")
@@ -39,9 +49,7 @@ dependencies {
     implementation("org.apache.maven:maven-resolver-provider:3.10.0")
     implementation("org.apache.maven.resolver:maven-resolver-supplier-mvn4:2.0.25")
     implementation("io.modelcontextprotocol.sdk:mcp:2.2.0")
-    implementation("io.github.furstenheim:copy_down:1.1")
     implementation(libs.secret.store)
-    implementation(libs.angus.mail)
 
     implementation(libs.avro) {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
@@ -49,8 +57,11 @@ dependencies {
     implementation(libs.snappy) // for avro
     implementation(libs.parso) // SAS7BDAT
 
-    // local packages
-    implementation(fileTree("lib") { include("*.jar") })
+    implementation(libs.ioa.agent) {
+        // Always compile and run against the in-tree SMILE modules above.
+        exclude(group = "com.github.haifengl")
+    }
+    implementation("com.github.haifengl:smile-license:${project.version}")
 }
 
 application {
@@ -146,8 +157,9 @@ tasks.withType<Javadoc> {
     enabled = false
 }
 
-val unixScriptContent = generateUnixScript().replace("\r\n", "\n")
-val windowsScriptContent = generateWindowsScript().replace("\r\n", "\n").replace("\n", "\r\n")
+val ioaVersion = libs.versions.ioa.get()
+val unixScriptContent = generateUnixScript(ioaVersion).replace("\r\n", "\n")
+val windowsScriptContent = generateWindowsScript(ioaVersion).replace("\r\n", "\n").replace("\n", "\r\n")
 
 class CustomizeStartScripts(
     private val unixScriptContent: String,
@@ -167,7 +179,7 @@ tasks.named<CreateStartScripts>("startScripts") {
     doLast(CustomizeStartScripts(unixScriptContent, windowsScriptContent))
 }
 
-fun generateUnixScript(): String {
+fun generateUnixScript(ioaVersion: String): String {
     val d = "$"
     return """#!/usr/bin/env bash
 
@@ -501,7 +513,7 @@ addJava "--enable-native-access=ALL-UNNAMED"
 addJava "-Dsmile.home=${d}{SMILE_HOME}"
 addJava "-Dscala.usejavacp=true"
 addJava "-Dscala.repl.autoruncode=${d}{app_home}/predef.sc"
-export PYTHONPATH="${d}{PYTHONPATH}:${d}{app_home}/../lib/ioa-agent-1.0.0.jar"
+export PYTHONPATH="${d}{PYTHONPATH}:${d}{app_home}/../lib/ioa-agent-${ioaVersion}.jar"
 export PYTHONUTF8=1
 export PATH="${d}{app_home}:${d}{PATH}"
 [ -f "${d}SMILE_HOME/venv/bin/activate" ] && source "${d}SMILE_HOME/venv/bin/activate"
@@ -518,7 +530,7 @@ run "${d}@"
 """
 }
 
-fun generateWindowsScript(): String {
+fun generateWindowsScript(ioaVersion: String): String {
     return """@REM smile launcher script
 @REM
 @REM Environment:
@@ -575,7 +587,7 @@ call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc
 set "JAVA_HOME=%APP_HOME%\jbr"
 set OPENBLAS_NO_AVX512=1
 set OPENBLAS_NUM_THREAD=1
-set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-1.0.0.jar
+set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-${ioaVersion}.jar
 set PYTHONUTF8=1
 if exist "%APP_HOME%\venv\Scripts\activate.bat" CALL "%APP_HOME%\venv\Scripts\activate.bat"
 set "PATH=%~dp0;%APP_HOME%\venv\Lib\site-packages\torch\lib;!PATH!"

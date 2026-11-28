@@ -1,6 +1,7 @@
 [versions]
 arrow = "19.0.0"
 fastxml = "2.22.3"
+ioa = "1.0.0"
 jackson = "3.3.0"
 jsonschema = "4.38.0"
 # Keep in sync with `kotlinVersion` in kotlin/build.sbt and the Kotlin
@@ -15,6 +16,7 @@ arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-unsafe", version.
 duckdb = { module = "org.duckdb:duckdb_jdbc", version = "2.0.0.1" }
 fastxml-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "fastxml" }
 fastxml-datatype = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "fastxml" }
+ioa-agent = { module = "org.ioa:ioa-agent", version.ref = "ioa" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-yaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version = "1.0.0" }

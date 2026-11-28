@@ -1,5 +1,9 @@
 name := "smile-studio"
 
+val ioaVersion = "1.0.0"
+
+resolvers += Resolver.mavenLocal
+resolvers += "halo-maven" at "https://maven.aihalo.dev/releases"
 resolvers += "jitpack" at "https://jitpack.io"
 
 Compile / mainClass := Some("smile.Main")
@@ -86,7 +90,7 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dsmile.home=${SMILE_HOME}"""",
   """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
-  """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
+  s"""export PYTHONPATH="$${PYTHONPATH}:$${app_home}/../lib/org.ioa.ioa-agent-${ioaVersion}.jar"""",
   """export PYTHONUTF8=1""",
   // Put the launcher's bin directory on PATH, as the .bat launcher does with
   // %~dp0. ScalaKernel looks up `scala-cli`, which `bin/setup` installs there,
@@ -114,7 +118,7 @@ batScriptExtraDefines ++= Seq(
   """set "JAVA_HOME=%APP_HOME%\jbr"""",
   """set OPENBLAS_NO_AVX512=1""",
   """set OPENBLAS_NUM_THREAD=1""",
-  """set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\lib\ioa-agent-1.0.0.jar""",
+  s"""set PYTHONPATH=%PYTHONPATH%;%APP_HOME%\\lib\\org.ioa.ioa-agent-${ioaVersion}.jar""",
   """set PYTHONUTF8=1""",
   """CALL "%APP_HOME%\venv\Scripts\activate.bat"""",
   // activate.bat will set PATH with %PATH%, which is processed during parsing
@@ -131,9 +135,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.6",
-  "com.openai"        % "openai-java"        % "4.105.0",
-  "com.anthropic"     % "anthropic-java"     % "3.8.0",
-  "com.google.genai"  % "google-genai"       % "2.3.0",
   "org.commonmark"    % "commonmark"         % "0.32.0",
   "org.commonmark"    % "commonmark-ext-gfm-tables" % "0.32.0",
   "org.commonmark"    % "commonmark-ext-gfm-strikethrough" % "0.32.0",
@@ -148,9 +149,9 @@ libraryDependencies ++= Seq(
   "org.apache.maven"  % "maven-resolver-provider" % "3.10.0",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.25",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.2.0",
-  "io.github.furstenheim"       % "copy_down"    % "1.1",
   "photos.sluice"               % "secret-store" % "1.0.1",
-  "org.eclipse.angus"           % "angus-mail"   % "2.0.5"
+  ("org.ioa"                    % "ioa-agent"    % ioaVersion).excludeAll(ExclusionRule(organization = "com.github.haifengl")),
+  "com.github.haifengl"         % "smile-license" % version.value
 )
 
 // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin
@@ -168,13 +169,9 @@ libraryDependencies ++= {
 
 libraryDependencies ++= {
   val jacksonV = "3.3.0"
-  val jsonschemaV = "4.38.0"
   Seq(
-    "tools.jackson.core"       % "jackson-databind"            % jacksonV,
-    "tools.jackson.dataformat" % "jackson-dataformat-yaml"     % jacksonV,
-    "com.github.victools"      % "jsonschema-generator"        % jsonschemaV,
-    "com.github.victools"      % "jsonschema-module-jackson"   % jsonschemaV,
-    "com.github.victools"      % "jsonschema-module-swagger-2" % jsonschemaV
+    "tools.jackson.core"       % "jackson-databind"        % jacksonV,
+    "tools.jackson.dataformat" % "jackson-dataformat-yaml" % jacksonV
   )
 }
 
