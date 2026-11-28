@@ -1,8 +1,5 @@
 # Smile Studio
 /.smile/
-/log/
-
-# Agent tool workspace
 .playwright-cli/
 
 # JDTLS (or Eclipse JDT)
@@ -23,6 +20,9 @@ bin/
 
 # Agent scratch state
 /docs
+
+# Log file
+*.log
 
 # Class and package files
 *.class

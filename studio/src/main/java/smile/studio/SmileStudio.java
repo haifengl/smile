@@ -1570,6 +1570,9 @@ public class SmileStudio extends JFrame implements SearchListener {
             System.exit(1);
         }
 
+        SessionLogs.pruneAsync();
+        ioa.llm.SessionRetention.pruneWorkspaceAsync(Path.of(System.getProperty("user.dir")).resolve(".smile"));
+
         // Install font
         FlatJetBrainsMonoFont.install();
         // Application specific UI defaults
